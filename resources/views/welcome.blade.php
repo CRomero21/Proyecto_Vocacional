@@ -3,7 +3,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>¡Bienvenido</title>
+    <title>¡Bienvenido!</title>
     <link rel="stylesheet" href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
@@ -23,7 +23,7 @@
         <!-- Barra de navegación -->
         <nav class="flex justify-between items-center px-8 py-4 bg-white bg-opacity-80 shadow">
             <div>
-                <img src="{{asset('images/logo_uno_se.png')}}" alt =logo class="h-16  w-15 object-contain"/>
+                <img src="{{ asset('images/logo_uno_se.png') }}" alt="logo" class="h-16 w-16 object-contain"/>
             </div>
             <div class="flex gap-6">
                 <a href="#" class="text-blue-900 hover:underline">Quiénes somos</a>

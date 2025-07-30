@@ -35,6 +35,8 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'phone' => 'required|string|max:20', // nuevo campo
             'unidad_educativa' => 'required|string|max:100',// nuevo campo
+            'edad' =>['required','integer','min:1','max:120'],
+            'sexo'=> ['required','string','max:20'],
         ]);
 
         $user = User::create([
@@ -43,6 +45,9 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
             'phone' => $request->phone, // nuevo campo
             'unidad_educativa'=> $request->unidad_educativa,//nuevo campo
+            'edad'=> $request->edad,//nuevo campo
+            'sexo'=> $request->sexo,//nuevo campo
+            'role' => 'estudiante', // asigna automáticamente el rol
         ]);
 
         event(new Registered($user));

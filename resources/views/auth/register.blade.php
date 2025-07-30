@@ -20,7 +20,7 @@
             <!-- Sexo -->
             <div class="w-1/2">
                 <x-input-label for="sexo" :value="__('Sexo')" />
-                <select id="sexo" name="sexo" class="block mt-1 w-full" required>
+                <select id="sexo" name="sexo" class="block mt-1 w-full bg-gray-800 text-white" required>
                     <option value="">Seleccione...</option>
                     <option value="Masculino">Masculino</option>
                     <option value="Femenino">Femenino</option>
