@@ -7,18 +7,13 @@
     <link rel="stylesheet" href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
-        body {
-            background-image: url('{{ asset('images/3.jpeg') }}');
-            background-size: cover;
-            background-position: center;
-        }
         .overlay {
             background: rgba(11, 59, 233, 0.7);
             min-height: 100vh;
         }
     </style>
 </head>
-<body>
+<body style="background-image: url('{{ asset('images/3.jpeg') }}'); background-size: cover; background-position: center;">
     <div class="overlay flex flex-col min-h-screen">
         <!-- Barra de navegación -->
         <nav class="flex justify-between items-center px-8 py-4 bg-white bg-opacity-80 shadow">

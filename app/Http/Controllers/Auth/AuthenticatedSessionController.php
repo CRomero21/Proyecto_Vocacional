@@ -25,10 +25,12 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
-
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $user = Auth::user();
+
+        // Llama al método authenticated para redirección por rol
+        return $this->authenticated($request, $user);
     }
 
     /**
@@ -42,6 +44,20 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect('/welcome');
+    }
+
+    
+    protected function authenticated(Request $request, $user)
+    {
+        if ($user->role === 'superadmin') {
+            return redirect('/informes');
+        }
+        // Para el rol estudiante
+        if ($user->role === 'estudiante') {
+            return redirect('/dashboard');
+        }
+        // Otros roles
+        return redirect('/welcome');
     }
 }

@@ -1,0 +1,41 @@
+<?php
+
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Pregunta;
+use App\Models\Respuesta;
+use App\Models\Test;
+use Illuminate\Support\Facades\Auth;
+
+class CuestionarioController extends Controller
+{
+    // Mostrar el dashboard con historial de tests
+    public function mostrar(Request $request)
+    {
+        // Historial de tests del usuario autenticado
+        $tests = Auth::user()->tests()->withCount('respuestas')->orderByDesc('fecha')->get();
+
+        return view('dashboard', compact('tests'));
+    }
+
+    // Guardar las respuestas del usuario (no se usa si usas TestController para guardar tests)
+    public function guardar(Request $request)
+    {
+        $data = $request->validate([
+            'respuestas' => 'required|array',
+            'test_id' => 'required|exists:tests,id',
+        ]);
+
+        foreach ($data['respuestas'] as $pregunta_id => $valor) {
+            Respuesta::create([
+                'test_id' => $data['test_id'],
+                'pregunta_id' => $pregunta_id,
+                'valor' => (int)$valor,
+            ]);
+        }
+
+        return redirect()->route('dashboard')->with('success', 'Respuestas guardadas correctamente.');
+    }
+}

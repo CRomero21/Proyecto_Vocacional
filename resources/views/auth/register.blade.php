@@ -21,7 +21,7 @@
             <div class="w-1/2">
                 <x-input-label for="sexo" :value="__('Sexo')" />
                 <select id="sexo" name="sexo" class="block mt-1 w-full bg-gray-800 text-white" required>
-                    <option value="">Seleccione...</option>
+                    <option value="" disabled selected>Seleccione...</option>
                     <option value="Masculino">Masculino</option>
                     <option value="Femenino">Femenino</option>
                     <option value="Otro">Otro</option>
@@ -30,13 +30,25 @@
             </div>
         </div>
         
-        <!-- Email Address -->
+        <!-- Departamento -->
         <div class="mt-4">
-            <x-input-label for="email" :value="__('Correo')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+            <label for="departamento" class="block text-sm font-medium text-gray-700">Departamento</label>
+            <select id="departamento" name="departamento" required class="block mt-1 w-full bg-gray-800 text-white">
+                <option value="" disabled selected>Seleccione un departamento</option>
+                <option value="Chuquisaca">Chuquisaca</option>
+                <option value="La Paz">La Paz</option>
+                <option value="Cochabamba">Cochabamba</option>
+                <option value="Oruro">Oruro</option>
+                <option value="Potosí">Potosí</option>
+                <option value="Tarija">Tarija</option>
+                <option value="Santa Cruz">Santa Cruz</option>
+                <option value="Beni">Beni</option>
+                <option value="Pando">Pando</option>
+            </select>
+            @error('departamento')
+                <span class="text-red-500 text-xs">{{ $message }}</span>
+            @enderror
         </div>
-       
 
         <!-- numero de telefono -->
         <div class="mt-4">
@@ -51,28 +63,50 @@
             <x-input-error :messages ="$errors->get('unidad_educativa')" class="mt.2"/>
         </div>
 
-         <!-- Password -->
+        <!-- Email Address -->
         <div class="mt-4">
-            <x-input-label for="password" :value="__('Constraseña')" />
+            <x-input-label for="email" :value="__('Correo')" />
+            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
+            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+        </div>
 
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="new-password" />
-
+         <!-- Password -->
+        <div class="mt-4 relative">
+            <x-input-label for="password" :value="__('Contraseña')" />
+            <x-text-input id="password" class="block mt-1 w-full pr-10"
+                type="password"
+                name="password"
+                required autocomplete="new-password" />
+            <button type="button" onclick="togglePassword('password')" class="absolute right-2 top-8 text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm-9 0c0-3.866 3.582-7 8-7s8 3.134 8 7-3.582 7-8 7-8-3.134-8-7z" />
+                </svg>
+            </button>
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
         <!-- Confirm Password -->
-        <div class="mt-4">
+        <div class="mt-4 relative">
             <x-input-label for="password_confirmation" :value="__('Confirme Contraseña')" />
-
-            <x-text-input id="password_confirmation" class="block mt-1 w-full"
-                            type="password"
-                            name="password_confirmation" required autocomplete="new-password" />
-
+            <x-text-input id="password_confirmation" class="block mt-1 w-full pr-10"
+                type="password"
+                name="password_confirmation" required autocomplete="new-password" />
+            <button type="button" onclick="togglePassword('password_confirmation')" class="absolute right-2 top-8 text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm-9 0c0-3.866 3.582-7 8-7s8 3.134 8 7-3.582 7-8 7-8-3.134-8-7z" />
+                </svg>
+            </button>
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
         </div>
+
+        <script>
+        function togglePassword(id) {
+            const input = document.getElementById(id);
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+        </script>
 
         <div class="flex items-center justify-end mt-4">
             <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800" href="{{ route('login') }}">

@@ -37,7 +37,9 @@ class RegisteredUserController extends Controller
             'unidad_educativa' => 'required|string|max:100',// nuevo campo
             'edad' =>['required','integer','min:1','max:120'],
             'sexo'=> ['required','string','max:20'],
+            'departamento'=> ['required', 'string', 'max:50'], // nuevo campo
         ]);
+        
 
         $user = User::create([
             'name' => $request->name,
@@ -47,6 +49,7 @@ class RegisteredUserController extends Controller
             'unidad_educativa'=> $request->unidad_educativa,//nuevo campo
             'edad'=> $request->edad,//nuevo campo
             'sexo'=> $request->sexo,//nuevo campo
+            'departamento' => $request->departamento, // nuevo campo
             'role' => 'estudiante', // asigna automáticamente el rol
         ]);
 

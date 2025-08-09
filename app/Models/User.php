@@ -25,6 +25,10 @@ class User extends Authenticatable
         'email',
         'password',
         'phone',//campo nuevo
+        'departamento', // campo nuevo
+        'role', // campo nuevo, asigna el rol por defecto
+
+        'name', 'email', 'password', 'role',
     
     ];
 
@@ -36,6 +40,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        
     ];
 
     /**
@@ -49,5 +54,10 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function tests()
+    {
+        return $this->hasMany(\App\Models\Test::class);
     }
 }
