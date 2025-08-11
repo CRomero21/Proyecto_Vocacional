@@ -25,16 +25,7 @@
                         <span>Ver Informes</span>
                     </button>
                 </li>
-                <li>
-                    <button @click="opcion = 'usuarios'" class="w-full flex items-center px-4 py-3 rounded-lg transition-all duration-200"
-                    :class="opcion === 'usuarios' ? 'bg-blue-700 shadow-md' : 'hover:bg-blue-700/50'">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                        <span>Gestionar Usuarios</span>
-                    </button>
-                </li>
-                <li>
+                 <li>
                     <button @click="opcion = 'estadisticas'" class="w-full flex items-center px-4 py-3 rounded-lg transition-all duration-200"
                     :class="opcion === 'estadisticas' ? 'bg-blue-700 shadow-md' : 'hover:bg-blue-700/50'">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -42,6 +33,15 @@
                         </svg>
                         <span>Estadísticas</span>
                     </button>
+                </li>
+                <li>
+                    <!-- Cambiado de button a enlace directo -->
+                    <a href="{{ route('admin.usuarios.index') }}" class="w-full flex items-center px-4 py-3 rounded-lg transition-all duration-200 hover:bg-blue-700/50">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <span>Gestionar Usuarios</span>
+                    </a>
                 </li>
                 <li class="pt-2">
                     <a href="{{ route('admin.preguntas.index') }}" class="w-full flex items-center px-4 py-3 bg-green-700 hover:bg-green-800 rounded-lg transition-all duration-200">
@@ -62,7 +62,6 @@
         </div>
     </aside>
     
-    <!-- Contenido principal mejorado -->
     <main class="flex-1 ml-64 p-6">
         <div class="mx-auto max-w-4xl fade-in" x-show="opcion === 'bienvenida'">
             <div class="bg-white rounded-xl shadow-md overflow-hidden">
@@ -86,7 +85,8 @@
                             </svg>
                             <h3 class="font-semibold text-lg">Usuarios</h3>
                             <p class="text-gray-600 text-sm">Administra cuentas y permisos</p>
-                            <button @click="opcion = 'usuarios'" class="mt-3 text-green-700 hover:text-green-900 text-sm">Acceder →</button>
+                            <!-- Cambiado de button con @click a enlace directo -->
+                            <a href="{{ route('admin.usuarios.index') }}" class="mt-3 inline-block text-green-700 hover:text-green-900 text-sm">Acceder →</a>
                         </div>
                         <div class="bg-purple-50 p-4 rounded-lg text-center">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-purple-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
