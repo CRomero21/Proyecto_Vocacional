@@ -19,17 +19,14 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
-        'unidad_educativa',//campo nuevo
-        'edad',//campo nuevo
-        'sexo',//campo nuevo
+        'unidad_educativa',
+        'edad',
+        'sexo',
         'email',
         'password',
-        'phone',//campo nuevo
-        'departamento', // campo nuevo
-        'role', // campo nuevo, asigna el rol por defecto
-
-        'name', 'email', 'password', 'role',
-    
+        'phone',
+        'departamento',
+        'role',
     ];
 
     /**
@@ -40,7 +37,6 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
-        
     ];
 
     /**
@@ -54,6 +50,27 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    // AGREGAR AQUÍ: Constantes para roles
+    public const ROLE_SUPERADMIN = 'superadmin';
+    public const ROLE_COORDINADOR = 'coordinador'; // En lugar de 'admin'
+    public const ROLE_USER = 'user';
+
+    // AGREGAR AQUÍ: Métodos helper para verificar roles
+    public function isSuperAdmin()
+    {
+        return $this->role === self::ROLE_SUPERADMIN;
+    }
+
+    public function isCoordinador() 
+    {
+        return $this->role === self::ROLE_COORDINADOR;
+    }
+
+    public function isCoordinadorOrHigher()
+    {
+        return $this->isCoordinador() || $this->isSuperAdmin();
     }
 
     public function tests()

@@ -1,121 +1,378 @@
+
 <x-guest-layout>
-    <h2 class="text-center text-white text-2xl font-bold mb-6">Registrarse</h2>
-    <form method="POST" action="{{ route('register') }}">
-        @csrf
+    <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gradient-to-br from-blue-900 to-indigo-800 relative">
+        <!-- Elementos decorativos de fondo -->
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 opacity-20">
+            <div class="absolute top-10 left-10 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
+            <div class="absolute top-0 right-10 w-72 h-72 bg-yellow-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
+            <div class="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"></div>
+        </div>
 
-        <!-- Nombre -->
-        <div>
-            <x-input-label for="name" :value="__('Nombre y apellido')" />
-            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
+        <div class="w-full sm:max-w-2xl mt-6 px-6 py-6 bg-white/95 backdrop-blur-sm shadow-2xl overflow-hidden sm:rounded-xl border border-white/20 relative z-10">
+            <div class="mb-6 text-center">
+                <a href="/" class="flex justify-center mb-4">
+                    <img src="{{ asset('images/logo_uno_se.png') }}" alt="Logo" class="h-16 transition-transform duration-300 hover:scale-105">
+                </a>
+                <h2 class="text-2xl font-bold text-gray-800">Crea tu cuenta</h2>
+                <p class="text-sm text-gray-600 mt-1">Completa el formulario para comenzar tu orientación vocacional</p>
+            </div>
+
+            <form method="POST" action="{{ route('register') }}" class="space-y-5" x-data="{ 
+                step: 1, 
+                showPassword: false, 
+                showPasswordConfirm: false,
+                loading: false
+            }">
+                @csrf
+
+                <!-- Indicador de pasos -->
+                <div class="flex items-center justify-between px-2 mb-4">
+                    <div class="w-full flex items-center">
+                        <div class="relative flex items-center justify-center">
+                            <div class="h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-semibold z-10">1</div>
+                            <div x-show="step > 1" class="absolute inset-0 rounded-full bg-indigo-600 z-0 scale-110 transition-transform duration-300 shadow-md"></div>
+                        </div>
+                        <div class="flex-1 h-1 bg-gray-200 mx-2" :class="step >= 2 ? 'bg-indigo-600' : ''"></div>
+                    </div>
+                    <div class="w-full flex items-center">
+                        <div class="relative flex items-center justify-center">
+                            <div class="h-10 w-10 rounded-full" :class="step >= 2 ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-600'" class="flex items-center justify-center font-semibold z-10">2</div>
+                            <div x-show="step > 2" class="absolute inset-0 rounded-full bg-indigo-600 z-0 scale-110 transition-transform duration-300 shadow-md"></div>
+                        </div>
+                        <div class="flex-1 h-1 bg-gray-200 mx-2" :class="step >= 3 ? 'bg-indigo-600' : ''"></div>
+                    </div>
+                    <div class="w-full flex items-center">
+                        <div class="h-10 w-10 rounded-full" :class="step >= 3 ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-600'" class="flex items-center justify-center font-semibold">3</div>
+                    </div>
+                </div>
+
+                <!-- Paso 1: Información personal -->
+                <div x-show="step === 1" class="space-y-5">
+                    <div class="text-sm font-medium text-indigo-600 mb-4">
+                        Paso 1: Información personal
+                    </div>
+
+                    <!-- Nombre -->
+                    <div>
+                        <x-input-label for="name" :value="__('Nombre y apellido')" />
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                            </div>
+                            <x-text-input id="name" class="pl-10 block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" placeholder="Ingresa tu nombre y apellido" />
+                        </div>
+                        <x-input-error :messages="$errors->get('name')" class="mt-2" />
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Edad -->
+                        <div>
+                            <x-input-label for="edad" :value="__('Edad')" />
+                            <div class="mt-1 relative rounded-md shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <x-text-input id="edad" class="pl-10 block mt-1 w-full" type="number" name="edad" :value="old('edad')" required min="1" max="120" placeholder="Ej: 18" />
+                            </div>
+                            <x-input-error :messages="$errors->get('edad')" class="mt-2" />
+                        </div>
+                        
+                        <!-- Sexo -->
+                        <div>
+                            <x-input-label for="sexo" :value="__('Sexo')" />
+                            <div class="mt-1 relative rounded-md shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                    </svg>
+                                </div>
+                                <select id="sexo" name="sexo" class="pl-10 block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                                    <option value="" disabled {{ old('sexo') ? '' : 'selected' }}>Seleccione...</option>
+                                    <option value="Masculino" {{ old('sexo') == 'Masculino' ? 'selected' : '' }}>Masculino</option>
+                                    <option value="Femenino" {{ old('sexo') == 'Femenino' ? 'selected' : '' }}>Femenino</option>
+                                    <option value="Otro" {{ old('sexo') == 'Otro' ? 'selected' : '' }}>Otro</option>
+                                </select>
+                            </div>
+                            <x-input-error :messages="$errors->get('sexo')" class="mt-2" />
+                        </div>
+                    </div>
+
+                    <div class="pt-4 flex justify-end">
+                        <button type="button" @click="step = 2" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Siguiente
+                            <svg xmlns="http://www.w3.org/2000/svg" class="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Paso 2: Ubicación y contacto -->
+                <div x-show="step === 2" class="space-y-5" style="display: none;">
+                    <div class="text-sm font-medium text-indigo-600 mb-4">
+                        Paso 2: Ubicación y contacto
+                    </div>
+
+                    <!-- Departamento -->
+                    <div>
+                        <x-input-label for="departamento" :value="__('Departamento')" />
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </div>
+                            <select id="departamento" name="departamento" class="pl-10 block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                                <option value="" disabled {{ old('departamento') ? '' : 'selected' }}>Seleccione un departamento</option>
+                                <option value="Chuquisaca" {{ old('departamento') == 'Chuquisaca' ? 'selected' : '' }}>Chuquisaca</option>
+                                <option value="La Paz" {{ old('departamento') == 'La Paz' ? 'selected' : '' }}>La Paz</option>
+                                <option value="Cochabamba" {{ old('departamento') == 'Cochabamba' ? 'selected' : '' }}>Cochabamba</option>
+                                <option value="Oruro" {{ old('departamento') == 'Oruro' ? 'selected' : '' }}>Oruro</option>
+                                <option value="Potosí" {{ old('departamento') == 'Potosí' ? 'selected' : '' }}>Potosí</option>
+                                <option value="Tarija" {{ old('departamento') == 'Tarija' ? 'selected' : '' }}>Tarija</option>
+                                <option value="Santa Cruz" {{ old('departamento') == 'Santa Cruz' ? 'selected' : '' }}>Santa Cruz</option>
+                                <option value="Beni" {{ old('departamento') == 'Beni' ? 'selected' : '' }}>Beni</option>
+                                <option value="Pando" {{ old('departamento') == 'Pando' ? 'selected' : '' }}>Pando</option>
+                            </select>
+                        </div>
+                        <x-input-error :messages="$errors->get('departamento')" class="mt-2" />
+                    </div>
+
+                    <!-- Teléfono -->
+                    <div>
+                        <x-input-label for="phone" :value="__('Teléfono')" />
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                </svg>
+                            </div>
+                            <x-text-input id="phone" class="pl-10 block mt-1 w-full" type="text" name="phone" :value="old('phone')" required placeholder="Ej: 77123456" />
+                        </div>
+                        <x-input-error :messages="$errors->get('phone')" class="mt-2" />
+                    </div>
+
+                    <!-- Unidad educativa -->
+                    <div>
+                        <x-input-label for="unidad_educativa" :value="__('Unidad Educativa')" />
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                            </div>
+                            <x-text-input id="unidad_educativa" class="pl-10 block mt-1 w-full" type="text" name="unidad_educativa" :value="old('unidad_educativa')" required placeholder="Nombre de tu colegio o institución" />
+                        </div>
+                        <x-input-error :messages="$errors->get('unidad_educativa')" class="mt-2" />
+                    </div>
+
+                    <div class="pt-4 flex justify-between">
+                        <button type="button" @click="step = 1" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                            </svg>
+                            Anterior
+                        </button>
+                        <button type="button" @click="step = 3" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Siguiente
+                            <svg xmlns="http://www.w3.org/2000/svg" class="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Paso 3: Cuenta y contraseña -->
+                <div x-show="step === 3" class="space-y-5" style="display: none;">
+                    <div class="text-sm font-medium text-indigo-600 mb-4">
+                        Paso 3: Datos de acceso
+                    </div>
+
+                    <!-- Correo -->
+                    <div>
+                        <x-input-label for="email" :value="__('Correo electrónico')" />
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <x-text-input id="email" class="pl-10 block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" placeholder="tu.correo@ejemplo.com" />
+                        </div>
+                        <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                    </div>
+
+                    <!-- Contraseña -->
+                    <div>
+                        <x-input-label for="password" :value="__('Contraseña')" />
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                            </div>
+                            <x-text-input 
+                                id="password" 
+                                class="pl-10 pr-10 block mt-1 w-full"
+                                x-bind:type="showPassword ? 'text' : 'password'"
+                                name="password"
+                                required 
+                                autocomplete="new-password"
+                                placeholder="Mínimo 8 caracteres" 
+                            />
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                <button 
+                                    type="button" 
+                                    @click="showPassword = !showPassword" 
+                                    class="text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600">
+                                    <svg 
+                                        x-show="!showPassword" 
+                                        xmlns="http://www.w3.org/2000/svg" 
+                                        class="h-5 w-5" 
+                                        fill="none" 
+                                        viewBox="0 0 24 24" 
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                    <svg 
+                                        x-show="showPassword" 
+                                        xmlns="http://www.w3.org/2000/svg" 
+                                        class="h-5 w-5" 
+                                        fill="none" 
+                                        viewBox="0 0 24 24" 
+                                        stroke="currentColor"
+                                        style="display: none;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <x-input-error :messages="$errors->get('password')" class="mt-2" />
+                    </div>
+
+                    <!-- Confirmar Contraseña -->
+                    <div>
+                        <x-input-label for="password_confirmation" :value="__('Confirme Contraseña')" />
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                            </div>
+                            <x-text-input 
+                                id="password_confirmation" 
+                                class="pl-10 pr-10 block mt-1 w-full"
+                                x-bind:type="showPasswordConfirm ? 'text' : 'password'"
+                                name="password_confirmation"
+                                required 
+                                autocomplete="new-password"
+                                placeholder="Repite tu contraseña" 
+                            />
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                <button 
+                                    type="button" 
+                                    @click="showPasswordConfirm = !showPasswordConfirm" 
+                                    class="text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600">
+                                    <svg 
+                                        x-show="!showPasswordConfirm" 
+                                        xmlns="http://www.w3.org/2000/svg" 
+                                        class="h-5 w-5" 
+                                        fill="none" 
+                                        viewBox="0 0 24 24" 
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                    <svg 
+                                        x-show="showPasswordConfirm" 
+                                        xmlns="http://www.w3.org/2000/svg" 
+                                        class="h-5 w-5" 
+                                        fill="none" 
+                                        viewBox="0 0 24 24" 
+                                        stroke="currentColor"
+                                        style="display: none;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
+                    </div>
+
+                    <!-- Términos y condiciones -->
+                    <div class="mt-4">
+                        <div class="flex items-start">
+                            <div class="flex items-center h-5">
+                                <input id="terms" name="terms" type="checkbox" required class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                            </div>
+                            <div class="ml-3 text-sm">
+                                <label for="terms" class="font-medium text-gray-700">Acepto los <a href="#" class="text-indigo-600 hover:text-indigo-500">términos y condiciones</a></label>
+                                <p class="text-gray-500">Al registrarte, aceptas nuestras políticas de privacidad y uso de datos.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 flex justify-between">
+                        <button type="button" @click="step = 2" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                            </svg>
+                            Anterior
+                        </button>
+                        <x-primary-button 
+                            class="ml-4"
+                            @click="loading = true"
+                            x-bind:class="{ 'opacity-90 cursor-not-allowed': loading }">
+                            <span x-show="!loading">{{ __('Registrar') }}</span>
+                            <span x-show="loading" class="flex items-center" style="display: none;">
+                                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Procesando...
+                            </span>
+                        </x-primary-button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-600">
+                    ¿Ya tienes una cuenta? 
+                    <a href="{{ route('login') }}" class="font-medium text-indigo-600 hover:text-indigo-500 transition-colors duration-200">
+                        Inicia sesión aquí
+                    </a>
+                </p>
+            </div>
         </div>
         
-        <div class="mt-4 flex gap-4">
-            <!-- Edad -->
-            <div class="w-1/2">
-                <x-input-label for="edad" :value="__('Edad')" />
-                <x-text-input id="edad" class="block mt-1 w-full" type="number" name="edad" :value="old('edad')" required min="1" max="120"/>
-                <x-input-error :messages="$errors->get('edad')" class="mt-2" />
-            </div>
-            <!-- Sexo -->
-            <div class="w-1/2">
-                <x-input-label for="sexo" :value="__('Sexo')" />
-                <select id="sexo" name="sexo" class="block mt-1 w-full bg-gray-800 text-white" required>
-                    <option value="" disabled selected>Seleccione...</option>
-                    <option value="Masculino">Masculino</option>
-                    <option value="Femenino">Femenino</option>
-                    <option value="Otro">Otro</option>
-                </select>
-                <x-input-error :messages="$errors->get('sexo')" class="mt-2" />
-            </div>
+        <!-- Footer simple -->
+        <div class="mt-8 text-center text-sm text-white/70">
+            <p>&copy; {{ date('Y') }} Orientación Vocacional. Todos los derechos reservados.</p>
         </div>
-        
-        <!-- Departamento -->
-        <div class="mt-4">
-            <label for="departamento" class="block text-sm font-medium text-gray-700">Departamento</label>
-            <select id="departamento" name="departamento" required class="block mt-1 w-full bg-gray-800 text-white">
-                <option value="" disabled selected>Seleccione un departamento</option>
-                <option value="Chuquisaca">Chuquisaca</option>
-                <option value="La Paz">La Paz</option>
-                <option value="Cochabamba">Cochabamba</option>
-                <option value="Oruro">Oruro</option>
-                <option value="Potosí">Potosí</option>
-                <option value="Tarija">Tarija</option>
-                <option value="Santa Cruz">Santa Cruz</option>
-                <option value="Beni">Beni</option>
-                <option value="Pando">Pando</option>
-            </select>
-            @error('departamento')
-                <span class="text-red-500 text-xs">{{ $message }}</span>
-            @enderror
-        </div>
+    </div>
 
-        <!-- numero de telefono -->
-        <div class="mt-4">
-            <x-input-label  for="phone" :value="__('Telefono')"/>
-            <x-text-input id="phone" name="phone" type="text" required autofocus />
-        </div>
-
-        <!-- unidad educativa-->
-        <div class="mt-4">
-            <x-input-label for="unidad_educativa" :value="__('Unidad Educativa')"/>
-            <x-text-input id="unidad_educativa" class="block mt-1 2-full" type="text" name="unidad_educativa" :value="old('unidad_educativa')" required />
-            <x-input-error :messages ="$errors->get('unidad_educativa')" class="mt.2"/>
-        </div>
-
-        <!-- Email Address -->
-        <div class="mt-4">
-            <x-input-label for="email" :value="__('Correo')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
-
-         <!-- Password -->
-        <div class="mt-4 relative">
-            <x-input-label for="password" :value="__('Contraseña')" />
-            <x-text-input id="password" class="block mt-1 w-full pr-10"
-                type="password"
-                name="password"
-                required autocomplete="new-password" />
-            <button type="button" onclick="togglePassword('password')" class="absolute right-2 top-8 text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm-9 0c0-3.866 3.582-7 8-7s8 3.134 8 7-3.582 7-8 7-8-3.134-8-7z" />
-                </svg>
-            </button>
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
-
-        <!-- Confirm Password -->
-        <div class="mt-4 relative">
-            <x-input-label for="password_confirmation" :value="__('Confirme Contraseña')" />
-            <x-text-input id="password_confirmation" class="block mt-1 w-full pr-10"
-                type="password"
-                name="password_confirmation" required autocomplete="new-password" />
-            <button type="button" onclick="togglePassword('password_confirmation')" class="absolute right-2 top-8 text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm-9 0c0-3.866 3.582-7 8-7s8 3.134 8 7-3.582 7-8 7-8-3.134-8-7z" />
-                </svg>
-            </button>
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
-        </div>
-
-        <script>
-        function togglePassword(id) {
-            const input = document.getElementById(id);
-            input.type = input.type === 'password' ? 'text' : 'password';
+    <style>
+        @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
         }
-        </script>
-
-        <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800" href="{{ route('login') }}">
-                {{ __('¿Ya estas Registrado?') }}
-            </a>
-
-            <x-primary-button class="ms-4">
-                {{ __('Registrar') }}
-            </x-primary-button>
-        </div>
-    </form>
+        .animate-blob {
+            animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+            animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+            animation-delay: 4s;
+        }
+    </style>
 </x-guest-layout>

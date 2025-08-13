@@ -55,7 +55,7 @@ class UsuarioController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
-            'role' => ['required', Rule::in(['user', 'admin', 'superadmin'])],
+            'role' => ['required', Rule::in(['estudiante', 'coordinador', 'superadmin'])],
         ]);
 
         User::create([
