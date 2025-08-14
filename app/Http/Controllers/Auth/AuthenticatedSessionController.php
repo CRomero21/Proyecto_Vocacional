@@ -48,16 +48,18 @@ class AuthenticatedSessionController extends Controller
     }
 
     
+    
+// filepath: app/Http/Controllers/Auth/AuthenticatedSessionController.php
+
+// Añade este método al final de la clase, antes del corchete de cierre
     protected function authenticated(Request $request, $user)
     {
         if ($user->role === 'superadmin') {
             return redirect('/informes');
-        }
-        // Para el rol estudiante
-        if ($user->role === 'estudiante') {
+        } elseif ($user->role === 'coordinador') {
+            return redirect('/coordinador-dashboard');
+        } else {
             return redirect('/dashboard');
         }
-        // Otros roles
-        return redirect('/welcome');
     }
 }

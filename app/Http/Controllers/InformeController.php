@@ -17,7 +17,7 @@ class InformeController extends Controller
     {
         $user = Auth::user();
 
-        if (!$user || $user->role !== 'superadmin') {
+        if (!$user || $user->role !== 'superadmin'|| $user->role === 'coordinador') {
             abort(403, 'No tienes permiso para acceder a esta página.');
         }
 

@@ -23,6 +23,36 @@
                                     <span class="font-semibold">Informes</span>
                                 </div>
                             </x-nav-link>
+                            
+                        @elseif(auth()->user()->role === 'coordinador')
+                            <x-nav-link :href="route('coordinador.dashboard')" :active="request()->routeIs('coordinador.dashboard')" class="group">
+                                <div class="flex items-center px-4 py-2 rounded-md transition-all {{ request()->routeIs('coordinador.dashboard') ? 'bg-[#131e58] text-white' : 'text-white hover:bg-white/10' }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                    </svg>
+                                    <span class="font-semibold">Dashboard</span>
+                                </div>
+                            </x-nav-link>
+                            
+                            <x-nav-link :href="route('coordinador.informes')" :active="request()->routeIs('coordinador.informes')" class="group">
+                                <div class="flex items-center px-4 py-2 rounded-md transition-all {{ request()->routeIs('coordinador.informes') ? 'bg-[#131e58] text-white' : 'text-white hover:bg-white/10' }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    <span class="font-semibold">Informes</span>
+                                </div>
+                            </x-nav-link>
+                            
+                            <x-nav-link :href="route('coordinador.estadisticas')" :active="request()->routeIs('coordinador.estadisticas')" class="group">
+                                <div class="flex items-center px-4 py-2 rounded-md transition-all {{ request()->routeIs('coordinador.estadisticas') ? 'bg-[#131e58] text-white' : 'text-white hover:bg-white/10' }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                                    </svg>
+                                    <span class="font-semibold">Estadísticas</span>
+                                </div>
+                            </x-nav-link>
+                            
                         @else
                             <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="group">
                                 <div class="flex items-center px-4 py-2 rounded-md transition-all {{ request()->routeIs('dashboard') ? 'bg-[#131e58] text-white' : 'text-white hover:bg-white/10' }}">
@@ -128,6 +158,36 @@
                             Informes
                         </div>
                     </x-responsive-nav-link>
+                    
+                @elseif(auth()->user()->role === 'coordinador')
+                    <x-responsive-nav-link :href="route('coordinador.dashboard')" :active="request()->routeIs('coordinador.dashboard')">
+                        <div class="flex items-center {{ request()->routeIs('coordinador.dashboard') ? 'text-white bg-[#131e58]' : 'text-white' }} rounded-md px-3 py-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
+                            Dashboard
+                        </div>
+                    </x-responsive-nav-link>
+                    
+                    <x-responsive-nav-link :href="route('coordinador.informes')" :active="request()->routeIs('coordinador.informes')">
+                        <div class="flex items-center {{ request()->routeIs('coordinador.informes') ? 'text-white bg-[#131e58]' : 'text-white' }} rounded-md px-3 py-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Informes
+                        </div>
+                    </x-responsive-nav-link>
+                    
+                    <x-responsive-nav-link :href="route('coordinador.estadisticas')" :active="request()->routeIs('coordinador.estadisticas')">
+                        <div class="flex items-center {{ request()->routeIs('coordinador.estadisticas') ? 'text-white bg-[#131e58]' : 'text-white' }} rounded-md px-3 py-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                            </svg>
+                            Estadísticas
+                        </div>
+                    </x-responsive-nav-link>
+                    
                 @else
                     <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         <div class="flex items-center {{ request()->routeIs('dashboard') ? 'text-white bg-[#131e58]' : 'text-white' }} rounded-md px-3 py-2">

@@ -90,30 +90,39 @@ class UsuarioController extends Controller
      */
     public function update(Request $request, User $usuario)
     {
-        $validated = $request->validate([
+        // Reglas de validación base
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,'.$usuario->id,
-            'role' => ['required', Rule::in(['user', 'admin', 'superadmin'])],
-            'password' => 'nullable|string|min:8|confirmed',
-        ]);
-
+            'role' => ['required', Rule::in(['estudiante', 'coordinador', 'superadmin'])],
+        ];
+        
+        // Añadir reglas de validación de contraseña solo si se proporciona una
+        if ($request->filled('password')) {
+            $rules['password'] = 'required|string|min:8|confirmed';
+        }
+        
+        // Validar con las reglas aplicables
+        $validated = $request->validate($rules);
+        
+        // Preparar datos para actualizar
         $userData = [
             'name' => $validated['name'],
             'email' => $validated['email'],
             'role' => $validated['role'],
         ];
-
-        // Solo actualiza la contraseña si se proporciona una nueva
-        if (!empty($validated['password'])) {
+        
+        // Actualizar contraseña solo si se proporcionó
+        if ($request->filled('password')) {
             $userData['password'] = Hash::make($validated['password']);
         }
-
+        
         $usuario->update($userData);
-
+        
         return redirect()
             ->route('admin.usuarios.index')
             ->with('success', 'Usuario actualizado correctamente.');
-    }
+}
 
     /**
      * Muestra la información detallada de un usuario específico.

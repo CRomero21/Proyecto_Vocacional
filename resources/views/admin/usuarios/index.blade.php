@@ -50,9 +50,9 @@
                 </div>
                 
                 <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                    <div class="text-xs font-medium text-gray-500 uppercase">Administradores</div>
+                    <div class="text-xs font-medium text-gray-500 uppercase">Coordinadores</div>
                     <div class="mt-2 flex items-baseline justify-between">
-                        <div class="text-2xl font-semibold text-gray-900">{{ $usuarios->where('role', 'admin')->count() }}</div>
+                        <div class="text-2xl font-semibold text-gray-900">{{ $usuarios->where('role', 'coordinador')->count() }}</div>
                         <div class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">Staff</div>
                     </div>
                 </div>
@@ -124,8 +124,8 @@
                         <label for="roleFilter" class="block text-sm font-medium text-gray-700 mb-1">Filtrar por rol</label>
                         <select x-model="roleFilter" class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
                             <option value="todos">Todos los roles</option>
-                            <option value="user">Estudiantes</option>
-                            <option value="admin">Administradores</option>
+                            <option value="estudiantes">Estudiantes</option>
+                            <option value="coordinador">Coordinador</option>
                             <option value="superadmin">Super Administradores</option>
                         </select>
                     </div>
@@ -221,10 +221,10 @@
                         <td class="px-6 py-4 whitespace-nowrap" data-role="{{ $usuario->role }}">
                             <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
                                 @if($usuario->role === 'superadmin') bg-yellow-100 text-yellow-800
-                                @elseif($usuario->role === 'admin') bg-purple-100 text-purple-800
+                                @elseif($usuario->role === 'coordinador') bg-purple-100 text-purple-800
                                 @else bg-green-100 text-green-800 @endif">
                                 @if($usuario->role === 'superadmin') Super Admin
-                                @elseif($usuario->role === 'admin') Administrador
+                                @elseif($usuario->role === 'coordinador') Coordinador
                                 @else Estudiante @endif
                             </span>
                         </td>
