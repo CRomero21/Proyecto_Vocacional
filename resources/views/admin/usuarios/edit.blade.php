@@ -1,4 +1,3 @@
-
 @extends('layouts.app')
 
 @section('title', 'Editar Usuario')
@@ -8,7 +7,7 @@
     <!-- Cabecera de la página -->
     <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
         <div class="bg-gradient-to-r from-purple-600 to-indigo-700 px-6 py-4">
-            <div class="flex items-center">
+            <div class="flex items-center">s
                 <div class="flex-shrink-0">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -39,6 +38,7 @@
                     <div class="text-center mb-6">
                         <h4 class="text-lg font-medium text-gray-900">{{ $usuario->name }}</h4>
                         <p class="text-sm text-gray-500">{{ $usuario->email }}</p>
+                        <p class="text-sm text-gray-500 mt-1">{{ $usuario->departamento ?? 'Sin departamento asignado' }}</p>
                     </div>
                     
                     <div class="border-t border-gray-200 pt-4">
@@ -138,6 +138,47 @@
                                             <input type="email" name="email" id="email" value="{{ old('email', $usuario->email) }}" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md @error('email') border-red-300 @enderror" placeholder="ejemplo@correo.com" required>
                                         </div>
                                         @error('email')
+                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    
+                                    <div>
+                                        <label for="departamento" class="block text-sm font-medium text-gray-700 mb-1">Departamento</label>
+                                        <div class="mt-1 relative rounded-md shadow-sm">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                                </svg>
+                                            </div>
+                                            <select name="departamento" id="departamento" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 pr-12 sm:text-sm border-gray-300 rounded-md @error('departamento') border-red-300 @enderror" required>
+                                                <option value="" disabled>Seleccione un departamento</option>
+                                                <option value="La Paz" {{ old('departamento', $usuario->departamento) == 'La Paz' ? 'selected' : '' }}>La Paz</option>
+                                                <option value="Santa Cruz" {{ old('departamento', $usuario->departamento) == 'Santa Cruz' ? 'selected' : '' }}>Santa Cruz</option>
+                                                <option value="Cochabamba" {{ old('departamento', $usuario->departamento) == 'Cochabamba' ? 'selected' : '' }}>Cochabamba</option>
+                                                <option value="Chuquisaca" {{ old('departamento', $usuario->departamento) == 'Chuquisaca' ? 'selected' : '' }}>Chuquisaca (Sucre)</option>
+                                                <option value="Oruro" {{ old('departamento', $usuario->departamento) == 'Oruro' ? 'selected' : '' }}>Oruro</option>
+                                                <option value="Potosí" {{ old('departamento', $usuario->departamento) == 'Potosí' ? 'selected' : '' }}>Potosí</option>
+                                                <option value="Tarija" {{ old('departamento', $usuario->departamento) == 'Tarija' ? 'selected' : '' }}>Tarija</option>
+                                                <option value="Beni" {{ old('departamento', $usuario->departamento) == 'Beni' ? 'selected' : '' }}>Beni</option>
+                                                <option value="Pando" {{ old('departamento', $usuario->departamento) == 'Pando' ? 'selected' : '' }}>Pando</option>
+                                            </select>
+                                        </div>
+                                        @error('departamento')
+                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    
+                                    <div>
+                                        <label for="telefono" class="block text-sm font-medium text-gray-700 mb-1">Teléfono (opcional)</label>
+                                        <div class="mt-1 relative rounded-md shadow-sm">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                                </svg>
+                                            </div>
+                                            <input type="tel" name="telefono" id="telefono" value="{{ old('telefono', $usuario->telefono ?? '') }}" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md" placeholder="(123) 456-7890">
+                                        </div>
+                                        @error('telefono')
                                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                         @enderror
                                     </div>

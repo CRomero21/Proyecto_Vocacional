@@ -56,6 +56,7 @@ class UsuarioController extends Controller
             'email' => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
             'role' => ['required', Rule::in(['estudiante', 'coordinador', 'superadmin'])],
+            'departamento' => 'required|string|max:100', // Nueva validación para departamento
         ]);
 
         User::create([
@@ -63,6 +64,7 @@ class UsuarioController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
+            'departamento' => $validated['departamento'], // Añadir departamento al crear
         ]);
 
         return redirect()
@@ -95,6 +97,8 @@ class UsuarioController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,'.$usuario->id,
             'role' => ['required', Rule::in(['estudiante', 'coordinador', 'superadmin'])],
+            'departamento' => 'required|string|max:100', // Añadir validación de departamento
+
         ];
         
         // Añadir reglas de validación de contraseña solo si se proporciona una
@@ -110,6 +114,7 @@ class UsuarioController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'role' => $validated['role'],
+            'departamento' => $validated['departamento'], // Añadir departamento a la actualización
         ];
         
         // Actualizar contraseña solo si se proporcionó
