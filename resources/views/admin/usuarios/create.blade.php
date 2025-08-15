@@ -229,3 +229,7 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+    <script src="{{ asset('js/form-validation.js') }}"></script>
+@endpush

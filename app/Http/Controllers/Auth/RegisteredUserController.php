@@ -31,13 +31,14 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'edad' => ['required', 'numeric', 'min:5', 'max:120'],
+            'sexo' => ['required', 'string'],
+            'departamento' => ['required', 'string'],
+            'phone' => ['required', 'string', 'min:7', 'max:8'],
+            'unidad_educativa' => ['nullable', 'string', 'max:255'], // Cambia 'required' por 'nullable'
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'phone' => 'required|string|max:20', // nuevo campo
-            'unidad_educativa' => 'required|string|max:100',// nuevo campo
-            'edad' =>['required','integer','min:1','max:120'],
-            'sexo'=> ['required','string','max:20'],
-            'departamento'=> ['required', 'string', 'max:50'], // nuevo campo
+            'terms' => ['required', 'accepted'],
         ]);
         
 
