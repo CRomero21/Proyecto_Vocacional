@@ -137,6 +137,27 @@
                         if (errorContainer) errorContainer.textContent = '';
                     }
                     
+                    // Validar unidad educativa (letras y números)
+                    if(!document.getElementById('unidad_educativa').value || 
+                       !/^[A-Za-zÁÉÍÓÚáéíóúÑñÜü0-9 ]+$/.test(document.getElementById('unidad_educativa').value)) {
+                        document.getElementById('unidad_educativa').classList.add('border-red-500');
+                        isValid = false;
+                        
+                        // Encontrar o crear contenedor de error
+                        let errorContainer = document.getElementById('unidad_educativa').parentNode.parentNode.querySelector('.text-red-600');
+                        if (!errorContainer) {
+                            errorContainer = document.createElement('p');
+                            errorContainer.classList.add('mt-2', 'text-sm', 'text-red-600');
+                            document.getElementById('unidad_educativa').parentNode.parentNode.appendChild(errorContainer);
+                        }
+                        errorContainer.textContent = 'Por favor ingrese el nombre de su unidad educativa (letras y números permitidos)';
+                        
+                    } else {
+                        document.getElementById('unidad_educativa').classList.remove('border-red-500');
+                        const errorContainer = document.getElementById('unidad_educativa').parentNode.parentNode.querySelector('.text-red-600');
+                        if (errorContainer) errorContainer.textContent = '';
+                    }
+                    
                     return isValid;
                 }
             }">
@@ -276,16 +297,15 @@
                     </div>
 
                     <!-- Unidad educativa -->
-                    <!-- Unidad educativa (sin atributo required) -->
                     <div>
-                        <x-input-label for="unidad_educativa" :value="__('Unidad Educativa (opcional)')" />
+                        <x-input-label for="unidad_educativa" :value="__('Unidad Educativa')" />
                         <div class="mt-1 relative rounded-md shadow-sm">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                 </svg>
                             </div>
-                            <x-text-input id="unidad_educativa" class="pl-10 block mt-1 w-full" type="text" name="unidad_educativa" :value="old('unidad_educativa')" placeholder="Nombre de tu colegio o institución" />
+                            <x-text-input id="unidad_educativa" class="pl-10 block mt-1 w-full" type="text" name="unidad_educativa" :value="old('unidad_educativa')" required placeholder="Nombre de tu colegio o institución" />
                         </div>
                         <x-input-error :messages="$errors->get('unidad_educativa')" class="mt-2" />
                     </div>
@@ -612,6 +632,16 @@ document.addEventListener('DOMContentLoaded', function() {
             return null;
         },
         
+        unidad_educativa: function(value) {
+            if (!value.trim()) {
+                return 'El nombre de la unidad educativa es requerido';
+            }
+            if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñÜü0-9 ]+$/.test(value)) {
+                return 'La unidad educativa solo debe contener letras y números';
+            }
+            return null;
+        },
+        
         email: function(value) {
             if (!regexPatterns.email.test(value)) {
                 return 'Por favor ingrese un correo válido de Gmail, Hotmail o Yahoo';
@@ -648,6 +678,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return true;
     }
     
+    
     // Validar nombre cuando pierde el foco
     if (nameInput) {
         nameInput.addEventListener('blur', function() {
@@ -680,6 +711,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (phoneInput) {
         phoneInput.addEventListener('blur', function() {
             validateField(this, 'phone');
+        });
+    }
+    
+    // Validar unidad educativa
+    if (unidadEducativaInput) {
+        unidadEducativaInput.addEventListener('blur', function() {
+            validateField(this, 'unidad_educativa');
         });
     }
     
@@ -778,6 +816,10 @@ document.addEventListener('DOMContentLoaded', function() {
             errorStep = Math.max(errorStep, 2);
         }
         if (!validateField(phoneInput, 'phone')) {
+            hasErrors = true;
+            errorStep = Math.max(errorStep, 2);
+        }
+        if (!validateField(unidadEducativaInput, 'unidad_educativa')) {
             hasErrors = true;
             errorStep = Math.max(errorStep, 2);
         }

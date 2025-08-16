@@ -9,11 +9,24 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    
-    public function up()
+    public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('departamento')->nullable();
+            if (!Schema::hasColumn('users', 'departamento')) {
+                $table->string('departamento')->nullable();
+            }
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            if (Schema::hasColumn('users', 'departamento')) {
+                $table->dropColumn('departamento');
+            }
         });
     }
 };

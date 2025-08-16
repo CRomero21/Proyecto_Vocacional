@@ -15,6 +15,13 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->dateTime('fecha')->default(now());
+            
+            // Campos para resultados vocacionales
+            $table->string('tipo_primario')->nullable();
+            $table->string('tipo_secundario')->nullable();
+            $table->json('resultados')->nullable();
+            $table->boolean('completado')->default(false);
+            
             $table->timestamps();
         });
     }
