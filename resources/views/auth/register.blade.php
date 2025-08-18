@@ -174,13 +174,13 @@
                     </div>
                     <div class="w-full flex items-center">
                         <div class="relative flex items-center justify-center">
-                            <div class="h-10 w-10 rounded-full" :class="step >= 2 ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-600'" class="flex items-center justify-center font-semibold z-10">2</div>
+                            <div class="h-10 w-10 rounded-full flex items-center justify-center font-semibold z-10" :class="step >= 2 ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-600'">2</div>
                             <div x-show="step > 2" class="absolute inset-0 rounded-full bg-indigo-600 z-0 scale-110 transition-transform duration-300 shadow-md"></div>
                         </div>
                         <div class="flex-1 h-1 bg-gray-200 mx-2" :class="step >= 3 ? 'bg-indigo-600' : ''"></div>
                     </div>
                     <div class="w-full flex items-center">
-                        <div class="h-10 w-10 rounded-full" :class="step >= 3 ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-600'" class="flex items-center justify-center font-semibold">3</div>
+                        <div class="h-10 w-10 rounded-full flex items-center justify-center font-semibold" :class="step >= 3 ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-600'">3</div>
                     </div>
                 </div>
 
