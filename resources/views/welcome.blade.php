@@ -318,66 +318,7 @@
     </section>
     
     <!-- Testimonios -->
-    <section id="testimonios" class="py-16 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl font-bold text-gray-900 sm:text-4xl">Lo que dicen nuestros usuarios</h2>
-                <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
-                    Estudiantes y profesionales han encontrado su camino gracias a nuestro test vocacional.
-                </p>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="bg-gray-50 rounded-xl p-8 relative">
-                    <div class="absolute -top-4 -left-4 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-quote-left text-blue-500"></i>
-                    </div>
-                    <p class="text-gray-600 mb-6">
-                        "El test me ayudó a descubrir aptitudes que no sabía que tenía. Ahora estoy estudiando Psicología y me encanta. Recomiendo totalmente esta herramienta a cualquiera que esté indeciso sobre su futuro."
-                    </p>
-                    <div class="flex items-center">
-                        <img class="h-12 w-12 rounded-full" src="https://randomuser.me/api/portraits/women/46.jpg" alt="Laura García">
-                        <div class="ml-4">
-                            <h4 class="text-sm font-semibold text-gray-900">Laura García</h4>
-                            <p class="text-xs text-gray-500">Estudiante de Psicología</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="bg-gray-50 rounded-xl p-8 relative">
-                    <div class="absolute -top-4 -left-4 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-quote-left text-blue-500"></i>
-                    </div>
-                    <p class="text-gray-600 mb-6">
-                        "Tenía muchas dudas sobre qué estudiar después del bachillerato. Gracias al test RIASEC pude conocer mejor mis intereses y decidirme por Ingeniería Informática, que se adapta perfectamente a mi personalidad."
-                    </p>
-                    <div class="flex items-center">
-                        <img class="h-12 w-12 rounded-full" src="https://randomuser.me/api/portraits/men/32.jpg" alt="Carlos Rodríguez">
-                        <div class="ml-4">
-                            <h4 class="text-sm font-semibold text-gray-900">Carlos Rodríguez</h4>
-                            <p class="text-xs text-gray-500">Estudiante de Ing. Informática</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="bg-gray-50 rounded-xl p-8 relative">
-                    <div class="absolute -top-4 -left-4 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-quote-left text-blue-500"></i>
-                    </div>
-                    <p class="text-gray-600 mb-6">
-                        "Como orientadora escolar, recomiendo esta herramienta a todos mis alumnos. Los resultados son precisos y el informe que reciben les da una visión clara de sus opciones profesionales. ¡Una gran ayuda!"
-                    </p>
-                    <div class="flex items-center">
-                        <img class="h-12 w-12 rounded-full" src="https://randomuser.me/api/portraits/women/65.jpg" alt="Ana Martínez">
-                        <div class="ml-4">
-                            <h4 class="text-sm font-semibold text-gray-900">Ana Martínez</h4>
-                            <p class="text-xs text-gray-500">Orientadora escolar</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+    
     
     <!-- CTA final -->
     <section class="py-16 bg-gradient-to-r from-blue-600 to-indigo-700 relative overflow-hidden">
