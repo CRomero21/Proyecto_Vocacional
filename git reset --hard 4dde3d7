@@ -1,0 +1,13 @@
+[33m1ca0e26[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m migracion de tablas
+[33m0bd5a35[m creacion de tabla carreras
+[33m4dde3d7[m welcome sin testimonios
+[33m9ef63ef[m ajustes de pantalla de registro
+[33m3a339a2[m correcion de migraciones y validacion de datos como cliente y servidor
+[33mff024ac[m registor mejorado para validar campos
+[33ma15029e[m edicion de nuevos usuarios con superadministrador
+[33mdd36b73[m definicion de roles completos: superadmin,coordinador y estudiante
+[33mfa61bf9[m mejora de interfaz
+[33mdc81b43[m mejora de interfaz
+[33m3bc42e2[m Mejora de interfaces: modernización de vistas del test RIASEC y panel de administración
+[33m45bd58b[m control de roles
+[33mdfaa768[m welcome,login y register

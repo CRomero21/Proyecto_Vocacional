@@ -12,17 +12,26 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->integer('edad')->nullable();
-            $table->string('sexo', 20)->nullable();
-            $table->string('phone', 20)->nullable();
-            $table->string('unidad_educativa', 100)->nullable();
+            if (!Schema::hasColumn('users', 'edad')) {
+                $table->integer('edad')->nullable();
+            }
+            
+            // Para las demás columnas también
+            if (!Schema::hasColumn('users', 'direccion')) {
+                $table->string('direccion')->nullable();
+            }
+            
+            // ... resto de columnas con la misma verificación
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['edad', 'sexo', 'phone', 'unidad_educativa']);
+            $table->dropColumn(['edad', 'direccion', /* otras columnas */]);
         });
     }
 };
