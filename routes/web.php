@@ -97,7 +97,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::resource('carreras', CarreraController::class);
     
     // Rutas para gestión de universidades
-    Route::resource('universidades', UniversidadController::class);
+    Route::resource('universidades', UniversidadController::class)->parameters([
+        'universidades' => 'universidad'
+    ]);
     
     // Rutas para gestión de tipos de personalidad RIASEC (ahora con destroy habilitado)
     Route::resource('tipos-personalidad', TipoPersonalidadController::class);

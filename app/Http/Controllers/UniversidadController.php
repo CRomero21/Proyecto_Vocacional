@@ -16,7 +16,14 @@ class UniversidadController extends Controller
         $universidades = Universidad::query()
             ->when(request('search'), function($query, $search) {
                 return $query->where('nombre', 'like', "%{$search}%")
-                    ->orWhere('ubicacion', 'like', "%{$search}%");
+                    ->orWhere('departamento', 'like', "%{$search}%")
+                    ->orWhere('municipio', 'like', "%{$search}%");
+            })
+            ->when(request('departamento'), function($query, $departamento) {
+                return $query->where('departamento', $departamento);
+            })
+            ->when(request('tipo'), function($query, $tipo) {
+                return $query->where('tipo', $tipo);
             })
             ->when(request('orden'), function($query, $orden) {
                 return match($orden) {
@@ -24,11 +31,13 @@ class UniversidadController extends Controller
                     'nombre_desc' => $query->orderBy('nombre', 'desc'),
                     'recientes' => $query->orderBy('created_at', 'desc'),
                     'antiguos' => $query->orderBy('created_at', 'asc'),
+                    'carreras_desc' => $query->withCount('carreras')->orderBy('carreras_count', 'desc'),
                     default => $query->orderBy('nombre', 'asc')
                 };
             }, function($query) {
                 return $query->orderBy('nombre', 'asc');
             })
+            ->withCount('carreras')
             ->paginate(10)
             ->withQueryString();
 
@@ -46,25 +55,23 @@ class UniversidadController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    
     public function store(Request $request)
     {
         $validated = $request->validate([
             'nombre' => 'required|string|max:255|unique:universidades',
             'departamento' => 'required|string|max:255',
+            'municipio' => 'required|string|max:255',
             'direccion' => 'required|string|max:255',
-            'municipio' => 'required|string|max:255', // Validación para el nuevo campo
             'tipo' => 'required|string|in:Pública,Privada',
             'telefono' => 'nullable|string|max:20',
             'sitio_web' => 'nullable|url|max:255',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'acreditada' => 'nullable|boolean',
+            'descripcion' => 'nullable|string|max:1000',
         ]);
 
-        // Convertir el checkbox en un valor booleano
         $validated['acreditada'] = $request->has('acreditada') ? 1 : 0;
 
-        // Manejar la carga del logo si existe
         if ($request->hasFile('logo')) {
             $logoPath = $request->file('logo')->store('logos', 'public');
             $validated['logo'] = $logoPath;
@@ -81,9 +88,7 @@ class UniversidadController extends Controller
      */
     public function show(Universidad $universidad)
     {
-        // Cargar relación con carreras
         $universidad->load('carreras');
-        
         return view('admin.universidades.show', compact('universidad'));
     }
 
@@ -102,11 +107,27 @@ class UniversidadController extends Controller
     {
         $validated = $request->validate([
             'nombre' => 'required|string|max:255|unique:universidades,nombre,'.$universidad->id,
+            'departamento' => 'required|string|max:255',
+            'municipio' => 'required|string|max:255',
+            'direccion' => 'required|string|max:255',
             'tipo' => 'required|string|in:Pública,Privada',
-            'ubicacion' => 'required|string|max:255',
+            'telefono' => 'nullable|string|max:20',
             'sitio_web' => 'nullable|url|max:255',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'acreditada' => 'nullable|boolean',
             'descripcion' => 'nullable|string|max:1000',
         ]);
+
+        $validated['acreditada'] = $request->has('acreditada') ? 1 : 0;
+
+        if ($request->hasFile('logo')) {
+            // Elimina el logo anterior si existe
+            if ($universidad->logo) {
+                \Storage::disk('public')->delete($universidad->logo);
+            }
+            $logoPath = $request->file('logo')->store('logos', 'public');
+            $validated['logo'] = $logoPath;
+        }
 
         $universidad->update($validated);
 
@@ -119,9 +140,12 @@ class UniversidadController extends Controller
      */
     public function destroy(Universidad $universidad)
     {
-        // Verificar si tiene carreras asociadas
         if ($universidad->carreras()->exists()) {
             return back()->with('error', 'No se puede eliminar la universidad porque tiene carreras asociadas');
+        }
+
+        if ($universidad->logo) {
+            \Storage::disk('public')->delete($universidad->logo);
         }
 
         $universidad->delete();
