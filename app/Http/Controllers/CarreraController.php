@@ -1,6 +1,4 @@
 <?php
-
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -17,10 +15,10 @@ class CarreraController extends Controller
         $carreras = Carrera::query()
             ->when(request('search'), function($query, $search) {
                 return $query->where('nombre', 'like', "%{$search}%")
-                    ->orWhere('area', 'like', "%{$search}%");
+                    ->orWhere('area_conocimiento', 'like', "%{$search}%");
             })
-            ->when(request('area'), function($query, $area) {
-                return $query->where('area', $area);
+            ->when(request('area_conocimiento'), function($query, $area_conocimiento) {
+                return $query->where('area_conocimiento', $area_conocimiento);
             })
             ->when(request('orden'), function($query, $orden) {
                 return match($orden) {
@@ -38,9 +36,9 @@ class CarreraController extends Controller
             ->withQueryString();
 
         // Obtener áreas disponibles para filtrado
-        $areas = Carrera::distinct('area')->pluck('area');
+        $areas_conocimiento = Carrera::distinct('area_conocimiento')->pluck('area_conocimiento');
 
-        return view('admin.carreras.index', compact('carreras', 'areas'));
+        return view('admin.carreras.index', compact('carreras', 'areas_conocimiento'));
     }
 
     /**
@@ -49,7 +47,8 @@ class CarreraController extends Controller
     public function create()
     {
         $tiposPersonalidad = TipoPersonalidad::all();
-        return view('admin.carreras.create', compact('tiposPersonalidad'));
+        $areas = Carrera::distinct('area_conocimiento')->pluck('area_conocimiento')->filter()->values();
+        return view('admin.carreras.create', compact('tiposPersonalidad', 'areas'));
     }
 
     /**
@@ -59,15 +58,45 @@ class CarreraController extends Controller
     {
         $validated = $request->validate([
             'nombre' => 'required|string|max:255|unique:carreras',
-            'area' => 'required|string|max:255',
-            'descripcion' => 'nullable|string|max:1000',
+            'descripcion' => 'required|string|max:1000',
             'duracion' => 'nullable|string|max:100',
             'perfil_ingreso' => 'nullable|string|max:1000',
             'perfil_egreso' => 'nullable|string|max:1000',
-            'tipo_personalidad_id' => 'required|exists:tipos_personalidad,id',
+            'tipo_primario' => 'required|string|max:10',
+            'tipo_secundario' => 'nullable|string|max:10',
+            'tipo_terciario' => 'nullable|string|max:10',
+            'imagen' => 'nullable|image|max:2048',
+            'nueva_area' => 'nullable|string|max:255',
         ]);
 
-        Carrera::create($validated);
+        // Prioriza nueva_area si viene, si no, usa area_conocimiento del select
+        $area = $request->filled('nueva_area') ? $request->input('nueva_area') : $request->input('area_conocimiento');
+
+        // Si no hay área, error manual
+        if (!$area) {
+            return back()->withInput()->withErrors(['area_conocimiento' => 'Debes seleccionar o escribir un área de conocimiento.']);
+        }
+
+        // Manejo de imagen
+        $imagenPath = null;
+        if ($request->hasFile('imagen')) {
+            $imagenPath = $request->file('imagen')->store('carreras', 'public');
+        }
+
+        // Guardar carrera
+        $carrera = new Carrera();
+        $carrera->nombre = $validated['nombre'];
+        $carrera->area_conocimiento = $area;
+        $carrera->descripcion = $validated['descripcion'];
+        $carrera->duracion = $validated['duracion'] ?? null;
+        $carrera->perfil_ingreso = $validated['perfil_ingreso'] ?? null;
+        $carrera->perfil_egreso = $validated['perfil_egreso'] ?? null;
+        $carrera->es_institucional = $request->has('es_institucional');
+        $carrera->imagen = $imagenPath;
+        $carrera->tipo_primario = $validated['tipo_primario'];
+        $carrera->tipo_secundario = $validated['tipo_secundario'] ?? null;
+        $carrera->tipo_terciario = $validated['tipo_terciario'] ?? null;
+        $carrera->save();
 
         return redirect()->route('admin.carreras.index')
             ->with('success', 'Carrera creada exitosamente');
@@ -79,7 +108,7 @@ class CarreraController extends Controller
     public function show(Carrera $carrera)
     {
         // Cargar relaciones con universidades y tipo de personalidad
-        $carrera->load(['universidades', 'tipoPersonalidad']);
+        $carrera->load(['universidades']);
         
         return view('admin.carreras.show', compact('carrera'));
     }
@@ -90,7 +119,8 @@ class CarreraController extends Controller
     public function edit(Carrera $carrera)
     {
         $tiposPersonalidad = TipoPersonalidad::all();
-        return view('admin.carreras.edit', compact('carrera', 'tiposPersonalidad'));
+        $areas = Carrera::distinct('area_conocimiento')->pluck('area_conocimiento')->filter()->values();
+        return view('admin.carreras.edit', compact('carrera', 'tiposPersonalidad', 'areas'));
     }
 
     /**
@@ -100,15 +130,39 @@ class CarreraController extends Controller
     {
         $validated = $request->validate([
             'nombre' => 'required|string|max:255|unique:carreras,nombre,'.$carrera->id,
-            'area' => 'required|string|max:255',
-            'descripcion' => 'nullable|string|max:1000',
+            'descripcion' => 'required|string|max:1000',
             'duracion' => 'nullable|string|max:100',
             'perfil_ingreso' => 'nullable|string|max:1000',
             'perfil_egreso' => 'nullable|string|max:1000',
-            'tipo_personalidad_id' => 'required|exists:tipos_personalidad,id',
+            'tipo_primario' => 'required|string|max:10',
+            'tipo_secundario' => 'nullable|string|max:10',
+            'tipo_terciario' => 'nullable|string|max:10',
+            'imagen' => 'nullable|image|max:2048',
+            'nueva_area' => 'nullable|string|max:255',
         ]);
 
-        $carrera->update($validated);
+        $area = $request->filled('nueva_area') ? $request->input('nueva_area') : $request->input('area_conocimiento');
+        if (!$area) {
+            return back()->withInput()->withErrors(['area_conocimiento' => 'Debes seleccionar o escribir un área de conocimiento.']);
+        }
+
+        // Manejo de imagen
+        if ($request->hasFile('imagen')) {
+            $imagenPath = $request->file('imagen')->store('carreras', 'public');
+            $carrera->imagen = $imagenPath;
+        }
+
+        $carrera->nombre = $validated['nombre'];
+        $carrera->area_conocimiento = $area;
+        $carrera->descripcion = $validated['descripcion'];
+        $carrera->duracion = $validated['duracion'] ?? null;
+        $carrera->perfil_ingreso = $validated['perfil_ingreso'] ?? null;
+        $carrera->perfil_egreso = $validated['perfil_egreso'] ?? null;
+        $carrera->es_institucional = $request->has('es_institucional');
+        $carrera->tipo_primario = $validated['tipo_primario'];
+        $carrera->tipo_secundario = $validated['tipo_secundario'] ?? null;
+        $carrera->tipo_terciario = $validated['tipo_terciario'] ?? null;
+        $carrera->save();
 
         return redirect()->route('admin.carreras.show', $carrera)
             ->with('success', 'Carrera actualizada exitosamente');
