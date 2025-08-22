@@ -119,6 +119,8 @@ Route::prefix('s')->name('admin.')->middleware(['auth'])->group(function () {
         
     Route::delete('carrera-universidad/{carrera}/{universidad}', [CarreraUniversidadController::class, 'destroy'])
         ->name('carrera-universidad.destroy');
+
+    Route::resource('admin/carrera-universidad', \App\Http\Controllers\CarreraUniversidadController::class);
 });
 
 require __DIR__.'/auth.php';

@@ -1,11 +1,11 @@
 <?php
 
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Universidad;
 use App\Models\Carrera;
+use App\Models\CarreraUniversidad;
 
 class CarreraUniversidadController extends Controller
 {
@@ -14,31 +14,18 @@ class CarreraUniversidadController extends Controller
      */
     public function index()
     {
-        $universidades = Universidad::withCount('carreras')
-            ->when(request('search'), function($query, $search) {
-                return $query->where('nombre', 'like', "%{$search}%");
-            })
-            ->orderBy('nombre')
-            ->paginate(10);
-
-        return view('admin.carrera-universidad.index', compact('universidades'));
+        $carrerasUniversidades = CarreraUniversidad::with(['carrera', 'universidad'])->orderBy('id', 'desc')->get();
+        return view('admin.carrera-universidad.index', compact('carrerasUniversidades'));
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create(Request $request)
+    public function create()
     {
         $universidades = Universidad::orderBy('nombre')->get();
         $carreras = Carrera::orderBy('nombre')->get();
-        
-        // Preseleccionar universidad si viene en la URL
-        $universidadSeleccionada = null;
-        if ($request->has('universidad_id')) {
-            $universidadSeleccionada = Universidad::find($request->universidad_id);
-        }
-
-        return view('admin.carrera-universidad.create', compact('universidades', 'carreras', 'universidadSeleccionada'));
+        return view('admin.carrera-universidad.create', compact('universidades', 'carreras'));
     }
 
     /**
@@ -47,27 +34,73 @@ class CarreraUniversidadController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'carrera_id' => 'required|exists:carreras,id',
             'universidad_id' => 'required|exists:universidades,id',
-            'carreras' => 'required|array',
-            'carreras.*' => 'exists:carreras,id'
+            'modalidad' => 'required|string|max:50',
+            'duracion' => 'nullable|string|max:100',
+            'costo_semestre' => 'nullable|numeric',
+            'requisitos' => 'nullable|string|max:500',
+            'disponible' => 'nullable|boolean',
         ]);
 
-        $universidad = Universidad::find($validated['universidad_id']);
-        
-        // Sincronizar carreras sin desvincular las existentes
-        $universidad->carreras()->syncWithoutDetaching($validated['carreras']);
+        CarreraUniversidad::create([
+            'carrera_id' => $validated['carrera_id'],
+            'universidad_id' => $validated['universidad_id'],
+            'modalidad' => $validated['modalidad'],
+            'duracion' => $validated['duracion'] ?? null,
+            'costo_semestre' => $validated['costo_semestre'] ?? null,
+            'requisitos' => $validated['requisitos'] ?? null,
+            'disponible' => $request->has('disponible'),
+        ]);
 
-        return redirect()->route('admin.universidades.show', $universidad)
-            ->with('success', 'Carreras asociadas exitosamente');
+        return redirect()->route('admin.carrera-universidad.index')
+            ->with('success', 'Carrera asignada correctamente a la universidad.');
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit($id)
+    {
+        $carreraUniversidad = CarreraUniversidad::with(['carrera', 'universidad'])->findOrFail($id);
+        return view('admin.carrera-universidad.edit', compact('carreraUniversidad'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, $id)
+    {
+        $carreraUniversidad = CarreraUniversidad::findOrFail($id);
+
+        $validated = $request->validate([
+            'modalidad' => 'required|string|max:50',
+            'duracion' => 'nullable|string|max:100',
+            'costo_semestre' => 'nullable|numeric',
+            'requisitos' => 'nullable|string|max:500',
+            'disponible' => 'nullable|boolean',
+        ]);
+
+        $carreraUniversidad->update([
+            'modalidad' => $validated['modalidad'],
+            'duracion' => $validated['duracion'] ?? null,
+            'costo_semestre' => $validated['costo_semestre'] ?? null,
+            'requisitos' => $validated['requisitos'] ?? null,
+            'disponible' => $request->has('disponible'),
+        ]);
+
+        return redirect()->route('admin.carrera-universidad.index')
+            ->with('success', 'Asignación actualizada correctamente.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Carrera $carrera, Universidad $universidad)
+    public function destroy($id)
     {
-        $universidad->carreras()->detach($carrera->id);
-        
+        $rel = CarreraUniversidad::findOrFail($id);
+        $rel->delete();
+
         return back()->with('success', 'Carrera desvinculada exitosamente');
     }
 }
