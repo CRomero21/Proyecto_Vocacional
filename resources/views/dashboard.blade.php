@@ -1,4 +1,3 @@
-
 @extends('layouts.app')
 
 @section('title', 'Mi Portal de Orientación Vocacional')
@@ -46,11 +45,6 @@
                     <span class="font-medium">¡Excelente!</span>
                     <span class="ml-1">{{ session('success') }}</span>
                 </div>
-                <button type="button" class="ml-auto text-[#0079f4] hover:text-[#0b3be9] focus:outline-none">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
             </div>
         @endif
 
@@ -112,25 +106,26 @@
                     </div>
                 </div>
                 <div class="p-5 flex-grow">
-                    @if(isset($tests) && $tests->count())
+                    @if(isset($perfil_riasec) && count($perfil_riasec))
                         <div class="grid grid-cols-3 gap-2 mb-4">
-                            <div class="bg-[#0079f4]/10 rounded-lg p-3 text-center">
-                                <span class="text-xs font-medium text-[#0b3be9] uppercase">R</span>
-                                <div class="text-2xl font-bold text-[#051a9a]">75%</div>
-                                <span class="text-xs text-[#0079f4]">Realista</span>
-                            </div>
-                            <div class="bg-[#00aeff]/10 rounded-lg p-3 text-center">
-                                <span class="text-xs font-medium text-[#0b3be9] uppercase">I</span>
-                                <div class="text-2xl font-bold text-[#051a9a]">62%</div>
-                                <span class="text-xs text-[#0079f4]">Investigador</span>
-                            </div>
-                            <div class="bg-[#0b3be9]/10 rounded-lg p-3 text-center">
-                                <span class="text-xs font-medium text-[#0b3be9] uppercase">A</span>
-                                <div class="text-2xl font-bold text-[#051a9a]">45%</div>
-                                <span class="text-xs text-[#0079f4]">Artístico</span>
-                            </div>
+                            @foreach($perfil_riasec as $sigla => $valor)
+                                <div class="bg-[#0079f4]/10 rounded-lg p-3 text-center">
+                                    <span class="text-xs font-medium text-[#0b3be9] uppercase">{{ $sigla }}</span>
+                                    <div class="text-2xl font-bold text-[#051a9a]">{{ $valor }}%</div>
+                                    <span class="text-xs text-[#0079f4]">
+                                        {{ [
+                                            'R' => 'Realista',
+                                            'I' => 'Investigador',
+                                            'A' => 'Artístico',
+                                            'S' => 'Social',
+                                            'E' => 'Emprendedor',
+                                            'C' => 'Convencional'
+                                        ][$sigla] ?? $sigla }}
+                                    </span>
+                                </div>
+                            @endforeach
                         </div>
-                        <p class="text-sm text-gray-500">Tu perfil predominante indica aptitud para áreas técnicas y científicas.</p>
+                        <p class="text-sm text-gray-500">Tu perfil predominante indica tus áreas de mayor afinidad profesional.</p>
                     @else
                         <div class="flex flex-col items-center justify-center h-24">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-[#c8c8c8] mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -165,23 +160,21 @@
                     </div>
                 </div>
                 <div class="p-5 flex-grow">
-                    @if(isset($tests) && $tests->count())
+                    @if(isset($carreras_sugeridas) && count($carreras_sugeridas))
                         <ul class="space-y-2">
-                            <li class="flex items-center text-sm">
-                                <span class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-[#00aeff]/20 text-[#051a9a] font-semibold mr-2">1</span>
-                                <span class="text-gray-700">Ingeniería de Sistemas</span>
-                                <span class="ml-auto text-[#0079f4] text-xs font-medium">92% match</span>
-                            </li>
-                            <li class="flex items-center text-sm">
-                                <span class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-[#00aeff]/20 text-[#051a9a] font-semibold mr-2">2</span>
-                                <span class="text-gray-700">Ingeniería Industrial</span>
-                                <span class="ml-auto text-[#0079f4] text-xs font-medium">85% match</span>
-                            </li>
-                            <li class="flex items-center text-sm">
-                                <span class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-[#00aeff]/20 text-[#051a9a] font-semibold mr-2">3</span>
-                                <span class="text-gray-700">Ciencia de Datos</span>
-                                <span class="ml-auto text-[#0079f4] text-xs font-medium">79% match</span>
-                            </li>
+                            @foreach($carreras_sugeridas as $i => $carrera)
+                                <li class="flex items-center text-sm">
+                                    <span class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-[#00aeff]/20 text-[#051a9a] font-semibold mr-2">{{ $i+1 }}</span>
+                                    <span class="text-gray-700">
+                                        {{ is_array($carrera) ? $carrera['nombre'] : $carrera->nombre }}
+                                    </span>
+                                    @if(is_array($carrera) && isset($carrera['match']))
+                                        <span class="ml-auto text-[#0079f4] text-xs font-medium">{{ $carrera['match'] }}% match</span>
+                                    @elseif(isset($carrera->match))
+                                        <span class="ml-auto text-[#0079f4] text-xs font-medium">{{ $carrera->match }}% match</span>
+                                    @endif
+                                </li>
+                            @endforeach
                         </ul>
                     @else
                         <div class="flex flex-col items-center justify-center h-24">
@@ -206,16 +199,13 @@
         <!-- Panel principal para estudiantes - Mejorado -->
         <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8 border border-[#c8c8c8]/50">
             <div class="bg-gradient-to-r from-[#051a9a] to-[#0b3be9] px-6 py-5 relative overflow-hidden">
-                <!-- Elementos decorativos -->
                 <div class="absolute top-0 right-0 -mt-4 -mr-16 w-32 h-32 bg-white/10 rounded-full"></div>
                 <div class="absolute bottom-0 right-10 -mb-8 w-16 h-16 bg-white/10 rounded-full"></div>
-                
                 <div class="relative">
                     <h1 class="text-2xl font-bold text-white">Test de Orientación Vocacional</h1>
                     <p class="text-[#f2f2f2] mt-1">Descubre tu perfil profesional con el método RIASEC (Holland)</p>
                 </div>
             </div>
-                    
             <div class="p-6 md:p-8">
                 <div class="flex flex-col lg:flex-row">
                     <div class="lg:w-3/5 lg:pr-8 mb-6 lg:mb-0">
@@ -225,13 +215,11 @@
                             </svg>
                             Descubre tu carrera ideal
                         </h2>
-                        
                         <p class="text-gray-600 mb-4 leading-relaxed">
                             El test RIASEC, desarrollado por John Holland, evalúa seis tipos de personalidad: Realista, 
                             Investigador, Artístico, Social, Emprendedor y Convencional. Tu perfil único te ayudará a 
                             identificar las carreras más adecuadas para ti.
                         </p>
-                        
                         <div class="bg-[#0079f4]/5 rounded-lg p-4 mb-5 border border-[#0079f4]/20">
                             <h3 class="font-medium text-[#051a9a] mb-2 text-sm uppercase tracking-wide">¿Cómo funciona?</h3>
                             <ul class="space-y-3">
@@ -249,7 +237,6 @@
                                 </li>
                             </ul>
                         </div>
-                        
                         <div class="flex items-center justify-between">
                             <div class="flex items-center text-sm text-gray-500">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -265,20 +252,16 @@
                             </div>
                         </div>
                     </div>
-                    
                     <!-- Sección de iniciar test mejorada -->
                     <div class="lg:w-2/5 flex flex-col">
                         <div class="bg-gradient-to-b from-[#f2f2f2] to-[#0079f4]/5 rounded-xl p-6 border border-[#0079f4]/20 shadow-sm relative overflow-hidden">
-                            <!-- Elementos decorativos -->
                             <div class="absolute top-0 right-0 w-20 h-20 bg-[#00aeff]/10 rounded-full -mt-10 -mr-10"></div>
                             <div class="absolute bottom-0 left-0 w-16 h-16 bg-[#0b3be9]/10 rounded-full -mb-8 -ml-8"></div>
-                            
                             <div class="relative">
                                 <div class="flex items-center justify-between mb-4">
                                     <h3 class="text-lg font-semibold text-[#131e58]">Test RIASEC</h3>
                                     <span class="bg-[#0079f4]/20 text-[#051a9a] text-xs font-semibold px-2.5 py-0.5 rounded-full">Recomendado</span>
                                 </div>
-                                
                                 <ul class="mb-6 space-y-2">
                                     <li class="flex items-center text-sm">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-[#0b3be9] mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -299,11 +282,9 @@
                                         <span class="text-gray-600">Informe detallado de tu perfil</span>
                                     </li>
                                 </ul>
-                                
                                 <a href="{{ route('test.iniciar') }}" class="block text-center bg-[#0b3be9] hover:bg-[#051a9a] focus:ring-4 focus:ring-[#0b3be9]/30 text-white font-medium rounded-lg px-5 py-3.5 transition duration-200 shadow-sm hover:shadow">
                                     Iniciar Test RIASEC
                                 </a>
-                                
                                 <p class="text-xs text-gray-500 mt-4 text-center">
                                     Responde honestamente para obtener los mejores resultados posibles.
                                 </p>
@@ -318,10 +299,8 @@
         @if(isset($tests) && $tests->count())
             <div id="historial" class="bg-white rounded-xl shadow-md overflow-hidden border border-[#c8c8c8]/50">
                 <div class="bg-gradient-to-r from-[#0b3be9] to-[#0079f4] px-6 py-5 relative overflow-hidden">
-                    <!-- Elementos decorativos -->
                     <div class="absolute top-0 right-0 -mt-4 -mr-16 w-32 h-32 bg-white/10 rounded-full"></div>
                     <div class="absolute bottom-0 right-10 -mb-8 w-16 h-16 bg-white/10 rounded-full"></div>
-                    
                     <div class="relative flex items-center justify-between">
                         <div>
                             <h2 class="text-xl font-bold text-white">Mi Historial de Tests</h2>
@@ -337,7 +316,6 @@
                         </div>
                     </div>
                 </div>
-                
                 <div class="p-6">
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-[#c8c8c8]/50">
@@ -354,29 +332,24 @@
                                 @foreach($tests as $test)
                                 <tr class="hover:bg-[#f2f2f2] transition-colors duration-150">
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">
-                                        {{ date('d/m/Y', strtotime($test->fecha)) }}
+                                        {{ date('d/m/Y', strtotime($test->fecha ?? $test->created_at)) }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ date('H:i', strtotime($test->fecha)) }}
+                                        {{ date('H:i', strtotime($test->fecha ?? $test->created_at)) }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-[#00aeff]/20 text-[#051a9a]">
-                                            {{ $test->respuestas_count }} completadas
+                                            {{ $test->respuestas_count ?? 'N/A' }} completadas
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#0079f4]/20 text-[#051a9a]">
-                                          R<span class="mx-0.5">•</span>I
+                                          {{ $test->perfil_dominante ?? 'N/A' }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <a href="#" class="text-[#0b3be9] hover:text-[#051a9a] mr-3">
                                             Ver resultados
-                                        </a>
-                                        <a href="#" class="text-gray-400 hover:text-gray-600">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-                                            </svg>
                                         </a>
                                     </td>
                                 </tr>
@@ -405,7 +378,6 @@
                     </svg>
                 </a>
             </div>
-            
             <div class="bg-white rounded-lg shadow-sm p-6 border border-[#c8c8c8]/50 hover:shadow-md transition-shadow">
                 <div class="text-[#00aeff] mb-3">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -421,7 +393,6 @@
                     </svg>
                 </a>
             </div>
-            
             <div class="bg-white rounded-lg shadow-sm p-6 border border-[#c8c8c8]/50 hover:shadow-md transition-shadow">
                 <div class="text-[#0b3be9] mb-3">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -440,7 +411,6 @@
         </div>
     </div>
 </div>
-
 <style>
 @keyframes fade-in-down {
     0% { opacity: 0; transform: translateY(-10px); }

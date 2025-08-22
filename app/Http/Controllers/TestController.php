@@ -91,6 +91,47 @@ class TestController extends Controller
         return view('dashboard', compact('preguntas', 'test_id'));
     }
     
+
+    public function dashboard()
+    {
+        $user = Auth::user();
+
+        // Obtener tests completados del usuario
+        $tests = Test::where('user_id', $user->id)
+            ->where('completado', true)
+            ->withCount('respuestas')
+            ->orderByDesc('fecha_completado')
+            ->get();
+
+        // Perfil RIASEC del último test
+        $perfil_riasec = [];
+        if ($tests->count()) {
+            $ultimo = $tests->first();
+            // Si guardas los resultados como JSON en el campo 'resultados'
+            $resultados = $ultimo->resultados;
+            if (is_string($resultados)) {
+                $resultados = json_decode($resultados, true);
+            }
+            $perfil_riasec = $resultados['porcentajes'] ?? [];
+        }
+
+        // Carreras sugeridas del último test
+        $carreras_sugeridas = [];
+        if ($tests->count()) {
+            $ultimo = $tests->first();
+            $resultados = $ultimo->resultados;
+            if (is_string($resultados)) {
+                $resultados = json_decode($resultados, true);
+            }
+            $carreras_sugeridas = $resultados['recomendaciones'] ?? [];
+        }
+
+        return view('dashboard', [
+            'tests' => $tests,
+            'perfil_riasec' => $perfil_riasec,
+            'carreras_sugeridas' => $carreras_sugeridas,
+        ]);
+    }
     /**
      * Procesa las respuestas de un test para calcular el perfil RIASEC
      */

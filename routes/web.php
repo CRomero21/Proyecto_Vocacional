@@ -40,23 +40,24 @@ Route::get('/', function () {
 Route::get('/dashboard', [CuestionarioController::class, 'mostrar'])
     ->middleware(['auth'])
     ->name('dashboard');
+    
 
 // DASHBOARD PARA COORDINADOR - SIN PREFIJOS NI MIDDLEWARE PERSONALIZADO
 Route::get('/coordinador-dashboard', [CoordinadorController::class, 'dashboard'])
-    ->middleware(['auth', 'role:coordinador'])
+    ->middleware(['auth'])
     ->name('coordinador.dashboard');
 
 // OTRAS RUTAS DE COORDINADOR
 Route::get('/coordinador-informes', [CoordinadorController::class, 'informes'])
-    ->middleware(['auth', 'role:coordinador'])
+    ->middleware(['auth'])
     ->name('coordinador.informes');
 
 Route::get('/coordinador-estudiante/{id}', [CoordinadorController::class, 'detalleEstudiante'])
-    ->middleware(['auth', 'role:coordinador'])
+    ->middleware(['auth'])
     ->name('coordinador.estudiante');
 
 Route::get('/coordinador-estadisticas', [CoordinadorController::class, 'estadisticas'])
-    ->middleware(['auth', 'role:coordinador'])
+    ->middleware(['auth'])
     ->name('coordinador.estadisticas');
 
 // RESTO DE RUTAS PROTEGIDAS
@@ -86,15 +87,17 @@ Route::middleware(['auth'])->group(function () {
     // Ruta para mostrar el test en dashboard
     Route::get('/test/mostrar', [TestController::class, 'mostrar'])->name('test.mostrar');
 });
+    Route::middleware(['auth'])->get('/dashboard', [TestController::class, 'dashboard'])->name('dashboard');
 
 // SISTEMA DE ADMINISTRACIÓN - CON RESTRICCIÓN DE ROL SUPERADMIN
-Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
+Route::prefix('s')->name('admin.')->middleware(['auth'])->group(function () {
     // Administración general
     Route::resource('preguntas', PreguntaController::class);  
     Route::resource('usuarios', UsuarioController::class);
     
     // Rutas para gestión de carreras
     Route::resource('carreras', CarreraController::class);
+    
     
     // Rutas para gestión de universidades
     Route::resource('universidades', UniversidadController::class)->parameters([
