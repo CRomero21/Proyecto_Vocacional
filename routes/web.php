@@ -103,7 +103,11 @@ Route::prefix('s')->name('admin.')->middleware(['auth'])->group(function () {
     Route::resource('universidades', UniversidadController::class)->parameters([
         'universidades' => 'universidad'
     ]);
+
+    Route::get('admin/universidades/{universidad}', [UniversidadController::class, 'show'])->name('admin.universidades.show');
     
+    
+    Route::delete('admin/carrera-universidad/{carrera}/{universidad}', [CarreraUniversidadController::class, 'destroy'])->name('admin.carrera-universidad.destroy');
     // Rutas para gestión de tipos de personalidad RIASEC (ahora con destroy habilitado)
     Route::resource('tipos-personalidad', TipoPersonalidadController::class);
     

@@ -12,11 +12,24 @@ class CarreraUniversidadController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $carrerasUniversidades = CarreraUniversidad::with(['carrera', 'universidad'])->orderBy('id', 'desc')->get();
-        return view('admin.carrera-universidad.index', compact('carrerasUniversidades'));
-    }
+        $query = \App\Models\CarreraUniversidad::with(['carrera', 'universidad']);
+
+        if ($request->filled('universidad_id')) {
+            $query->where('universidad_id', $request->universidad_id);
+        }
+        if ($request->filled('q')) {
+            $query->whereHas('carrera', function($q) use ($request) {
+                $q->where('nombre', 'like', '%' . $request->q . '%');
+            });
+        }
+
+        $carrerasUniversidades = $query->orderBy('id', 'desc')->get();
+        $universidades = \App\Models\Universidad::orderBy('nombre')->get();
+
+        return view('admin.carrera-universidad.index', compact('carrerasUniversidades', 'universidades'));
+}
 
     /**
      * Show the form for creating a new resource.

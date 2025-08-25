@@ -131,9 +131,7 @@ class UniversidadController extends Controller
 
         $universidad->update($validated);
 
-        return redirect()->route('admin.universidades.show', $universidad)
-            ->with('success', 'Universidad actualizada exitosamente');
-    }
+    return redirect()->route('admin.universidades.index')->with('success', 'Universidad actualizada correctamente');    }
 
     /**
      * Remove the specified resource from storage.

@@ -22,16 +22,16 @@ class TipoPersonalidad extends Model
     /**
      * Obtiene las carreras asociadas a este tipo de personalidad como tipo primario
      */
-    public function carrerasPrimarias()
+    public function carrerasPrimario()
     {
-        return $this->hasMany(CarreraTipo::class, 'tipo_primario', 'codigo');
+        return $this->hasMany(\App\Models\Carrera::class, 'tipo_primario', 'codigo');
     }
-    
-    /**
-     * Obtiene las carreras asociadas a este tipo de personalidad como tipo secundario
-     */
-    public function carrerasSecundarias()
+    public function carrerasSecundario()
     {
-        return $this->hasMany(CarreraTipo::class, 'tipo_secundario', 'codigo');
+        return $this->hasMany(\App\Models\Carrera::class, 'tipo_secundario', 'codigo');
+    }
+    public function carrerasTerciario()
+    {
+        return $this->hasMany(\App\Models\Carrera::class, 'tipo_terciario', 'codigo');
     }
 }

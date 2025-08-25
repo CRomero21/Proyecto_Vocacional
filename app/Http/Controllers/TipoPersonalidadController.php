@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -8,28 +7,22 @@ use App\Models\TipoPersonalidad;
 
 class TipoPersonalidadController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        $tiposPersonalidad = TipoPersonalidad::withCount('carreras')
-            ->get();
+        $tiposPersonalidad = TipoPersonalidad::withCount([
+            'carrerasPrimario',
+            'carrerasSecundario',
+            'carrerasTerciario'
+        ])->get();
 
         return view('admin.tipos-personalidad.index', compact('tiposPersonalidad'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return view('admin.tipos-personalidad.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -37,7 +30,7 @@ class TipoPersonalidadController extends Controller
             'nombre' => 'required|string|max:255',
             'descripcion' => 'required|string',
             'caracteristicas' => 'required|string',
-            'profesiones_afines' => 'required|string',
+            'color_hex' => 'required|string|max:7',
         ]);
 
         TipoPersonalidad::create($validated);
@@ -46,55 +39,44 @@ class TipoPersonalidadController extends Controller
             ->with('success', 'Perfil RIASEC creado exitosamente');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(TipoPersonalidad $tipoPersonalidad)
+    public function show(TipoPersonalidad $tipos_personalidad)
     {
-        // Cargar relación con carreras
-        $tipoPersonalidad->load('carreras');
-        
-        return view('admin.tipos-personalidad.show', compact('tipoPersonalidad'));
+        $tipos_personalidad->load('carrerasPrimario', 'carrerasSecundario', 'carrerasTerciario');
+        return view('admin.tipos-personalidad.show', ['tipoPersonalidad' => $tipos_personalidad]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(TipoPersonalidad $tipoPersonalidad)
+    public function edit(TipoPersonalidad $tipos_personalidad)
     {
-        return view('admin.tipos-personalidad.edit', compact('tipoPersonalidad'));
+        return view('admin.tipos-personalidad.edit', ['tipoPersonalidad' => $tipos_personalidad]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, TipoPersonalidad $tipoPersonalidad)
+    public function update(Request $request, TipoPersonalidad $tipos_personalidad)
     {
         $validated = $request->validate([
-            'codigo' => 'required|string|max:10|unique:tipos_personalidad,codigo,'.$tipoPersonalidad->id,
+            'codigo' => 'required|string|max:10|unique:tipos_personalidad,codigo,'.$tipos_personalidad->id,
             'nombre' => 'required|string|max:255',
             'descripcion' => 'required|string',
             'caracteristicas' => 'required|string',
-            'profesiones_afines' => 'required|string',
+            'color_hex' => 'required|string|max:7',
         ]);
 
-        $tipoPersonalidad->update($validated);
+        $tipos_personalidad->update($validated);
 
-        return redirect()->route('admin.tipos-personalidad.show', $tipoPersonalidad)
+        return redirect()->route('admin.tipos-personalidad.show', ['tipos_personalidad' => $tipos_personalidad->id])
             ->with('success', 'Perfil RIASEC actualizado exitosamente');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(TipoPersonalidad $tipoPersonalidad)
+    public function destroy(TipoPersonalidad $tipos_personalidad)
     {
-        // Verificar si tiene carreras asociadas
-        if ($tipoPersonalidad->carreras()->exists()) {
+        if (
+            $tipos_personalidad->carrerasPrimario()->exists() ||
+            $tipos_personalidad->carrerasSecundario()->exists() ||
+            $tipos_personalidad->carrerasTerciario()->exists()
+        ) {
             return back()->with('error', 'No se puede eliminar este perfil RIASEC porque tiene carreras asociadas');
         }
 
-        $tipoPersonalidad->delete();
+        $tipos_personalidad->delete();
 
         return redirect()->route('admin.tipos-personalidad.index')
             ->with('success', 'Perfil RIASEC eliminado exitosamente');

@@ -62,7 +62,6 @@
                                 <p class="text-sm text-gray-500">Nombre</p>
                                 <p class="text-gray-800">{{ $universidad->nombre }}</p>
                             </div>
-                            
                             <div>
                                 <p class="text-sm text-gray-500">Tipo</p>
                                 <p class="text-gray-800">{{ $universidad->tipo }}</p>
@@ -89,7 +88,6 @@
                                 @endif
                             </div>
                         </div>
-
                         @if($universidad->descripcion)
                             <div class="mt-4">
                                 <p class="text-sm text-gray-500">Descripción</p>
@@ -118,9 +116,14 @@
                                     <li class="p-4 hover:bg-gray-100 flex justify-between items-center">
                                         <div>
                                             <p class="font-medium text-gray-800">{{ $carrera->nombre }}</p>
-                                            <p class="text-sm text-gray-500">{{ $carrera->area }}</p>
+                                            <p class="text-sm text-gray-500">{{ $carrera->area_conocimiento ?? 'Sin área' }}</p>
                                         </div>
-                                        <form action="{{ route('admin.carrera-universidad.destroy', ['carrera' => $carrera->id, 'universidad' => $universidad->id]) }}" method="POST" class="inline" onsubmit="return confirm('¿Desasociar esta carrera de la universidad?');">
+                                        @php
+                                            // Obtener el modelo pivot de la relación carrera_universidad
+                                            $pivotId = $carrera->pivot->id ?? null;
+                                        @endphp
+                                        @if($pivotId)
+                                        <form action="{{ route('admin.carrera-universidad.destroy', $pivotId) }}" method="POST" class="inline" onsubmit="return confirm('¿Desasociar esta carrera de la universidad?');">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="text-red-600 hover:text-red-800">
@@ -129,6 +132,7 @@
                                                 </svg>
                                             </button>
                                         </form>
+                                        @endif
                                     </li>
                                 @endforeach
                             </ul>

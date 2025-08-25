@@ -1,3 +1,4 @@
+
 @extends('layouts.app')
 
 @section('content')
@@ -36,13 +37,24 @@
                             {{ $carrera->area_conocimiento ?? 'No especificada' }}
                         </td>
                         <td class="py-3 px-6 text-left">
-                            @if($carrera->tipoPrimario && $carrera->tipoPrimario->tipoPrimarioRiasec)
-                                <span class="px-2 py-1 rounded text-white text-xs font-bold" 
-                                      style="background-color: {{ $carrera->tipoPrimario->tipoPrimarioRiasec->color_hex }}">
-                                    {{ $carrera->tipoPrimario->tipoPrimarioRiasec->codigo }}
-                                </span>
-                                @if($carrera->tipoPrimario->tipo_secundario)
-                                    - {{ $carrera->tipoPrimario->tipo_secundario }}
+                            @if($carrera->tipoPrimario || $carrera->tipoSecundario || $carrera->tipoTerciario)
+                                @if($carrera->tipoPrimario)
+                                    <span class="px-2 py-1 rounded text-white text-xs font-bold"
+                                          style="background-color: {{ $carrera->tipoPrimario->color_hex }}">
+                                        {{ $carrera->tipoPrimario->codigo }}
+                                    </span>
+                                @endif
+                                @if($carrera->tipoSecundario)
+                                    <span class="px-2 py-1 rounded text-white text-xs font-bold"
+                                          style="background-color: {{ $carrera->tipoSecundario->color_hex }}">
+                                        {{ $carrera->tipoSecundario->codigo }}
+                                    </span>
+                                @endif
+                                @if($carrera->tipoTerciario)
+                                    <span class="px-2 py-1 rounded text-white text-xs font-bold"
+                                          style="background-color: {{ $carrera->tipoTerciario->color_hex }}">
+                                        {{ $carrera->tipoTerciario->codigo }}
+                                    </span>
                                 @endif
                             @else
                                 No asignado
