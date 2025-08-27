@@ -2,10 +2,10 @@
 
 @section('content')
 <div class="container mx-auto px-4 py-6">
-    <div class="max-w-4xl mx-auto">
-        <div class="bg-white shadow-md rounded-lg p-6">
-            <h1 class="text-2xl font-bold text-gray-800 mb-4">Continuar Test Vocacional</h1>
-            <p class="text-gray-600 mb-6">Continúa respondiendo las preguntas para descubrir tu perfil vocacional.</p>
+    <div class="max-w-3xl mx-auto">
+        <div class="bg-white shadow-lg rounded-2xl p-8">
+            <h1 class="text-3xl font-bold text-blue-700 mb-2">Test Vocacional</h1>
+            <p class="text-gray-600 mb-6">Responde según tu nivel de identificación con cada afirmación. ¡No hay respuestas correctas o incorrectas!</p>
 
             <form action="{{ route('test.guardar') }}" method="POST">
                 @csrf
@@ -17,36 +17,36 @@
                     </div>
                 @endif
 
-                <div class="space-y-6">
-                    @foreach($preguntas as $pregunta)
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <p class="font-medium text-gray-800 mb-3">{{ $pregunta->texto }}</p>
-                            
-                            <div class="grid grid-cols-3 gap-2">
-                                <label class="flex items-center p-3 bg-white rounded-md border @if(isset($respuestas_existentes[$pregunta->id]) && $respuestas_existentes[$pregunta->id] == 0) border-blue-500 bg-blue-50 @else border-gray-200 @endif hover:bg-gray-50">
-                                    <input type="radio" name="respuestas[{{ $pregunta->id }}]" value="0" class="text-blue-600 focus:ring-blue-500" 
-                                        {{ (isset($respuestas_existentes[$pregunta->id]) && $respuestas_existentes[$pregunta->id] == 0) ? 'checked' : '' }}>
-                                    <span class="ml-2">No me identifica</span>
+                <div class="space-y-8">
+                    @foreach($preguntas as $index => $pregunta)
+                        <div class="bg-blue-50 p-6 rounded-xl shadow-sm border border-blue-100 transition hover:shadow-md">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-sm text-blue-600 font-semibold">Pregunta {{ $index+1 }} de {{ count($preguntas) }}</span>
+                                <div class="w-32 h-2 bg-blue-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-blue-400" style="width: {{ (($index+1)/count($preguntas))*100 }}%"></div>
+                                </div>
+                            </div>
+                            <p class="font-semibold text-gray-800 text-lg mb-4">{{ $pregunta->texto }}</p>
+                            <div class="flex flex-col md:flex-row gap-3">
+                                <label class="flex-1 flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:bg-blue-100 cursor-pointer transition">
+                                    <input type="radio" name="respuestas[{{ $pregunta->id }}]" value="0" class="text-blue-600 focus:ring-blue-500" required>
+                                    <span class="ml-3 text-gray-700">No me identifica</span>
                                 </label>
-                                
-                                <label class="flex items-center p-3 bg-white rounded-md border @if(isset($respuestas_existentes[$pregunta->id]) && $respuestas_existentes[$pregunta->id] == 1) border-blue-500 bg-blue-50 @else border-gray-200 @endif hover:bg-gray-50">
-                                    <input type="radio" name="respuestas[{{ $pregunta->id }}]" value="1" class="text-blue-600 focus:ring-blue-500"
-                                        {{ (isset($respuestas_existentes[$pregunta->id]) && $respuestas_existentes[$pregunta->id] == 1) ? 'checked' : '' }}>
-                                    <span class="ml-2">Me identifica un poco</span>
+                                <label class="flex-1 flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:bg-blue-100 cursor-pointer transition">
+                                    <input type="radio" name="respuestas[{{ $pregunta->id }}]" value="1" class="text-blue-600 focus:ring-blue-500">
+                                    <span class="ml-3 text-gray-700">Me identifica un poco</span>
                                 </label>
-                                
-                                <label class="flex items-center p-3 bg-white rounded-md border @if(isset($respuestas_existentes[$pregunta->id]) && $respuestas_existentes[$pregunta->id] == 2) border-blue-500 bg-blue-50 @else border-gray-200 @endif hover:bg-gray-50">
-                                    <input type="radio" name="respuestas[{{ $pregunta->id }}]" value="2" class="text-blue-600 focus:ring-blue-500"
-                                        {{ (isset($respuestas_existentes[$pregunta->id]) && $respuestas_existentes[$pregunta->id] == 2) ? 'checked' : '' }}>
-                                    <span class="ml-2">Me identifica mucho</span>
+                                <label class="flex-1 flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:bg-blue-100 cursor-pointer transition">
+                                    <input type="radio" name="respuestas[{{ $pregunta->id }}]" value="2" class="text-blue-600 focus:ring-blue-500">
+                                    <span class="ml-3 text-gray-700">Me identifica mucho</span>
                                 </label>
                             </div>
                         </div>
                     @endforeach
                 </div>
 
-                <div class="mt-8 flex justify-end">
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg">
+                <div class="mt-10 flex justify-end">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl shadow transition">
                         Guardar y Ver Resultados
                     </button>
                 </div>

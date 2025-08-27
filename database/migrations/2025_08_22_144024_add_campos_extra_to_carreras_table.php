@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('tipo_terciario', 10)->nullable();
         });
     }
-s
+
     public function down()
     {
         Schema::table('carreras', function (Blueprint $table) {
