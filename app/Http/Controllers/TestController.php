@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -170,7 +169,7 @@ class TestController extends Controller
             $tipoSecundario = $tiposOrdenados[1] ?? null;
         }
 
-        $recomendaciones = $this->obtenerRecomendacionesCarreras($tipoPrimario, $tipoSecundario);
+        $recomendaciones = $this->obtenerRecomendacionesCarreras($tipoPrimario, $tipoSecundario, $porcentajes);
 
         $resultados = [
             'puntajes' => $puntajes,
@@ -192,226 +191,175 @@ class TestController extends Controller
             ->with('success', 'Resultados procesados correctamente.');
     }
 
-    private function obtenerRecomendacionesCarreras($tipoPrimario, $tipoSecundario)
+    // --- Lógica personalizada de match según porcentajes RIASEC ---
+    private function calcularMatchPersonalizado($carrera, $porcentajesUsuario)
+    {
+        $tiposCarrera = [];
+        if (isset($carrera->tipo_primario)) $tiposCarrera[] = $carrera->tipo_primario;
+        if (isset($carrera->tipo_secundario)) $tiposCarrera[] = $carrera->tipo_secundario;
+
+        $match = 0;
+        foreach ($tiposCarrera as $tipo) {
+            $match += $porcentajesUsuario[$tipo] ?? 0;
+        }
+
+        if (count($tiposCarrera) > 0) {
+            $match = intval($match / count($tiposCarrera));
+        }
+
+        return $match;
+    }
+
+    
+    private function obtenerRecomendacionesCarreras($tipoPrimario, $tipoSecundario, $porcentajesUsuario = [])
     {
         if (!$tipoPrimario) {
             return [];
         }
 
-        try {
-            if (!Schema::hasTable('carrera_tipo')) {
-                throw new \Exception("La tabla carrera_tipo no existe");
-            }
+        // 1. Coincidencia exacta (primario y secundario)
+        $exactas = DB::table('carrera_tipo')
+            ->join('carreras', 'carrera_tipo.carrera_id', '=', 'carreras.id')
+            ->where('carrera_tipo.tipo_primario', $tipoPrimario)
+            ->where('carrera_tipo.tipo_secundario', $tipoSecundario)
+            ->select('carreras.id', 'carreras.nombre', 'carreras.area_conocimiento', 
+                    'carreras.descripcion', 'carreras.es_institucional',
+                    'carrera_tipo.tipo_primario', 'carrera_tipo.tipo_secundario')
+            ->get();
 
-            // 1. Buscar SOLO carreras institucionales que coincidan con el perfil
-            $carrerasCoincidentes = DB::table('carrera_tipo')
-                ->join('carreras', 'carrera_tipo.carrera_id', '=', 'carreras.id')
-                ->where('carreras.es_institucional', 1)
-                ->where(function($query) use ($tipoPrimario, $tipoSecundario) {
-                    $query->where(function($q) use ($tipoPrimario, $tipoSecundario) {
-                        $q->where('tipo_primario', $tipoPrimario)
-                          ->where('tipo_secundario', $tipoSecundario);
-                    })
-                    ->orWhere(function($q) use ($tipoPrimario, $tipoSecundario) {
-                        $q->where('tipo_primario', $tipoSecundario)
-                          ->where('tipo_secundario', $tipoPrimario);
-                    })
-                    ->orWhere('tipo_primario', $tipoPrimario)
-                    ->orWhere('tipo_primario', $tipoSecundario);
-                })
-                ->select('carreras.id', 'carreras.nombre', 'carreras.area_conocimiento', 
-                         'carreras.descripcion', 'carreras.es_institucional',
-                         'carrera_tipo.tipo_primario', 'carrera_tipo.tipo_secundario')
+        $idsExactas = $exactas->pluck('id')->toArray();
+
+        // 2. Coincidencia parcial (solo primario o secundario, pero no ambos)
+        $parciales = DB::table('carrera_tipo')
+            ->join('carreras', 'carrera_tipo.carrera_id', '=', 'carreras.id')
+            ->where(function($q) use ($tipoPrimario, $tipoSecundario) {
+                $q->where('carrera_tipo.tipo_primario', $tipoPrimario)
+                ->orWhere('carrera_tipo.tipo_secundario', $tipoSecundario);
+            })
+            ->where(function($q) use ($tipoPrimario, $tipoSecundario) {
+               $q->where('carrera_tipo.tipo_primario', '!=', $tipoPrimario)
+                ->orWhere('carrera_tipo.tipo_secundario', '!=', $tipoSecundario);
+            })
+            ->whereNotIn('carreras.id', $idsExactas)
+            ->select('carreras.id', 'carreras.nombre', 'carreras.area_conocimiento', 
+                    'carreras.descripcion', 'carreras.es_institucional',
+                    'carrera_tipo.tipo_primario', 'carrera_tipo.tipo_secundario')
+            ->get();
+
+        $idsParciales = $parciales->pluck('id')->toArray();
+
+        // 3. Si faltan, rellena con otras carreras (sin coincidencia)
+        $idsYaIncluidos = array_merge($idsExactas, $idsParciales);
+        $faltantes = 10 - ($exactas->count() + $parciales->count());
+        $otras = collect();
+        if ($faltantes > 0) {
+            $otras = DB::table('carreras')
+                ->whereNotIn('id', $idsYaIncluidos)
+                ->select('id', 'nombre', 'area_conocimiento', 'descripcion', 'es_institucional')
+                ->limit($faltantes)
                 ->get();
-
-            // 2. Si no hay suficientes institucionales, buscar otras carreras relevantes (no institucionales)
-            if ($carrerasCoincidentes->count() < 10) {
-                $faltantes = 10 - $carrerasCoincidentes->count();
-                $otrasCarreras = DB::table('carrera_tipo')
-                    ->join('carreras', 'carrera_tipo.carrera_id', '=', 'carreras.id')
-                    ->where('carreras.es_institucional', 0)
-                    ->where(function($query) use ($tipoPrimario, $tipoSecundario) {
-                        $query->where(function($q) use ($tipoPrimario, $tipoSecundario) {
-                            $q->where('tipo_primario', $tipoPrimario)
-                              ->where('tipo_secundario', $tipoSecundario);
-                        })
-                        ->orWhere(function($q) use ($tipoPrimario, $tipoSecundario) {
-                            $q->where('tipo_primario', $tipoSecundario)
-                              ->where('tipo_secundario', $tipoPrimario);
-                        })
-                        ->orWhere('tipo_primario', $tipoPrimario)
-                        ->orWhere('tipo_primario', $tipoSecundario);
-                    })
-                    ->select('carreras.id', 'carreras.nombre', 'carreras.area_conocimiento', 
-                             'carreras.descripcion', 'carreras.es_institucional',
-                             'carrera_tipo.tipo_primario', 'carrera_tipo.tipo_secundario')
-                    ->limit($faltantes)
-                    ->get();
-
-                $carrerasCoincidentes = $carrerasCoincidentes->concat($otrasCarreras);
-            }
-
-            if ($carrerasCoincidentes->isEmpty()) {
-                return $this->obtenerRecomendacionesAlternativas($tipoPrimario, $tipoSecundario);
-            }
-
-            $recomendaciones = [];
-            foreach ($carrerasCoincidentes as $carrera) {
-                $match = $this->calcularPorcentajeMatch(
-                    $tipoPrimario, 
-                    $tipoSecundario,
-                    $carrera->tipo_primario, 
-                    $carrera->tipo_secundario,
-                    $carrera->es_institucional ?? false
-                );
-
-                $recomendacion = [
-                    'carrera_id' => $carrera->id,
-                    'nombre' => $carrera->nombre,
-                    'area' => $carrera->area_conocimiento,
-                    'descripcion' => $carrera->descripcion,
-                    'match' => $match,
-                    'es_institucional' => $carrera->es_institucional,
-                    'universidades' => []
-                ];
-
-                try {
-                    if (Schema::hasTable('carrera_universidad') && Schema::hasTable('universidades')) {
-                        $universidades = DB::table('carrera_universidad')
-                            ->join('universidades', 'carrera_universidad.universidad_id', '=', 'universidades.id')
-                            ->where('carrera_id', $carrera->id)
-                            ->where('disponible', true)
-                            ->select(
-                                'universidades.id',
-                                'universidades.nombre',
-                                'universidades.departamento',
-                                'universidades.tipo',
-                                'universidades.sitio_web',
-                                'universidades.acreditada',
-                                'carrera_universidad.modalidad',
-                                'carrera_universidad.duracion',
-                                'carrera_universidad.costo_semestre'
-                            )
-                            ->get();
-
-                        $recomendacion['universidades'] = $universidades;
-                    }
-                } catch (\Exception $e) {
-                    Log::error('Error al obtener universidades: ' . $e->getMessage());
-                }
-
-                $recomendaciones[] = $recomendacion;
-            }
-
-            // Ordenar: primero institucionales, luego por match
-            usort($recomendaciones, function($a, $b) {
-                if ($a['es_institucional'] == $b['es_institucional']) {
-                    return $b['match'] <=> $a['match'];
-                }
-                return $b['es_institucional'] <=> $a['es_institucional'];
-            });
-
-            return array_slice($recomendaciones, 0, 10);
-
-        } catch (\Exception $e) {
-            Log::error('Error en obtenerRecomendacionesCarreras: ' . $e->getMessage());
-            return $this->obtenerRecomendacionesAlternativas($tipoPrimario, $tipoSecundario);
         }
-    }
 
-    private function obtenerRecomendacionesAlternativas($tipoPrimario, $tipoSecundario)
-    {
-        $recomendacionesPorTipo = [
-            'R' => [
-                ['nombre' => 'Ingeniería Civil', 'area' => 'Ingeniería y Tecnología', 'match' => 95, 'descripcion' => 'Diseño y construcción de estructuras e infraestructuras.'],
-                ['nombre' => 'Ingeniería Mecánica', 'area' => 'Ingeniería y Tecnología', 'match' => 92, 'descripcion' => 'Diseño y mantenimiento de sistemas mecánicos y maquinaria.'],
-                ['nombre' => 'Arquitectura', 'area' => 'Arquitectura y Diseño', 'match' => 90, 'descripcion' => 'Diseño de espacios y edificaciones funcionales y estéticas.'],
-                ['nombre' => 'Agronomía', 'area' => 'Ciencias Agrícolas', 'match' => 85, 'descripcion' => 'Estudio y mejora de técnicas de producción agrícola.'],
-                ['nombre' => 'Tecnología en Electrónica', 'area' => 'Ingeniería y Tecnología', 'match' => 80, 'descripcion' => 'Diseño y mantenimiento de sistemas electrónicos.'],
-            ],
-            'I' => [
-                ['nombre' => 'Medicina', 'area' => 'Ciencias de la Salud', 'match' => 95, 'descripcion' => 'Diagnóstico, tratamiento y prevención de enfermedades.'],
-                ['nombre' => 'Física', 'area' => 'Ciencias Básicas', 'match' => 92, 'descripcion' => 'Estudio de las leyes fundamentales que rigen el universo.'],
-                ['nombre' => 'Biología', 'area' => 'Ciencias Básicas', 'match' => 90, 'descripcion' => 'Estudio de los seres vivos y sus procesos vitales.'],
-                ['nombre' => 'Química', 'area' => 'Ciencias Básicas', 'match' => 85, 'descripcion' => 'Estudio de la composición y propiedades de la materia.'],
-                ['nombre' => 'Matemáticas', 'area' => 'Ciencias Básicas', 'match' => 80, 'descripcion' => 'Estudio de números, estructuras y patrones abstractos.'],
-            ],
-            'A' => [
-                ['nombre' => 'Diseño Gráfico', 'area' => 'Arquitectura y Diseño', 'match' => 95, 'descripcion' => 'Creación visual de mensajes, identidades y experiencias.'],
-                ['nombre' => 'Música', 'area' => 'Humanidades y Artes', 'match' => 92, 'descripcion' => 'Estudio y creación de composiciones musicales.'],
-                ['nombre' => 'Literatura', 'area' => 'Humanidades y Artes', 'match' => 90, 'descripcion' => 'Estudio y creación de obras literarias.'],
-                ['nombre' => 'Teatro', 'area' => 'Humanidades y Artes', 'match' => 85, 'descripcion' => 'Interpretación de personajes y puesta en escena.'],
-                ['nombre' => 'Cine y Televisión', 'area' => 'Humanidades y Artes', 'match' => 80, 'descripcion' => 'Creación de productos audiovisuales.'],
-            ],
-            'S' => [
-                ['nombre' => 'Psicología', 'area' => 'Ciencias Sociales', 'match' => 95, 'descripcion' => 'Estudio del comportamiento y procesos mentales.'],
-                ['nombre' => 'Trabajo Social', 'area' => 'Ciencias Sociales', 'match' => 92, 'descripcion' => 'Intervención para mejorar el bienestar social e individual.'],
-                ['nombre' => 'Enfermería', 'area' => 'Ciencias de la Salud', 'match' => 90, 'descripcion' => 'Cuidado y atención integral a pacientes.'],
-                ['nombre' => 'Educación', 'area' => 'Educación', 'match' => 85, 'descripcion' => 'Formación y acompañamiento de procesos de aprendizaje.'],
-                ['nombre' => 'Terapia Ocupacional', 'area' => 'Ciencias de la Salud', 'match' => 80, 'descripcion' => 'Rehabilitación y adaptación a través de actividades.'],
-            ],
-            'E' => [
-                ['nombre' => 'Administración de Empresas', 'area' => 'Economía y Negocios', 'match' => 95, 'descripcion' => 'Gestión eficiente de recursos empresariales.'],
-                ['nombre' => 'Marketing', 'area' => 'Economía y Negocios', 'match' => 92, 'descripcion' => 'Desarrollo de estrategias para posicionar productos y servicios.'],
-                ['nombre' => 'Derecho', 'area' => 'Derecho', 'match' => 90, 'descripcion' => 'Interpretación y aplicación de normas jurídicas.'],
-                ['nombre' => 'Relaciones Internacionales', 'area' => 'Ciencias Sociales', 'match' => 85, 'descripcion' => 'Análisis de la interacción entre estados y organismos internacionales.'],
-                ['nombre' => 'Comunicación Social', 'area' => 'Ciencias Sociales', 'match' => 80, 'descripcion' => 'Gestión de la comunicación en diversas plataformas y contextos.'],
-            ],
-            'C' => [
-                ['nombre' => 'Contaduría Pública', 'area' => 'Economía y Negocios', 'match' => 95, 'descripcion' => 'Registro, análisis e interpretación de información financiera.'],
-                ['nombre' => 'Ingeniería de Sistemas', 'area' => 'Ingeniería y Tecnología', 'match' => 92, 'descripcion' => 'Diseño y desarrollo de soluciones tecnológicas.'],
-                ['nombre' => 'Estadística', 'area' => 'Ciencias Básicas', 'match' => 90, 'descripcion' => 'Recolección, análisis e interpretación de datos.'],
-                ['nombre' => 'Economía', 'area' => 'Economía y Negocios', 'match' => 85, 'descripcion' => 'Estudio de la producción, distribución y consumo de bienes y servicios.'],
-                ['nombre' => 'Bibliotecología', 'area' => 'Humanidades y Artes', 'match' => 80, 'descripcion' => 'Gestión de información y recursos bibliográficos.'],
-            ],
-        ];
+        // Unir todas las carreras recomendadas
+        $todas = $exactas->concat($parciales)->concat($otras)->take(10);
 
+        // Armar recomendaciones con match personalizado
         $recomendaciones = [];
+        foreach ($todas as $carrera) {
+            $match = $this->calcularMatchPersonalizado($carrera, $porcentajesUsuario);
 
-        if (isset($recomendacionesPorTipo[$tipoPrimario])) {
-            foreach ($recomendacionesPorTipo[$tipoPrimario] as $carrera) {
-                $recomendaciones[] = [
-                    'carrera_id' => null,
-                    'nombre' => $carrera['nombre'],
-                    'area' => $carrera['area'],
-                    'descripcion' => $carrera['descripcion'],
-                    'match' => $carrera['match'],
-                    'universidades' => []
-                ];
+            $recomendacion = [
+                'carrera_id' => $carrera->id,
+                'nombre' => $carrera->nombre,
+                'area' => $carrera->area_conocimiento,
+                'descripcion' => $carrera->descripcion,
+                'match' => $match,
+                'es_institucional' => $carrera->es_institucional,
+                'universidades' => []
+            ];
+
+            // Universidades asociadas
+            try {
+                if (Schema::hasTable('carrera_universidad') && Schema::hasTable('universidades')) {
+                    $universidades = DB::table('carrera_universidad')
+                        ->join('universidades', 'carrera_universidad.universidad_id', '=', 'universidades.id')
+                        ->where('carrera_id', $carrera->id)
+                        ->where('disponible', true)
+                        ->select(
+                            'universidades.id',
+                            'universidades.nombre',
+                            'universidades.departamento',
+                            'universidades.tipo',
+                            'universidades.sitio_web',
+                            'universidades.acreditada',
+                            'carrera_universidad.modalidad',
+                            'carrera_universidad.duracion',
+                            'carrera_universidad.costo_semestre'
+                        )
+                        ->get();
+
+                    $recomendacion['universidades'] = $universidades;
+                }
+            } catch (\Exception $e) {
+                Log::error('Error al obtener universidades: ' . $e->getMessage());
             }
+
+            $recomendaciones[] = $recomendacion;
         }
 
-        if ($tipoSecundario && isset($recomendacionesPorTipo[$tipoSecundario])) {
-            foreach ($recomendacionesPorTipo[$tipoSecundario] as $carrera) {
-                $match = round($carrera['match'] * 0.8);
-                $recomendaciones[] = [
-                    'carrera_id' => null,
-                    'nombre' => $carrera['nombre'],
-                    'area' => $carrera['area'],
-                    'descripcion' => $carrera['descripcion'] . ' (Recomendado por perfil ' . $tipoSecundario . ')',
-                    'match' => $match,
-                    'universidades' => []
-                ];
-            }
-        }
-
+        // Ordenar por match descendente
         usort($recomendaciones, function($a, $b) {
             return $b['match'] <=> $a['match'];
         });
 
-        $resultado = [];
-        $nombresAgregados = [];
-
-        foreach ($recomendaciones as $rec) {
-            if (!in_array($rec['nombre'], $nombresAgregados) && count($resultado) < 10) {
-                $resultado[] = $rec;
-                $nombresAgregados[] = $rec['nombre'];
-            }
-        }
-
-        return $resultado;
+        return $recomendaciones;
     }
 
+    private function obtenerRecomendacionesAlternativas($tipoPrimario, $tipoSecundario = [])
+    {
+        // 1. Carreras con al menos una universidad asociada (disponible)
+        $carrerasConUniversidad = Carrera::whereHas('universidades', function($q) {
+                $q->where('disponible', true);
+            })
+            ->with(['universidades' => function($q) {
+                $q->where('disponible', true);
+            }])
+            ->limit(10)
+            ->get();
+
+        // 2. Si faltan, completar con carreras sin universidad asociada
+        $faltantes = 10 - $carrerasConUniversidad->count();
+        $carrerasSinUniversidad = collect();
+        if ($faltantes > 0) {
+            $carrerasSinUniversidad = Carrera::whereDoesntHave('universidades', function($q) {
+                    $q->where('disponible', true);
+                })
+                ->limit($faltantes)
+                ->get();
+        }
+
+        // 3. Unir ambas colecciones
+        $carreras = $carrerasConUniversidad->concat($carrerasSinUniversidad);
+
+        // 4. Formatear resultados
+        $recomendaciones = [];
+        foreach ($carreras as $carrera) {
+            // Calcula el match real usando los porcentajes del usuario
+            $match = $this->calcularMatchPersonalizado($carrera, $porcentajesUsuario ?? []);
+            $recomendaciones[] = [
+                'carrera_id' => $carrera->id,
+                'nombre' => $carrera->nombre,
+                'area' => $carrera->area_conocimiento,
+                'descripcion' => $carrera->descripcion,
+                'match' => $match,
+                'universidades' => $carrera->universidades ?? []
+            ];
+        }
+
+        return $recomendaciones;
+    }
+
+    // Esta función ya no se usa para el match principal, pero la dejo por si la necesitas para otros cálculos
     private function calcularPorcentajeMatch($userPrimario, $userSecundario, $carreraPrimario, $carreraSecundario, $esInstitucional = false)
     {
         $match = 0;

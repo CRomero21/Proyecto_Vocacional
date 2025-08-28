@@ -1,9 +1,11 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Carrera;
 use App\Models\TipoPersonalidad;
+use Illuminate\Support\Facades\DB;
 
 class CarreraController extends Controller
 {
@@ -93,10 +95,15 @@ class CarreraController extends Controller
         $carrera->perfil_egreso = $validated['perfil_egreso'] ?? null;
         $carrera->es_institucional = $request->has('es_institucional');
         $carrera->imagen = $imagenPath;
-        $carrera->tipo_primario = $validated['tipo_primario'];
-        $carrera->tipo_secundario = $validated['tipo_secundario'] ?? null;
-        $carrera->tipo_terciario = $validated['tipo_terciario'] ?? null;
         $carrera->save();
+
+        // Guardar en carrera_tipo
+        DB::table('carrera_tipo')->insert([
+            'carrera_id' => $carrera->id,
+            'tipo_primario' => $validated['tipo_primario'] ?? null,
+            'tipo_secundario' => $validated['tipo_secundario'] ?? null,
+            'tipo_terciario' => $validated['tipo_terciario'] ?? null,
+        ]);
 
         return redirect()->route('admin.carreras.index')
             ->with('success', 'Carrera creada exitosamente');
@@ -159,10 +166,17 @@ class CarreraController extends Controller
         $carrera->perfil_ingreso = $validated['perfil_ingreso'] ?? null;
         $carrera->perfil_egreso = $validated['perfil_egreso'] ?? null;
         $carrera->es_institucional = $request->has('es_institucional');
-        $carrera->tipo_primario = $validated['tipo_primario'];
-        $carrera->tipo_secundario = $validated['tipo_secundario'] ?? null;
-        $carrera->tipo_terciario = $validated['tipo_terciario'] ?? null;
         $carrera->save();
+
+        // Actualizar o crear en carrera_tipo
+        DB::table('carrera_tipo')->updateOrInsert(
+            ['carrera_id' => $carrera->id],
+            [
+                'tipo_primario' => $validated['tipo_primario'] ?? null,
+                'tipo_secundario' => $validated['tipo_secundario'] ?? null,
+                'tipo_terciario' => $validated['tipo_terciario'] ?? null,
+            ]
+        );
 
         return redirect()->route('admin.carreras.show', $carrera)
             ->with('success', 'Carrera actualizada exitosamente');
@@ -177,6 +191,9 @@ class CarreraController extends Controller
         if ($carrera->universidades()->exists()) {
             return back()->with('error', 'No se puede eliminar la carrera porque está asociada a universidades');
         }
+
+        // Eliminar también de carrera_tipo
+        DB::table('carrera_tipo')->where('carrera_id', $carrera->id)->delete();
 
         $carrera->delete();
 

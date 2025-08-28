@@ -1,3 +1,4 @@
+
 @extends('layouts.app')
 
 @section('content')
@@ -21,14 +22,14 @@
                 <p class="text-sm text-gray-600">
                     Tu tipo primario es 
                     <span class="font-bold px-2 py-1 rounded text-white" 
-                          style="background-color: {{ isset($tiposPersonalidad[$test->tipo_primario]['color']) ? $tiposPersonalidad[$test->tipo_primario]['color'] : '#3498db' }}">
-                        {{ $test->tipo_primario }} - {{ isset($tiposPersonalidad[$test->tipo_primario]['nombre']) ? $tiposPersonalidad[$test->tipo_primario]['nombre'] : $test->tipo_primario }}
+                          style="background-color: {{ $tiposPersonalidad[$test->tipo_primario]['color'] ?? '#3498db' }}">
+                        {{ $test->tipo_primario }} - {{ $tiposPersonalidad[$test->tipo_primario]['nombre'] ?? $test->tipo_primario }}
                     </span>
                     @if($test->tipo_secundario)
                         y tu tipo secundario es 
                         <span class="font-bold px-2 py-1 rounded text-white" 
-                              style="background-color: {{ isset($tiposPersonalidad[$test->tipo_secundario]['color']) ? $tiposPersonalidad[$test->tipo_secundario]['color'] : '#2ecc71' }}">
-                            {{ $test->tipo_secundario }} - {{ isset($tiposPersonalidad[$test->tipo_secundario]['nombre']) ? $tiposPersonalidad[$test->tipo_secundario]['nombre'] : $test->tipo_secundario }}
+                              style="background-color: {{ $tiposPersonalidad[$test->tipo_secundario]['color'] ?? '#2ecc71' }}">
+                            {{ $test->tipo_secundario }} - {{ $tiposPersonalidad[$test->tipo_secundario]['nombre'] ?? $test->tipo_secundario }}
                         </span>
                     @endif
                 </p>
@@ -46,7 +47,7 @@
                                     <div class="flex-grow mx-2">
                                         <div class="bg-gray-200 rounded-full h-4 overflow-hidden">
                                             <div class="h-4 rounded-full" 
-                                                 style="width: {{ $porcentaje }}%; background-color: {{ isset($tiposPersonalidad[$tipo]['color']) ? $tiposPersonalidad[$tipo]['color'] : '#3498db' }}"></div>
+                                                 style="width: {{ $porcentaje }}%; background-color: {{ $tiposPersonalidad[$tipo]['color'] ?? '#3498db' }}"></div>
                                         </div>
                                     </div>
                                     <span class="w-10 text-right">{{ $porcentaje }}%</span>
@@ -105,24 +106,24 @@
                                             <div class="p-3 bg-gray-50 rounded border">
                                                 <div class="flex justify-between">
                                                     <div>
-                                                        <h5 class="font-medium">{{ $universidad->nombre }}</h5>
-                                                        <p class="text-sm text-gray-600">{{ $universidad->departamento }} - {{ $universidad->tipo }}</p>
+                                                        <h5 class="font-medium">{{ $universidad['nombre'] ?? 'Sin nombre' }}</h5>
+                                                        <p class="text-sm text-gray-600">{{ $universidad['departamento'] ?? '' }} - {{ $universidad['tipo'] ?? '' }}</p>
                                                     </div>
-                                                    @if($universidad->acreditada)
+                                                    @if(!empty($universidad['acreditada']))
                                                         <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Acreditada</span>
                                                     @endif
                                                 </div>
                                                 <div class="mt-2 text-sm">
-                                                    <p>Modalidad: <span class="font-medium">{{ $universidad->modalidad }}</span></p>
-                                                    @if(isset($universidad->duracion))
-                                                        <p>Duración: <span class="font-medium">{{ $universidad->duracion }}</span></p>
+                                                    <p>Modalidad: <span class="font-medium">{{ $universidad['modalidad'] ?? 'No especificado' }}</span></p>
+                                                    @if(!empty($universidad['duracion']))
+                                                        <p>Duración: <span class="font-medium">{{ $universidad['duracion'] }}</span></p>
                                                     @endif
-                                                    @if(isset($universidad->costo_semestre))
-                                                        <p>Costo aproximado: <span class="font-medium">${{ number_format($universidad->costo_semestre, 0, ',', '.') }}</span></p>
+                                                    @if(isset($universidad['costo_semestre']) && $universidad['costo_semestre'] !== null)
+                                                        <p>Costo aproximado: <span class="font-medium">${{ number_format($universidad['costo_semestre'], 0, ',', '.') }}</span></p>
                                                     @endif
                                                 </div>
-                                                @if(isset($universidad->sitio_web))
-                                                    <a href="{{ $universidad->sitio_web }}" target="_blank" class="inline-block mt-2 text-sm text-blue-600 hover:underline">Visitar sitio web</a>
+                                                @if(!empty($universidad['sitio_web']))
+                                                    <a href="{{ $universidad['sitio_web'] }}" target="_blank" class="inline-block mt-2 text-sm text-blue-600 hover:underline">Visitar sitio web</a>
                                                 @endif
                                             </div>
                                         @endforeach
