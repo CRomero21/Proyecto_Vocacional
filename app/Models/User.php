@@ -20,12 +20,13 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'unidad_educativa',
-        'edad',
+        'fecha_nacimiento',
         'sexo',
         'email',
         'password',
         'phone',
         'departamento',
+        'ciudad',
         'role',
     ];
 
@@ -43,7 +44,7 @@ class User extends Authenticatable
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
-     */
+     */g
     protected function casts(): array
     {
         return [

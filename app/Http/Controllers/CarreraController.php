@@ -12,30 +12,25 @@ class CarreraController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $carreras = Carrera::query()
-            ->when(request('search'), function($query, $search) {
+        $carreras = Carrera::with('carreraTipo')
+            ->when($request->search, function($query, $search) {
                 return $query->where('nombre', 'like', "%{$search}%")
                     ->orWhere('area_conocimiento', 'like', "%{$search}%");
             })
-            ->when(request('area_conocimiento'), function($query, $area_conocimiento) {
+            ->when($request->area_conocimiento, function($query, $area_conocimiento) {
                 return $query->where('area_conocimiento', $area_conocimiento);
             })
-            ->when(request('orden'), function($query, $orden) {
-                return match($orden) {
-                    'nombre_asc' => $query->orderBy('nombre', 'asc'),
-                    'nombre_desc' => $query->orderBy('nombre', 'desc'),
-                    'recientes' => $query->orderBy('created_at', 'desc'),
-                    'antiguos' => $query->orderBy('created_at', 'asc'),
-                    default => $query->orderBy('nombre', 'asc')
-                };
-            }, function($query) {
-                return $query->orderBy('nombre', 'asc');
-            })
-            ->withCount('universidades')
+            ->when(
+                $request->filled('es_institucional'),
+                function($query) use ($request) {
+                    return $query->where('es_institucional', $request->es_institucional);
+                }
+            )
+            ->orderBy('nombre', 'asc')
             ->paginate(10)
-            ->withQueryString();
+            ->appends($request->except('page'));
 
         // Obtener áreas disponibles para filtrado
         $areas_conocimiento = Carrera::distinct('area_conocimiento')->pluck('area_conocimiento');

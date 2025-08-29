@@ -31,6 +31,10 @@ class Carrera extends Model
             ->withPivot('modalidad', 'duracion', 'costo_semestre', 'requisitos', 'disponible')
             ->withTimestamps();
     }
+    public function carreraTipo()
+    {
+        return $this->hasOne(\App\Models\CarreraTipo::class, 'carrera_id');
+    }
 
     /**
      * Relación con el tipo RIASEC primario
