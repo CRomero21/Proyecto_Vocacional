@@ -1,4 +1,3 @@
-
 @extends('layouts.app')
 
 @section('content')
@@ -24,7 +23,8 @@
             <span class="font-bold">Características:</span>
             <div class="text-gray-700">{{ $tipoPersonalidad->caracteristicas }}</div>
         </div>
-        <div class="mt-8 flex justify-end">
+        <div class="mt-8 flex justify-between">
+            <a href="{{ route('admin.tipos-personalidad.index') }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded font-bold">Volver</a>
             <a href="{{ route('admin.tipos-personalidad.edit', ['tipos_personalidad' => $tipoPersonalidad->id]) }}" class="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded font-bold">Editar</a>
         </div>
     </div>

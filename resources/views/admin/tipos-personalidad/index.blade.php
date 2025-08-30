@@ -1,4 +1,3 @@
-
 @extends('layouts.app')
 
 @section('content')
@@ -16,11 +15,12 @@
                     <th class="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase">Código</th>
                     <th class="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase">Nombre</th>
                     <th class="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase">Color</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase">Carreras asociadas</th>
                     <th class="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase">Acciones</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-100">
-                @foreach($tiposPersonalidad as $tipo)
+                @foreach($tipos as $tipo)
                     <tr>
                         <td class="px-4 py-2 font-bold">{{ $tipo->codigo }}</td>
                         <td class="px-4 py-2">{{ $tipo->nombre }}</td>
@@ -28,10 +28,7 @@
                             <span class="inline-block w-6 h-6 rounded-full" style="background: {{ $tipo->color_hex }}"></span>
                             <span class="ml-2 text-xs">{{ $tipo->color_hex }}</span>
                         </td>
-                        <td class="px-4 py-2 flex gap-2">
-                            <a href="{{ route('admin.tipos-personalidad.show', ['tipos_personalidad' => $tipo->id]) }}" ...>Ver</a>
-                            <a href="{{ route('admin.tipos-personalidad.edit', ['tipos_personalidad' => $tipo->id]) }}" ...>Editar</a>
-                        </td>
+                        <td class="px-4 py-2">{{ $tipo->carreras_count }}</td>
                         <td class="px-4 py-2 flex gap-2">
                             <a href="{{ route('admin.tipos-personalidad.show', ['tipos_personalidad' => $tipo->id]) }}" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold">Ver</a>
                             <a href="{{ route('admin.tipos-personalidad.edit', ['tipos_personalidad' => $tipo->id]) }}" class="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded text-xs font-bold">Editar</a>
