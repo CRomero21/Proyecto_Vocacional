@@ -1,147 +1,175 @@
-
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
-    <div class="max-w-5xl mx-auto">
-        @if(session('success'))
-            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6" role="alert">
-                <p>{{ session('success') }}</p>
-            </div>
-        @endif
+<div class="max-w-6xl mx-auto px-4 py-10">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Resultados de tu Test Vocacional</h1>
+        <a href="{{ route('test.historial') }}" class="inline-flex items-center bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+            </svg>
+            Volver a mi historial
+        </a>
+    </div>
 
-        <h1 class="text-2xl font-bold text-gray-800 mb-2">Resultados de tu Test Vocacional</h1>
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Tu perfil RIASEC</h2>
         <p class="text-gray-600 mb-6">
-            Test completado el {{ \Carbon\Carbon::parse($test->fecha_completado)->format('d/m/Y') }}
+            El test RIASEC identifica tus intereses y preferencias ocupacionales según la teoría de Holland.
+            Tu perfil destaca en los siguientes tipos:
         </p>
 
-        <!-- Perfil RIASEC -->
-        <div class="bg-white shadow-md rounded-lg overflow-hidden mb-8">
-            <div class="bg-gray-100 px-6 py-4 border-b">
-                <h2 class="text-xl font-semibold">Tu Perfil RIASEC</h2>
-                <p class="text-sm text-gray-600">
-                    Tu tipo primario es 
-                    <span class="font-bold px-2 py-1 rounded text-white" 
-                          style="background-color: {{ $tiposPersonalidad[$test->tipo_primario]['color'] ?? '#3498db' }}">
-                        {{ $test->tipo_primario }} - {{ $tiposPersonalidad[$test->tipo_primario]['nombre'] ?? $test->tipo_primario }}
-                    </span>
-                    @if($test->tipo_secundario)
-                        y tu tipo secundario es 
-                        <span class="font-bold px-2 py-1 rounded text-white" 
-                              style="background-color: {{ $tiposPersonalidad[$test->tipo_secundario]['color'] ?? '#2ecc71' }}">
-                            {{ $test->tipo_secundario }} - {{ $tiposPersonalidad[$test->tipo_secundario]['nombre'] ?? $test->tipo_secundario }}
-                        </span>
-                    @endif
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                <h3 class="text-lg font-bold text-blue-800 mb-2">Tipo primario: {{ $test->tipo_primario }}</h3>
+                <p class="text-sm text-gray-700">
+                    {{ $tiposPersonalidad[$test->tipo_primario] ?? 'Descripción no disponible' }}
                 </p>
             </div>
-            
-            <div class="p-6">
-                <!-- Gráfica de barras para los puntajes -->
-                <div class="mb-6">
-                    <h3 class="font-semibold mb-3">Tus puntuaciones en cada dimensión</h3>
-                    <div class="space-y-4">
-                        @foreach($test->resultados['porcentajes'] as $tipo => $porcentaje)
-                            <div>
-                                <div class="flex items-center">
-                                    <span class="w-8 font-semibold">{{ $tipo }}</span>
-                                    <div class="flex-grow mx-2">
-                                        <div class="bg-gray-200 rounded-full h-4 overflow-hidden">
-                                            <div class="h-4 rounded-full" 
-                                                 style="width: {{ $porcentaje }}%; background-color: {{ $tiposPersonalidad[$tipo]['color'] ?? '#3498db' }}"></div>
-                                        </div>
-                                    </div>
-                                    <span class="w-10 text-right">{{ $porcentaje }}%</span>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-                
-                <!-- Interpretación del tipo primario -->
-                <div class="mb-6">
-                    <h3 class="font-semibold mb-2">Sobre tu tipo primario ({{ $test->tipo_primario }})</h3>
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <p>{{ $tiposPersonalidad[$test->tipo_primario]['descripcion'] ?? 'Descripción no disponible' }}</p>
-                    </div>
-                </div>
-                
-                <!-- Interpretación del tipo secundario -->
-                @if($test->tipo_secundario)
-                    <div class="mb-6">
-                        <h3 class="font-semibold mb-2">Sobre tu tipo secundario ({{ $test->tipo_secundario }})</h3>
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <p>{{ $tiposPersonalidad[$test->tipo_secundario]['descripcion'] ?? 'Descripción no disponible' }}</p>
-                        </div>
-                    </div>
-                @endif
+            <div class="bg-indigo-50 rounded-lg p-4 border border-indigo-100">
+                <h3 class="text-lg font-bold text-indigo-800 mb-2">Tipo secundario: {{ $test->tipo_secundario }}</h3>
+                <p class="text-sm text-gray-700">
+                    {{ $tiposPersonalidad[$test->tipo_secundario] ?? 'Descripción no disponible' }}
+                </p>
             </div>
         </div>
 
-        <!-- Recomendaciones de carreras -->
-        <div class="bg-white shadow-md rounded-lg overflow-hidden">
-            <div class="bg-gray-100 px-6 py-4 border-b">
-                <h2 class="text-xl font-semibold">Carreras Recomendadas</h2>
-                <p class="text-sm text-gray-600">Basadas en tu perfil {{ $test->tipo_primario }}{{ $test->tipo_secundario ? '-'.$test->tipo_secundario : '' }}</p>
-            </div>
-            
-            <div class="p-6">
-                <div class="space-y-6">
-                    @foreach($test->resultados['recomendaciones'] as $recomendacion)
-                        <div class="bg-white p-6 rounded-lg shadow border">
-                            <h3 class="text-lg font-bold">{{ $recomendacion['nombre'] }}</h3>
-                            <p class="text-gray-600">{{ $recomendacion['area'] }}</p>
-                            <div class="flex items-center mt-2">
-                                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                                    <div class="bg-blue-600 h-2.5 rounded-full" style="width: {{ $recomendacion['match'] }}%"></div>
+        <h3 class="text-lg font-bold text-gray-800 mb-3">Distribución de tus intereses</h3>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+            @foreach($test->resultados['porcentajes'] as $tipo => $porcentaje)
+                <div class="bg-gray-50 p-3 rounded-lg text-center border">
+                    <div class="text-2xl font-bold {{ $tipo == $test->tipo_primario ? 'text-blue-700' : ($tipo == $test->tipo_secundario ? 'text-indigo-700' : 'text-gray-700') }}">
+                        {{ $porcentaje }}%
+                    </div>
+                    <div class="text-sm font-semibold text-gray-600">{{ $tipo }}</div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+
+    <div class="mt-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Carreras recomendadas para tu perfil</h2>
+        
+        {{-- Carreras principales --}}
+        <div class="mb-8">
+            <h3 class="text-xl font-semibold text-indigo-800 mb-4">Recomendaciones principales</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                @foreach($test->resultados['recomendaciones'] as $recomendacion)
+                    @if($recomendacion['es_primaria'] ?? true)
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden border {{ $recomendacion['es_institucional'] ? 'border-indigo-500' : 'border-gray-200' }}">
+                            <div class="p-5">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="text-lg font-bold text-gray-800">{{ $recomendacion['nombre'] }}</h4>
+                                    <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                                        {{ $recomendacion['match'] }}% compatible
+                                    </span>
                                 </div>
-                                <span class="ml-2 text-sm font-medium">{{ $recomendacion['match'] }}% de coincidencia</span>
-                            </div>
-                            <p class="mt-2">{{ $recomendacion['descripcion'] }}</p>
-                            
-                            @if(isset($recomendacion['universidades']) && count($recomendacion['universidades']) > 0)
-                                <div class="mt-4">
-                                    <h4 class="font-semibold text-gray-700">Universidades que ofrecen esta carrera:</h4>
-                                    <div class="mt-2 space-y-2">
-                                        @foreach($recomendacion['universidades'] as $universidad)
-                                            <div class="p-3 bg-gray-50 rounded border">
-                                                <div class="flex justify-between">
-                                                    <div>
-                                                        <h5 class="font-medium">{{ $universidad['nombre'] ?? 'Sin nombre' }}</h5>
-                                                        <p class="text-sm text-gray-600">{{ $universidad['departamento'] ?? '' }} - {{ $universidad['tipo'] ?? '' }}</p>
-                                                    </div>
-                                                    @if(!empty($universidad['acreditada']))
-                                                        <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Acreditada</span>
-                                                    @endif
-                                                </div>
-                                                <div class="mt-2 text-sm">
-                                                    <p>Modalidad: <span class="font-medium">{{ $universidad['modalidad'] ?? 'No especificado' }}</span></p>
-                                                    @if(!empty($universidad['duracion']))
-                                                        <p>Duración: <span class="font-medium">{{ $universidad['duracion'] }}</span></p>
-                                                    @endif
-                                                    @if(isset($universidad['costo_semestre']) && $universidad['costo_semestre'] !== null)
-                                                        <p>Costo aproximado: <span class="font-medium">${{ number_format($universidad['costo_semestre'], 0, ',', '.') }}</span></p>
-                                                    @endif
-                                                </div>
-                                                @if(!empty($universidad['sitio_web']))
-                                                    <a href="{{ $universidad['sitio_web'] }}" target="_blank" class="inline-block mt-2 text-sm text-blue-600 hover:underline">Visitar sitio web</a>
-                                                @endif
-                                            </div>
-                                        @endforeach
+                                
+                                @if(!empty($recomendacion['area']))
+                                    <p class="text-sm text-gray-600 mb-3">{{ $recomendacion['area'] }}</p>
+                                @endif
+                                
+                                @if($recomendacion['es_institucional'] ?? false)
+                                    <div class="inline-block bg-indigo-100 text-indigo-800 text-xs font-semibold mb-3 px-2 py-1 rounded">
+                                        Carrera Institucional
                                     </div>
-                                </div>
-                            @endif
+                                @endif
+                                
+                                @if(!empty($recomendacion['descripcion']))
+                                    <p class="text-sm text-gray-700 mb-3 line-clamp-2">{{ $recomendacion['descripcion'] }}</p>
+                                @endif
+                                
+                                @if(isset($recomendacion['universidades']) && count($recomendacion['universidades']) > 0)
+                                    <div class="mt-3">
+                                        <p class="text-xs font-semibold text-gray-600">Disponible en:</p>
+                                        <ul class="mt-1 space-y-1">
+                                            @foreach($recomendacion['universidades'] as $universidad)
+                                                <li class="text-xs text-gray-600">
+                                                    {{ $universidad['nombre'] }} 
+                                                    <span class="text-gray-500">
+                                                        ({{ $universidad['modalidad'] }})
+                                                    </span>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
-                    @endforeach
-                </div>
-                
-                <div class="mt-8 flex justify-center">
-                    <a href="{{ route('test.historial') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded mr-2">
-                        Ver historial de tests
-                    </a>
-                    <a href="{{ route('test.iniciar') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">
-                        Realizar nuevo test
-                    </a>
-                </div>
+                    @endif
+                @endforeach
+            </div>
+        </div>
+        
+        {{-- Carreras relacionadas por área --}}
+        <div>
+            <h3 class="text-xl font-semibold text-purple-800 mb-4">Carreras relacionadas por área</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                @foreach($test->resultados['recomendaciones'] as $recomendacion)
+                    @if(isset($recomendacion['es_primaria']) && !$recomendacion['es_primaria'])
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden border {{ $recomendacion['es_institucional'] ? 'border-indigo-500' : 'border-purple-200' }}">
+                            <div class="p-5">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="text-lg font-bold text-gray-800">{{ $recomendacion['nombre'] }}</h4>
+                                    <span class="bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                                        {{ $recomendacion['match'] }}% compatible
+                                    </span>
+                                </div>
+                                
+                                @if(!empty($recomendacion['area']))
+                                    <p class="text-sm text-gray-600 mb-3">{{ $recomendacion['area'] }}</p>
+                                @endif
+                                
+                                @if($recomendacion['es_institucional'] ?? false)
+                                    <div class="inline-block bg-indigo-100 text-indigo-800 text-xs font-semibold mb-3 px-2 py-1 rounded">
+                                        Carrera Institucional
+                                    </div>
+                                @endif
+                                
+                                @if(!empty($recomendacion['descripcion']))
+                                    <p class="text-sm text-gray-700 mb-3 line-clamp-2">{{ $recomendacion['descripcion'] }}</p>
+                                @endif
+                                
+                                @if(isset($recomendacion['universidades']) && count($recomendacion['universidades']) > 0)
+                                    <div class="mt-3">
+                                        <p class="text-xs font-semibold text-gray-600">Disponible en:</p>
+                                        <ul class="mt-1 space-y-1">
+                                            @foreach($recomendacion['universidades'] as $universidad)
+                                                <li class="text-xs text-gray-600">
+                                                    {{ $universidad['nombre'] }} 
+                                                    <span class="text-gray-500">
+                                                        ({{ $universidad['modalidad'] }})
+                                                    </span>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+                @endforeach
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-12 mb-6 bg-gray-50 rounded-xl p-6 shadow-sm">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">¿Qué hacer ahora?</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white p-4 rounded-lg shadow-sm">
+                <h3 class="font-bold text-lg text-blue-800 mb-2">Explora las carreras</h3>
+                <p class="text-gray-700 mb-3">Investiga más sobre las carreras recomendadas. Busca planes de estudio, campo laboral y universidades.</p>
+                <a href="#" class="text-blue-600 hover:underline font-medium">Ver catálogo de carreras →</a>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-sm">
+                <h3 class="font-bold text-lg text-blue-800 mb-2">Habla con orientadores</h3>
+                <p class="text-gray-700 mb-3">Agenda una cita con nuestros orientadores vocacionales para resolver tus dudas.</p>
+                <a href="#" class="text-blue-600 hover:underline font-medium">Solicitar orientación →</a>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-sm">
+                <h3 class="font-bold text-lg text-blue-800 mb-2">Comparte tus resultados</h3>
+                <p class="text-gray-700 mb-3">Descarga un PDF con tus resultados para compartirlo con familiares o asesores.</p>
+                <a href="#" class="text-blue-600 hover:underline font-medium">Descargar PDF →</a>
             </div>
         </div>
     </div>

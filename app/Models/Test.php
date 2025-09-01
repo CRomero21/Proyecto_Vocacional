@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Collection;
 
 class Test extends Model
 {
@@ -27,18 +28,28 @@ class Test extends Model
     ];
 
     /**
-     * Obtiene las respuestas asociadas a este test
-     */
-    public function respuestas()
-    {
-        return $this->hasMany(Respuesta::class);
-    }
-
-    /**
      * Obtiene el usuario que realizó el test
      */
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Obtiene las carreras recomendadas para este test
+     */
+    public function carrerasRecomendadas()
+    {
+        return $this->hasMany(TestCarreraRecomendacion::class);
+    }
+    
+    /**
+     * @deprecated Esta relación se mantiene por compatibilidad con código existente
+     * pero ya no guardamos respuestas individuales en la base de datos.
+     */
+    public function respuestas()
+    {
+        // Devuelve una colección vacía para mantener compatibilidad
+        return $this->hasMany(Respuesta::class)->whereRaw('1 = 0');
     }
 }

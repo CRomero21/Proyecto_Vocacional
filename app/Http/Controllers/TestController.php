@@ -5,9 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Test;
 use App\Models\Pregunta;
-use App\Models\Respuesta;
 use App\Models\Carrera;
-use App\Models\Universidad;
 use App\Models\TipoPersonalidad;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -52,13 +50,16 @@ class TestController extends Controller
             abort(403, 'No autorizado');
         }
 
-        $respuestasExistentes = $test->respuestas()->pluck('valor', 'pregunta_id')->toArray();
-        $preguntas = Pregunta::inRandomOrder()->get();
+        if ($test->completado) {
+            return redirect()->route('test.resultados', $test->id);
+        }
 
-        return view('test.continuar', [
+        // Preguntas en orden aleatorio para realizar el test
+        $preguntas = Pregunta::inRandomOrder()->get();
+        
+        return view('test.realizar', [
             'preguntas' => $preguntas,
             'test_id' => $test->id,
-            'respuestas_existentes' => $respuestasExistentes
         ]);
     }
 
@@ -81,11 +82,12 @@ class TestController extends Controller
 
         $tests = Test::where('user_id', $user->id)
             ->where('completado', true)
-            ->withCount('respuestas')
             ->orderByDesc('fecha_completado')
             ->get();
 
         $perfil_riasec = [];
+        $carreras_sugeridas = [];
+        
         if ($tests->count()) {
             $ultimo = $tests->first();
             $resultados = $ultimo->resultados;
@@ -93,15 +95,6 @@ class TestController extends Controller
                 $resultados = json_decode($resultados, true);
             }
             $perfil_riasec = $resultados['porcentajes'] ?? [];
-        }
-
-        $carreras_sugeridas = [];
-        if ($tests->count()) {
-            $ultimo = $tests->first();
-            $resultados = $ultimo->resultados;
-            if (is_string($resultados)) {
-                $resultados = json_decode($resultados, true);
-            }
             $carreras_sugeridas = $resultados['recomendaciones'] ?? [];
         }
 
@@ -112,14 +105,49 @@ class TestController extends Controller
         ]);
     }
 
-    public function procesarResultados(Test $test)
+    public function resultados(Test $test)
     {
-        $respuestas = $test->respuestas()->with('pregunta')->get();
-
-        if ($respuestas->isEmpty()) {
-            return redirect()->back()->with('error', 'No hay respuestas para procesar.');
+        if ($test->user_id !== auth()->id() && 
+            !in_array(auth()->user()->role ?? '', ['superadmin', 'coordinador'])) {
+            abort(403, 'No autorizado');
         }
 
+        if (!$test->completado) {
+            return redirect()->route('test.continuar', $test->id)
+                ->with('info', 'Debes completar el test primero.');
+        }
+
+        $tiposPersonalidad = TipoPersonalidad::pluck('descripcion', 'codigo')->toArray();
+
+        if (empty($tiposPersonalidad)) {
+            $tiposPersonalidad = [
+                'R' => 'Personas prácticas y orientadas a la acción. Prefieren trabajar con objetos, máquinas, herramientas, plantas o animales.',
+                'I' => 'Personas analíticas, intelectuales y curiosas. Prefieren actividades que impliquen pensar, observar, investigar y resolver problemas.',
+                'A' => 'Personas creativas, intuitivas y sensibles. Disfrutan de la auto-expresión, la innovación y actividades sin una estructura clara.',
+                'S' => 'Personas amigables, colaborativas y empáticas. Disfrutan trabajando con otras personas, ayudando, enseñando o brindando asistencia.',
+                'E' => 'Personas persuasivas, ambiciosas y seguras. Prefieren liderar, convencer a otros y tomar riesgos para lograr objetivos.',
+                'C' => 'Personas organizadas, detallistas y precisas. Prefieren seguir procedimientos establecidos y trabajar con datos de manera ordenada.',
+            ];
+        }
+
+        return view('test.resultados', compact('test', 'tiposPersonalidad'));
+    }
+
+    public function guardar(Request $request)
+    {
+        $request->validate([
+            'test_id' => 'required|exists:tests,id',
+            'respuestas' => 'required|array',
+            'respuestas.*' => 'required|integer|min:0|max:2',
+        ]);
+
+        $test = Test::findOrFail($request->test_id);
+
+        if ($test->user_id !== auth()->id()) {
+            abort(403, 'No autorizado');
+        }
+
+        // Procesar resultados directamente desde las respuestas del formulario
         $puntajes = [
             'R' => 0, 'I' => 0, 'A' => 0, 'S' => 0, 'E' => 0, 'C' => 0
         ];
@@ -127,11 +155,18 @@ class TestController extends Controller
             'R' => 0, 'I' => 0, 'A' => 0, 'S' => 0, 'E' => 0, 'C' => 0
         ];
 
-        foreach ($respuestas as $respuesta) {
-            $tipo = $respuesta->pregunta->tipo;
-            if (isset($puntajes[$tipo])) {
-                $puntajes[$tipo] += $respuesta->valor;
-                $contadores[$tipo]++;
+        // Obtener las preguntas una sola vez para optimizar
+        $preguntas = Pregunta::whereIn('id', array_keys($request->respuestas))->get()->keyBy('id');
+
+        // Procesar respuestas directamente del request
+        foreach ($request->respuestas as $pregunta_id => $valor) {
+            $pregunta = $preguntas[$pregunta_id] ?? null;
+            if ($pregunta) {
+                $tipo = $pregunta->tipo;
+                if (isset($puntajes[$tipo])) {
+                    $puntajes[$tipo] += (int)$valor;
+                    $contadores[$tipo]++;
+                }
             }
         }
 
@@ -169,6 +204,7 @@ class TestController extends Controller
             $tipoSecundario = $tiposOrdenados[1] ?? null;
         }
 
+        // Obtener recomendaciones de carreras
         $recomendaciones = $this->obtenerRecomendacionesCarreras($tipoPrimario, $tipoSecundario, $porcentajes);
 
         $resultados = [
@@ -187,11 +223,56 @@ class TestController extends Controller
             'fecha_completado' => now()
         ]);
 
+        // Guardar recomendaciones en tabla separada
+        if (Schema::hasTable('test_carrera_recomendacion')) {
+            DB::table('test_carrera_recomendacion')->where('test_id', $test->id)->delete();
+            
+            foreach ($recomendaciones as $index => $recomendacion) {
+                DB::table('test_carrera_recomendacion')->insert([
+                    'test_id' => $test->id,
+                    'carrera_id' => $recomendacion['carrera_id'],
+                    'match_porcentaje' => $recomendacion['match'],
+                    'orden' => $index + 1,
+                    'es_primaria' => $recomendacion['es_primaria'] ?? true,
+                    'area_conocimiento' => $recomendacion['area'] ?? null,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
+        }
+
         return redirect()->route('test.resultados', $test->id)
             ->with('success', 'Resultados procesados correctamente.');
     }
 
-    // --- Lógica personalizada de match según porcentajes RIASEC ---
+    public function historial()
+    {
+        $tests = Test::where('user_id', auth()->id())
+            ->where('completado', true)
+            ->orderBy('fecha_completado', 'desc')
+            ->paginate(10);
+
+        return view('test.historial', compact('tests'));
+    }
+
+    public function eliminar(Test $test)
+    {
+        if ($test->user_id !== auth()->id() && auth()->user()->role !== 'superadmin') {
+            abort(403, 'No autorizado');
+        }
+
+        // Eliminar recomendaciones de carreras
+        if (Schema::hasTable('test_carrera_recomendacion')) {
+            DB::table('test_carrera_recomendacion')->where('test_id', $test->id)->delete();
+        }
+        
+        // Ya no necesitamos eliminar respuestas porque no las guardamos
+        $test->delete();
+
+        return redirect()->route('test.historial')
+            ->with('success', 'Test eliminado correctamente.');
+    }
+    
     private function calcularMatchPersonalizado($carrera, $porcentajesUsuario)
     {
         $tiposCarrera = [];
@@ -207,10 +288,14 @@ class TestController extends Controller
             $match = intval($match / count($tiposCarrera));
         }
 
-        return $match;
+        // Dar preferencia a carreras institucionales
+        if (isset($carrera->es_institucional) && $carrera->es_institucional) {
+            $match += 10; // Bonus de 10% para carreras institucionales
+        }
+
+        return min($match, 100); // No superar el 100%
     }
 
-    
     private function obtenerRecomendacionesCarreras($tipoPrimario, $tipoSecundario, $porcentajesUsuario = [])
     {
         if (!$tipoPrimario) {
@@ -250,7 +335,7 @@ class TestController extends Controller
 
         // 3. Si faltan, rellena con otras carreras (sin coincidencia)
         $idsYaIncluidos = array_merge($idsExactas, $idsParciales);
-        $faltantes = 10 - ($exactas->count() + $parciales->count());
+        $faltantes = 5 - ($exactas->count() + $parciales->count()); // Reducimos a 5 para dejar espacio a recomendaciones por área
         $otras = collect();
         if ($faltantes > 0) {
             $otras = DB::table('carreras')
@@ -260,11 +345,13 @@ class TestController extends Controller
                 ->get();
         }
 
-        // Unir todas las carreras recomendadas
-        $todas = $exactas->concat($parciales)->concat($otras)->take(10);
-
+        // Unir todas las carreras recomendadas principales
+        $todas = $exactas->concat($parciales)->concat($otras);
+        
         // Armar recomendaciones con match personalizado
-        $recomendaciones = [];
+        $recomendacionesPrincipales = [];
+        $areasConocimiento = [];
+        
         foreach ($todas as $carrera) {
             $match = $this->calcularMatchPersonalizado($carrera, $porcentajesUsuario);
 
@@ -275,8 +362,14 @@ class TestController extends Controller
                 'descripcion' => $carrera->descripcion,
                 'match' => $match,
                 'es_institucional' => $carrera->es_institucional,
+                'es_primaria' => true,
                 'universidades' => []
             ];
+            
+            // Guardar áreas de conocimiento para buscar carreras relacionadas
+            if (!empty($carrera->area_conocimiento) && !in_array($carrera->area_conocimiento, $areasConocimiento)) {
+                $areasConocimiento[] = $carrera->area_conocimiento;
+            }
 
             // Universidades asociadas
             try {
@@ -296,7 +389,8 @@ class TestController extends Controller
                             'carrera_universidad.duracion',
                             'carrera_universidad.costo_semestre'
                         )
-                        ->get();
+                        ->get()
+                        ->toArray(); // Convertir a array para evitar el error de objeto vs array
 
                     $recomendacion['universidades'] = $universidades;
                 }
@@ -304,186 +398,122 @@ class TestController extends Controller
                 Log::error('Error al obtener universidades: ' . $e->getMessage());
             }
 
-            $recomendaciones[] = $recomendacion;
+            $recomendacionesPrincipales[] = $recomendacion;
         }
+        
+        // 4. Obtener carreras relacionadas por área de conocimiento
+        $idsCarrerasYaIncluidas = array_column($recomendacionesPrincipales, 'carrera_id');
+        
+        if (!empty($areasConocimiento)) {
+            $carrerasRelacionadas = DB::table('carreras')
+                ->whereIn('area_conocimiento', $areasConocimiento)
+                ->whereNotIn('id', $idsCarrerasYaIncluidas)
+                ->select('id', 'nombre', 'area_conocimiento', 'descripcion', 'es_institucional')
+                ->limit(5)
+                ->get();
+                
+            foreach ($carrerasRelacionadas as $carrera) {
+                $match = $this->calcularMatchPersonalizado($carrera, $porcentajesUsuario);
+                
+                $recomendacion = [
+                    'carrera_id' => $carrera->id,
+                    'nombre' => $carrera->nombre,
+                    'area' => $carrera->area_conocimiento,
+                    'descripcion' => $carrera->descripcion,
+                    'match' => $match,
+                    'es_institucional' => $carrera->es_institucional,
+                    'es_primaria' => false,
+                    'universidades' => []
+                ];
+                
+                // Universidades asociadas
+                try {
+                    if (Schema::hasTable('carrera_universidad') && Schema::hasTable('universidades')) {
+                        $universidades = DB::table('carrera_universidad')
+                            ->join('universidades', 'carrera_universidad.universidad_id', '=', 'universidades.id')
+                            ->where('carrera_id', $carrera->id)
+                            ->where('disponible', true)
+                            ->select(
+                                'universidades.id',
+                                'universidades.nombre',
+                                'universidades.departamento',
+                                'universidades.tipo',
+                                'universidades.sitio_web',
+                                'universidades.acreditada',
+                                'carrera_universidad.modalidad',
+                                'carrera_universidad.duracion',
+                                'carrera_universidad.costo_semestre'
+                            )
+                            ->get()
+                            ->toArray(); // Convertir a array para evitar el error de objeto vs array
 
-        // Ordenar por match descendente
-        usort($recomendaciones, function($a, $b) {
+                        $recomendacion['universidades'] = $universidades;
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Error al obtener universidades: ' . $e->getMessage());
+                }
+                
+                $recomendacionesPrincipales[] = $recomendacion;
+            }
+        }
+        
+        // Ordenar el conjunto completo nuevamente por match e institucional
+        usort($recomendacionesPrincipales, function($a, $b) {
+            // Si uno es institucional y el otro no, priorizar el institucional
+            if ($a['es_institucional'] && !$b['es_institucional']) return -1;
+            if (!$a['es_institucional'] && $b['es_institucional']) return 1;
+            
+            // Si uno es recomendación primaria y el otro no, priorizar la primaria
+            if ($a['es_primaria'] && !$b['es_primaria']) return -1;
+            if (!$a['es_primaria'] && $b['es_primaria']) return 1;
+            
+            // Finalmente ordenar por porcentaje de match
             return $b['match'] <=> $a['match'];
         });
-
-        return $recomendaciones;
+        
+        // Limitar a 10 resultados finales
+        return array_slice($recomendacionesPrincipales, 0, 10);
     }
-
-    private function obtenerRecomendacionesAlternativas($tipoPrimario, $tipoSecundario = [])
+    
+    /**
+     * Genera informes de análisis basados en los tests RIASEC y recomendaciones de carreras
+     */
+    public function informes()
     {
-        // 1. Carreras con al menos una universidad asociada (disponible)
-        $carrerasConUniversidad = Carrera::whereHas('universidades', function($q) {
-                $q->where('disponible', true);
-            })
-            ->with(['universidades' => function($q) {
-                $q->where('disponible', true);
-            }])
-            ->limit(10)
+        // Tests completados por tipo de personalidad
+        $porTipoPersonalidad = DB::table('test')
+            ->where('completado', true)
+            ->selectRaw('tipo_primario, COUNT(*) as total')
+            ->groupBy('tipo_primario')
+            ->orderByDesc('total')
             ->get();
-
-        // 2. Si faltan, completar con carreras sin universidad asociada
-        $faltantes = 10 - $carrerasConUniversidad->count();
-        $carrerasSinUniversidad = collect();
-        if ($faltantes > 0) {
-            $carrerasSinUniversidad = Carrera::whereDoesntHave('universidades', function($q) {
-                    $q->where('disponible', true);
-                })
-                ->limit($faltantes)
+            
+        // Carreras más recomendadas
+        $carrerasMasRecomendadas = [];
+        if (Schema::hasTable('test_carrera_recomendacion')) {
+            $carrerasMasRecomendadas = DB::table('test_carrera_recomendacion')
+                ->join('carreras', 'test_carrera_recomendacion.carrera_id', '=', 'carreras.id')
+                ->selectRaw('carreras.nombre, COUNT(*) as total, AVG(match_porcentaje) as match_promedio')
+                ->where('es_primaria', true)
+                ->groupBy('carreras.id', 'carreras.nombre')
+                ->orderByDesc('total')
+                ->limit(10)
                 ->get();
         }
-
-        // 3. Unir ambas colecciones
-        $carreras = $carrerasConUniversidad->concat($carrerasSinUniversidad);
-
-        // 4. Formatear resultados
-        $recomendaciones = [];
-        foreach ($carreras as $carrera) {
-            // Calcula el match real usando los porcentajes del usuario
-            $match = $this->calcularMatchPersonalizado($carrera, $porcentajesUsuario ?? []);
-            $recomendaciones[] = [
-                'carrera_id' => $carrera->id,
-                'nombre' => $carrera->nombre,
-                'area' => $carrera->area_conocimiento,
-                'descripcion' => $carrera->descripcion,
-                'match' => $match,
-                'universidades' => $carrera->universidades ?? []
-            ];
-        }
-
-        return $recomendaciones;
-    }
-
-    // Esta función ya no se usa para el match principal, pero la dejo por si la necesitas para otros cálculos
-    private function calcularPorcentajeMatch($userPrimario, $userSecundario, $carreraPrimario, $carreraSecundario, $esInstitucional = false)
-    {
-        $match = 0;
-
-        if ($userPrimario == $carreraPrimario && $userSecundario == $carreraSecundario) {
-            $match = 95;
-        } else if ($userPrimario == $carreraSecundario && $userSecundario == $carreraPrimario) {
-            $match = 90;
-        } else if ($userPrimario == $carreraPrimario) {
-            $match = 85;
-        } else if ($userPrimario == $carreraSecundario) {
-            $match = 80;
-        } else if ($userSecundario == $carreraPrimario) {
-            $match = 75;
-        } else {
-            $match = 65;
-        }
-
-        if ($esInstitucional) {
-            $match += 5;
-        }
-
-        return min(round($match), 100);
-    }
-
-    public function resultados(Test $test)
-    {
-        if ($test->user_id !== auth()->id() && 
-            !in_array(auth()->user()->role, ['superadmin', 'coordinador'])) {
-            abort(403, 'No autorizado');
-        }
-
-        if (!$test->completado) {
-            return $this->procesarResultados($test);
-        }
-
-        $tiposPersonalidad = TipoPersonalidad::pluck('descripcion', 'codigo')->toArray();
-
-        if (empty($tiposPersonalidad)) {
-            $tiposPersonalidad = [
-                'R' => [
-                    'nombre' => 'Realista',
-                    'descripcion' => 'Personas prácticas y orientadas a la acción. Prefieren trabajar con objetos, máquinas, herramientas, plantas o animales.',
-                    'color' => '#e74c3c',
-                ],
-                'I' => [
-                    'nombre' => 'Investigativo',
-                    'descripcion' => 'Personas analíticas, intelectuales y curiosas. Prefieren actividades que impliquen pensar, observar, investigar y resolver problemas.',
-                    'color' => '#3498db',
-                ],
-                'A' => [
-                    'nombre' => 'Artístico',
-                    'descripcion' => 'Personas creativas, intuitivas y sensibles. Disfrutan de la auto-expresión, la innovación y actividades sin una estructura clara.',
-                    'color' => '#9b59b6',
-                ],
-                'S' => [
-                    'nombre' => 'Social',
-                    'descripcion' => 'Personas amigables, colaborativas y empáticas. Disfrutan trabajando con otras personas, ayudando, enseñando o brindando asistencia.',
-                    'color' => '#2ecc71',
-                ],
-                'E' => [
-                    'nombre' => 'Emprendedor',
-                    'descripcion' => 'Personas persuasivas, ambiciosas y seguras. Prefieren liderar, convencer a otros y tomar riesgos para lograr objetivos.',
-                    'color' => '#f39c12',
-                ],
-                'C' => [
-                    'nombre' => 'Convencional',
-                    'descripcion' => 'Personas organizadas, detallistas y precisas. Prefieren seguir procedimientos establecidos y trabajar con datos de manera ordenada.',
-                    'color' => '#1abc9c',
-                ],
-            ];
-        }
-
-        return view('test.resultados', compact('test', 'tiposPersonalidad'));
-    }
-
-    public function guardar(Request $request)
-    {
-        $request->validate([
-            'test_id' => 'required|exists:tests,id',
-            'respuestas' => 'required|array',
-            'respuestas.*' => 'required|integer|min:0|max:2',
-        ]);
-
-        $test = Test::findOrFail($request->test_id);
-
-        if ($test->user_id !== auth()->id()) {
-            abort(403, 'No autorizado');
-        }
-
-        Respuesta::where('test_id', $test->id)->delete();
-
-        foreach ($request->respuestas as $pregunta_id => $valor) {
-            Respuesta::create([
-                'test_id' => $test->id,
-                'pregunta_id' => $pregunta_id,
-                'valor' => (int)$valor,
-                'user_id' => auth()->id(),
-            ]);
-        }
-
-        return $this->procesarResultados($test);
-    }
-
-    public function historial()
-    {
-        $tests = Test::where('user_id', auth()->id())
-            ->where('completado', true)
-            ->orderBy('fecha_completado', 'desc')
-            ->paginate(10);
-
-        return view('test.historial', compact('tests'));
-    }
-
-    public function eliminar(Test $test)
-    {
-        if ($test->user_id !== auth()->id() && auth()->user()->role !== 'superadmin') {
-            abort(403, 'No autorizado');
-        }
-
-        Respuesta::where('test_id', $test->id)->delete();
-        $test->delete();
-
-        return redirect()->route('test.historial')
-            ->with('success', 'Test eliminado correctamente.');
+        
+        // Distribución por áreas de conocimiento
+        $porAreaConocimiento = DB::table('test_carrera_recomendacion')
+            ->join('carreras', 'test_carrera_recomendacion.carrera_id', '=', 'carreras.id')
+            ->selectRaw('carreras.area_conocimiento, COUNT(*) as total')
+            ->whereNotNull('carreras.area_conocimiento')
+            ->groupBy('carreras.area_conocimiento')
+            ->orderByDesc('total')
+            ->get();
+        
+        return view('informes.index', compact(
+            'porTipoPersonalidad',
+            'carrerasMasRecomendadas',
+            'porAreaConocimiento'
+        ));
     }
 }
