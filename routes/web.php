@@ -59,7 +59,8 @@ Route::get('/coordinador-estudiante/{id}', [CoordinadorController::class, 'detal
 Route::get('/coordinador-estadisticas', [CoordinadorController::class, 'estadisticas'])
     ->middleware(['auth'])
     ->name('coordinador.estadisticas');
-
+Route::post('/test/{test}/retroalimentacion', [TestController::class, 'guardarRetroalimentacion'])
+    ->name('test.retroalimentacion');
 // RESTO DE RUTAS PROTEGIDAS
 Route::middleware(['auth'])->group(function () {
     // Gestión de perfil

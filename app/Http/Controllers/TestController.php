@@ -204,15 +204,22 @@ class TestController extends Controller
             $tipoSecundario = $tiposOrdenados[1] ?? null;
         }
 
-        // Obtener recomendaciones de carreras
-        $recomendaciones = $this->obtenerRecomendacionesCarreras($tipoPrimario, $tipoSecundario, $porcentajes);
+        // Obtener recomendaciones de carreras con el algoritmo mejorado
+        $recomendaciones = $this->obtenerRecomendacionesFlexibles($tipoPrimario, $tipoSecundario, $porcentajes);
+
+        // Asegurarse de que $recomendaciones nunca sea null
+        if ($recomendaciones === null) {
+            $recomendaciones = []; // Convertir a array vacío si es null
+            Log::warning('No se encontraron recomendaciones para el perfil RIASEC: ' . $tipoPrimario . '-' . $tipoSecundario);
+        }
 
         $resultados = [
             'puntajes' => $puntajes,
             'promedios' => $promedios,
             'porcentajes' => $porcentajes,
             'recomendaciones' => $recomendaciones,
-            'fecha_procesamiento' => now()->toDateTimeString()
+            'fecha_procesamiento' => now()->toDateTimeString(),
+            'retroalimentacion' => null // Campo para guardar retroalimentación del usuario
         ];
 
         $test->update([
@@ -223,8 +230,8 @@ class TestController extends Controller
             'fecha_completado' => now()
         ]);
 
-        // Guardar recomendaciones en tabla separada
-        if (Schema::hasTable('test_carrera_recomendacion')) {
+        // Guardar recomendaciones en tabla separada (protegido contra null)
+        if (Schema::hasTable('test_carrera_recomendacion') && is_array($recomendaciones) && !empty($recomendaciones)) {
             DB::table('test_carrera_recomendacion')->where('test_id', $test->id)->delete();
             
             foreach ($recomendaciones as $index => $recomendacion) {
@@ -243,6 +250,38 @@ class TestController extends Controller
 
         return redirect()->route('test.resultados', $test->id)
             ->with('success', 'Resultados procesados correctamente.');
+    }
+
+    public function guardarRetroalimentacion(Request $request, Test $test)
+    {
+        $request->validate([
+            'utilidad' => 'required|integer|min:1|max:5',
+            'precision' => 'required|integer|min:1|max:5',
+            'comentario' => 'nullable|string|max:500',
+            'carrera_seleccionada' => 'nullable|exists:carreras,id'
+        ]);
+        
+        // Obtener resultados actuales
+        $resultados = $test->resultados;
+        if (is_string($resultados)) {
+            $resultados = json_decode($resultados, true);
+        }
+        
+        // Añadir retroalimentación
+        $resultados['retroalimentacion'] = [
+            'utilidad' => $request->utilidad,
+            'precision' => $request->precision,
+            'comentario' => $request->comentario,
+            'carrera_seleccionada' => $request->carrera_seleccionada,
+            'fecha' => now()->toDateTimeString()
+        ];
+        
+        // Actualizar el test
+        $test->update([
+            'resultados' => $resultados
+        ]);
+        
+        return back()->with('success', '¡Gracias por tu retroalimentación! Nos ayudará a mejorar.');
     }
 
     public function historial()
@@ -273,147 +312,88 @@ class TestController extends Controller
             ->with('success', 'Test eliminado correctamente.');
     }
     
-    private function calcularMatchPersonalizado($carrera, $porcentajesUsuario)
+    /**
+     * Obtiene recomendaciones de carreras de manera flexible
+     * Siempre retorna un array (nunca null) y muestra carreras aproximadas
+     */
+    private function obtenerRecomendacionesFlexibles($tipoPrimario, $tipoSecundario, $porcentajesUsuario = [])
     {
-        $tiposCarrera = [];
-        if (isset($carrera->tipo_primario)) $tiposCarrera[] = $carrera->tipo_primario;
-        if (isset($carrera->tipo_secundario)) $tiposCarrera[] = $carrera->tipo_secundario;
-
-        $match = 0;
-        foreach ($tiposCarrera as $tipo) {
-            $match += $porcentajesUsuario[$tipo] ?? 0;
-        }
-
-        if (count($tiposCarrera) > 0) {
-            $match = intval($match / count($tiposCarrera));
-        }
-
-        // Dar preferencia a carreras institucionales
-        if (isset($carrera->es_institucional) && $carrera->es_institucional) {
-            $match += 10; // Bonus de 10% para carreras institucionales
-        }
-
-        return min($match, 100); // No superar el 100%
-    }
-
-    private function obtenerRecomendacionesCarreras($tipoPrimario, $tipoSecundario, $porcentajesUsuario = [])
-    {
-        if (!$tipoPrimario) {
-            return [];
-        }
-
-        // 1. Coincidencia exacta (primario y secundario)
-        $exactas = DB::table('carrera_tipo')
-            ->join('carreras', 'carrera_tipo.carrera_id', '=', 'carreras.id')
-            ->where('carrera_tipo.tipo_primario', $tipoPrimario)
-            ->where('carrera_tipo.tipo_secundario', $tipoSecundario)
-            ->select('carreras.id', 'carreras.nombre', 'carreras.area_conocimiento', 
-                    'carreras.descripcion', 'carreras.es_institucional',
-                    'carrera_tipo.tipo_primario', 'carrera_tipo.tipo_secundario')
-            ->get();
-
-        $idsExactas = $exactas->pluck('id')->toArray();
-
-        // 2. Coincidencia parcial (solo primario o secundario, pero no ambos)
-        $parciales = DB::table('carrera_tipo')
-            ->join('carreras', 'carrera_tipo.carrera_id', '=', 'carreras.id')
-            ->where(function($q) use ($tipoPrimario, $tipoSecundario) {
-                $q->where('carrera_tipo.tipo_primario', $tipoPrimario)
-                ->orWhere('carrera_tipo.tipo_secundario', $tipoSecundario);
-            })
-            ->where(function($q) use ($tipoPrimario, $tipoSecundario) {
-               $q->where('carrera_tipo.tipo_primario', '!=', $tipoPrimario)
-                ->orWhere('carrera_tipo.tipo_secundario', '!=', $tipoSecundario);
-            })
-            ->whereNotIn('carreras.id', $idsExactas)
-            ->select('carreras.id', 'carreras.nombre', 'carreras.area_conocimiento', 
-                    'carreras.descripcion', 'carreras.es_institucional',
-                    'carrera_tipo.tipo_primario', 'carrera_tipo.tipo_secundario')
-            ->get();
-
-        $idsParciales = $parciales->pluck('id')->toArray();
-
-        // 3. Si faltan, rellena con otras carreras (sin coincidencia)
-        $idsYaIncluidos = array_merge($idsExactas, $idsParciales);
-        $faltantes = 5 - ($exactas->count() + $parciales->count()); // Reducimos a 5 para dejar espacio a recomendaciones por área
-        $otras = collect();
-        if ($faltantes > 0) {
-            $otras = DB::table('carreras')
-                ->whereNotIn('id', $idsYaIncluidos)
-                ->select('id', 'nombre', 'area_conocimiento', 'descripcion', 'es_institucional')
-                ->limit($faltantes)
-                ->get();
-        }
-
-        // Unir todas las carreras recomendadas principales
-        $todas = $exactas->concat($parciales)->concat($otras);
-        
-        // Armar recomendaciones con match personalizado
-        $recomendacionesPrincipales = [];
-        $areasConocimiento = [];
-        
-        foreach ($todas as $carrera) {
-            $match = $this->calcularMatchPersonalizado($carrera, $porcentajesUsuario);
-
-            $recomendacion = [
-                'carrera_id' => $carrera->id,
-                'nombre' => $carrera->nombre,
-                'area' => $carrera->area_conocimiento,
-                'descripcion' => $carrera->descripcion,
-                'match' => $match,
-                'es_institucional' => $carrera->es_institucional,
-                'es_primaria' => true,
-                'universidades' => []
-            ];
-            
-            // Guardar áreas de conocimiento para buscar carreras relacionadas
-            if (!empty($carrera->area_conocimiento) && !in_array($carrera->area_conocimiento, $areasConocimiento)) {
-                $areasConocimiento[] = $carrera->area_conocimiento;
-            }
-
-            // Universidades asociadas
-            try {
-                if (Schema::hasTable('carrera_universidad') && Schema::hasTable('universidades')) {
-                    $universidades = DB::table('carrera_universidad')
-                        ->join('universidades', 'carrera_universidad.universidad_id', '=', 'universidades.id')
-                        ->where('carrera_id', $carrera->id)
-                        ->where('disponible', true)
-                        ->select(
-                            'universidades.id',
-                            'universidades.nombre',
-                            'universidades.departamento',
-                            'universidades.tipo',
-                            'universidades.sitio_web',
-                            'universidades.acreditada',
-                            'carrera_universidad.modalidad',
-                            'carrera_universidad.duracion',
-                            'carrera_universidad.costo_semestre'
-                        )
-                        ->get()
-                        ->toArray(); // Convertir a array para evitar el error de objeto vs array
-
-                    $recomendacion['universidades'] = $universidades;
-                }
-            } catch (\Exception $e) {
-                Log::error('Error al obtener universidades: ' . $e->getMessage());
-            }
-
-            $recomendacionesPrincipales[] = $recomendacion;
-        }
-        
-        // 4. Obtener carreras relacionadas por área de conocimiento
-        $idsCarrerasYaIncluidas = array_column($recomendacionesPrincipales, 'carrera_id');
-        
-        if (!empty($areasConocimiento)) {
-            $carrerasRelacionadas = DB::table('carreras')
-                ->whereIn('area_conocimiento', $areasConocimiento)
-                ->whereNotIn('id', $idsCarrerasYaIncluidas)
-                ->select('id', 'nombre', 'area_conocimiento', 'descripcion', 'es_institucional')
-                ->limit(5)
-                ->get();
+        try {
+            // Incluso si no hay tipo primario, intentaremos encontrar recomendaciones
+            if (!$tipoPrimario) {
+                // Tomar los dos tipos con mayor porcentaje
+                arsort($porcentajesUsuario);
+                $tiposClaves = array_keys($porcentajesUsuario);
+                $tipoPrimario = $tiposClaves[0] ?? 'R'; // Valor por defecto
+                $tipoSecundario = $tiposClaves[1] ?? 'I'; // Valor por defecto
                 
-            foreach ($carrerasRelacionadas as $carrera) {
+                Log::info("No hay tipo primario, usando los de mayor porcentaje: $tipoPrimario y $tipoSecundario");
+            }
+
+            // 1. Obtener TODAS las carreras de la base de datos
+            $todasCarreras = DB::table('carreras')
+                ->leftJoin('carrera_tipo', 'carreras.id', '=', 'carrera_tipo.carrera_id')
+                ->select(
+                    'carreras.id', 
+                    'carreras.nombre', 
+                    'carreras.area_conocimiento', 
+                    'carreras.descripcion', 
+                    'carreras.es_institucional',
+                    'carrera_tipo.tipo_primario', 
+                    'carrera_tipo.tipo_secundario'
+                )
+                ->get();
+            
+            // Si no hay carreras, crear un array vacío
+            if ($todasCarreras->isEmpty()) {
+                Log::warning('No hay carreras en la base de datos');
+                return [];
+            }
+            
+            // 2. Calcular el match para CADA carrera
+            $carrerasConMatch = [];
+            
+            foreach ($todasCarreras as $carrera) {
+                // Si la carrera no tiene tipos RIASEC asignados, usar valores predeterminados
+                if (empty($carrera->tipo_primario)) {
+                    $carrera->tipo_primario = 'R';
+                }
+                if (empty($carrera->tipo_secundario)) {
+                    $carrera->tipo_secundario = 'I';
+                }
+                
+                // Calcular match con matriz de compatibilidad
                 $match = $this->calcularMatchPersonalizado($carrera, $porcentajesUsuario);
+                
+                // Determinar si es recomendación primaria o secundaria
+                $esPrimaria = ($match >= 50);
+                
+                // IMPORTANTE: Incluir TODAS las carreras, no solo las que tienen alto match
+                $carrerasConMatch[] = [
+                    'carrera' => $carrera,
+                    'match' => $match,
+                    'es_primaria' => $esPrimaria
+                ];
+            }
+            
+            // 3. Ordenar carreras por porcentaje de match (de mayor a menor)
+            usort($carrerasConMatch, function($a, $b) {
+                return $b['match'] <=> $a['match'];
+            });
+            
+            // 4. Limitar a 10 resultados y formatear para el resultado final
+            $carrerasConMatch = array_slice($carrerasConMatch, 0, 10);
+            
+            $recomendacionesFinal = [];
+            
+            foreach ($carrerasConMatch as $item) {
+                $carrera = $item['carrera'];
+                $match = $item['match'];
+                $esPrimaria = $item['es_primaria'];
+                
+                // Obtener información adicional
+                $campoLaboral = $this->obtenerCampoLaboral($carrera->id);
+                $habilidades = $this->obtenerHabilidadesCarrera($carrera->id);
                 
                 $recomendacion = [
                     'carrera_id' => $carrera->id,
@@ -422,11 +402,13 @@ class TestController extends Controller
                     'descripcion' => $carrera->descripcion,
                     'match' => $match,
                     'es_institucional' => $carrera->es_institucional,
-                    'es_primaria' => false,
-                    'universidades' => []
+                    'es_primaria' => $esPrimaria,
+                    'universidades' => [],
+                    'campo_laboral' => $campoLaboral,
+                    'habilidades' => $habilidades
                 ];
                 
-                // Universidades asociadas
+                // Obtener universidades asociadas
                 try {
                     if (Schema::hasTable('carrera_universidad') && Schema::hasTable('universidades')) {
                         $universidades = DB::table('carrera_universidad')
@@ -445,34 +427,160 @@ class TestController extends Controller
                                 'carrera_universidad.costo_semestre'
                             )
                             ->get()
-                            ->toArray(); // Convertir a array para evitar el error de objeto vs array
+                            ->toArray();
 
                         $recomendacion['universidades'] = $universidades;
                     }
                 } catch (\Exception $e) {
                     Log::error('Error al obtener universidades: ' . $e->getMessage());
+                    $recomendacion['universidades'] = [];
                 }
                 
-                $recomendacionesPrincipales[] = $recomendacion;
+                $recomendacionesFinal[] = $recomendacion;
+            }
+            
+            // Asegurarnos de siempre devolver un array, nunca null
+            return $recomendacionesFinal;
+            
+        } catch (\Exception $e) {
+            // Registrar el error para diagnóstico
+            Log::error('Error en obtenerRecomendacionesFlexibles: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+            
+            // Devolver un array vacío en caso de error
+            return [];
+        }
+    }
+    
+    /**
+     * Calcula el match personalizado entre un perfil RIASEC y una carrera
+     */
+    private function calcularMatchPersonalizado($carrera, $porcentajesUsuario)
+    {
+        // Consideramos todos los tipos RIASEC con una ponderación más precisa
+        $match = 0;
+        $pesoTotal = 0;
+        
+        // Matriz de compatibilidad entre tipos RIASEC
+        // Los valores representan qué tan compatibles son los tipos entre sí
+        $compatibilidadRIASEC = [
+            'R' => ['R' => 1.0, 'I' => 0.7, 'A' => 0.3, 'S' => 0.2, 'E' => 0.3, 'C' => 0.6],
+            'I' => ['R' => 0.7, 'I' => 1.0, 'A' => 0.6, 'S' => 0.4, 'E' => 0.3, 'C' => 0.4],
+            'A' => ['R' => 0.3, 'I' => 0.6, 'A' => 1.0, 'S' => 0.7, 'E' => 0.5, 'C' => 0.2],
+            'S' => ['R' => 0.2, 'I' => 0.4, 'A' => 0.7, 'S' => 1.0, 'E' => 0.8, 'C' => 0.3],
+            'E' => ['R' => 0.3, 'I' => 0.3, 'A' => 0.5, 'S' => 0.8, 'E' => 1.0, 'C' => 0.7],
+            'C' => ['R' => 0.6, 'I' => 0.4, 'A' => 0.2, 'S' => 0.3, 'E' => 0.7, 'C' => 1.0]
+        ];
+        
+        // Calcular match para el tipo primario y secundario de la carrera
+        if (isset($carrera->tipo_primario)) {
+            $tipoPrimarioCarrera = $carrera->tipo_primario;
+            
+            // Para cada tipo del usuario, calcular su contribución al match
+            foreach ($porcentajesUsuario as $tipoUsuario => $porcentaje) {
+                // Obtener el factor de compatibilidad entre este tipo del usuario y el tipo primario de la carrera
+                $factorCompatibilidad = $compatibilidadRIASEC[$tipoPrimarioCarrera][$tipoUsuario] ?? 0;
+                
+                // El peso es mayor para el tipo primario de la carrera
+                $peso = $factorCompatibilidad * 0.6; // 60% de peso para el tipo primario
+                $match += ($porcentaje * $peso / 100);
+                $pesoTotal += $peso;
             }
         }
         
-        // Ordenar el conjunto completo nuevamente por match e institucional
-        usort($recomendacionesPrincipales, function($a, $b) {
-            // Si uno es institucional y el otro no, priorizar el institucional
-            if ($a['es_institucional'] && !$b['es_institucional']) return -1;
-            if (!$a['es_institucional'] && $b['es_institucional']) return 1;
+        if (isset($carrera->tipo_secundario)) {
+            $tipoSecundarioCarrera = $carrera->tipo_secundario;
             
-            // Si uno es recomendación primaria y el otro no, priorizar la primaria
-            if ($a['es_primaria'] && !$b['es_primaria']) return -1;
-            if (!$a['es_primaria'] && $b['es_primaria']) return 1;
-            
-            // Finalmente ordenar por porcentaje de match
-            return $b['match'] <=> $a['match'];
-        });
+            // Para cada tipo del usuario, calcular su contribución al match
+            foreach ($porcentajesUsuario as $tipoUsuario => $porcentaje) {
+                // Obtener el factor de compatibilidad entre este tipo del usuario y el tipo secundario de la carrera
+                $factorCompatibilidad = $compatibilidadRIASEC[$tipoSecundarioCarrera][$tipoUsuario] ?? 0;
+                
+                // El peso es menor para el tipo secundario de la carrera
+                $peso = $factorCompatibilidad * 0.4; // 40% de peso para el tipo secundario
+                $match += ($porcentaje * $peso / 100);
+                $pesoTotal += $peso;
+            }
+        }
         
-        // Limitar a 10 resultados finales
-        return array_slice($recomendacionesPrincipales, 0, 10);
+        // Normalizar el match a un valor entre 0 y 100
+        $matchFinal = $pesoTotal > 0 ? ($match / $pesoTotal) * 100 : 0;
+        
+        // Redondear y limitar a 100
+        return min(round($matchFinal), 100);
+    }
+    
+    // Métodos para obtener información adicional (datos dummy si no existen tablas)
+    private function obtenerCampoLaboral($carreraId)
+    {
+        $camposLaborales = [
+            // Datos para carreras populares
+            1 => "Hospitales, clínicas, centros de salud, investigación médica, docencia",
+            2 => "Desarrollo de software, ciberseguridad, análisis de datos, inteligencia artificial",
+            3 => "Empresas públicas y privadas, consultorías, auditorías, emprendimientos",
+            4 => "Bufetes de abogados, fiscalía, juzgados, asesorías jurídicas, notarías",
+            5 => "Hospitales, clínicas dentales privadas, centros de salud, docencia",
+            6 => "Laboratorios clínicos, industria farmacéutica, investigación, desarrollo de medicamentos",
+            7 => "Instituciones educativas, centros de investigación pedagógica, editoriales educativas",
+            8 => "Agencias de publicidad, medios de comunicación, departamentos de marketing",
+            9 => "Constructoras, consultoras, sector público, empresas de infraestructura",
+            10 => "Hospitales, clínicas, centros deportivos, rehabilitación, gimnasios"
+        ];
+        
+        // Si existe el campo laboral en la base de datos, retornarlo
+        try {
+            if (Schema::hasTable('carrera_info')) {
+                $info = DB::table('carrera_info')
+                    ->where('carrera_id', $carreraId)
+                    ->value('campo_laboral');
+                
+                if ($info) {
+                    return $info;
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Error al obtener campo laboral: ' . $e->getMessage());
+        }
+        
+        // Si no existe, retornar un valor predeterminado o el de la lista dummy
+        return $camposLaborales[$carreraId] ?? 
+               "Empresas públicas y privadas, consultoría, emprendimientos, docencia e investigación.";
+    }
+    
+    private function obtenerHabilidadesCarrera($carreraId)
+    {
+        $habilidadesCarreras = [
+            // Datos para carreras populares
+            1 => ["Pensamiento analítico", "Empatía", "Toma de decisiones", "Comunicación efectiva", "Trabajo bajo presión"],
+            2 => ["Lógica", "Resolución de problemas", "Creatividad", "Trabajo en equipo", "Aprendizaje continuo"],
+            3 => ["Análisis numérico", "Toma de decisiones", "Liderazgo", "Comunicación", "Negociación"],
+            4 => ["Argumentación", "Análisis crítico", "Comunicación oral y escrita", "Negociación", "Investigación"],
+            5 => ["Precisión", "Habilidades manuales", "Comunicación", "Empatía", "Trabajo en equipo"],
+            6 => ["Precisión", "Investigación", "Análisis", "Atención al detalle", "Metodología científica"],
+            7 => ["Comunicación", "Empatía", "Creatividad", "Adaptabilidad", "Planificación"],
+            8 => ["Creatividad", "Comunicación", "Análisis de mercado", "Pensamiento estratégico", "Trabajo en equipo"],
+            9 => ["Cálculo", "Visión espacial", "Resolución de problemas", "Trabajo en equipo", "Liderazgo"],
+            10 => ["Conocimiento anatómico", "Empatía", "Comunicación", "Trabajo en equipo", "Precisión"]
+        ];
+        
+        // Si existen habilidades en la base de datos, retornarlas
+        try {
+            if (Schema::hasTable('carrera_info')) {
+                $info = DB::table('carrera_info')
+                    ->where('carrera_id', $carreraId)
+                    ->value('habilidades');
+                
+                if ($info) {
+                    return json_decode($info, true);
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Error al obtener habilidades: ' . $e->getMessage());
+        }
+        
+        // Si no existen, retornar un valor predeterminado o de la lista dummy
+        return $habilidadesCarreras[$carreraId] ?? 
+               ["Comunicación", "Trabajo en equipo", "Análisis", "Resolución de problemas", "Adaptabilidad"];
     }
     
     /**
@@ -515,5 +623,99 @@ class TestController extends Controller
             'carrerasMasRecomendadas',
             'porAreaConocimiento'
         ));
+    }
+    
+    /**
+     * Método para actualizar las preguntas RIASEC con preguntas mejoradas
+     */
+    public function actualizarPreguntasRIASEC()
+    {
+        // Eliminar preguntas existentes
+        DB::table('preguntas')->truncate();
+        
+        $preguntas = [
+            // Preguntas tipo Realista (R)
+            ['texto' => 'Me gusta trabajar con herramientas, maquinaria o equipos técnicos', 'tipo' => 'R'],
+            ['texto' => 'Disfruto reparando o construyendo cosas con mis manos', 'tipo' => 'R'],
+            ['texto' => 'Prefiero actividades que me permitan ver resultados tangibles y concretos', 'tipo' => 'R'],
+            ['texto' => 'Me interesa entender cómo funcionan los motores, aparatos o sistemas mecánicos', 'tipo' => 'R'],
+            ['texto' => 'Disfruto las actividades al aire libre o que impliquen esfuerzo físico', 'tipo' => 'R'],
+            ['texto' => 'Prefiero resolver problemas prácticos en lugar de teóricos', 'tipo' => 'R'],
+            ['texto' => 'Me gusta desarmar cosas para ver cómo funcionan por dentro', 'tipo' => 'R'],
+            ['texto' => 'Prefiero trabajar con objetos en lugar de con personas o ideas abstractas', 'tipo' => 'R'],
+            ['texto' => 'Me considero una persona práctica y orientada a la acción', 'tipo' => 'R'],
+            ['texto' => 'Disfruto actividades como la carpintería, mecánica, electricidad o jardinería', 'tipo' => 'R'],
+            
+            // Preguntas tipo Investigativo (I)
+            ['texto' => 'Me gusta resolver problemas complejos mediante el análisis lógico', 'tipo' => 'I'],
+            ['texto' => 'Disfruto investigando y descubriendo nuevos conocimientos', 'tipo' => 'I'],
+            ['texto' => 'Me interesa entender fenómenos o teorías científicas', 'tipo' => 'I'],
+            ['texto' => 'Prefiero actividades que impliquen pensamiento abstracto', 'tipo' => 'I'],
+            ['texto' => 'Me gusta diseñar experimentos para probar hipótesis', 'tipo' => 'I'],
+            ['texto' => 'Disfruto analizando datos y encontrando patrones o tendencias', 'tipo' => 'I'],
+            ['texto' => 'Me interesa leer sobre avances científicos o tecnológicos', 'tipo' => 'I'],
+            ['texto' => 'Prefiero trabajar en problemas que requieran precisión y atención al detalle', 'tipo' => 'I'],
+            ['texto' => 'Me considero una persona curiosa y analítica', 'tipo' => 'I'],
+            ['texto' => 'Disfruto resolviendo acertijos, rompecabezas o problemas matemáticos', 'tipo' => 'I'],
+            
+            // Preguntas tipo Artístico (A)
+            ['texto' => 'Me gusta expresarme de manera creativa o artística', 'tipo' => 'A'],
+            ['texto' => 'Disfruto actividades que me permitan usar mi imaginación', 'tipo' => 'A'],
+            ['texto' => 'Me interesa crear o interpretar música, arte, literatura o diseño', 'tipo' => 'A'],
+            ['texto' => 'Prefiero entornos de trabajo donde pueda innovar y ser original', 'tipo' => 'A'],
+            ['texto' => 'Me gusta pensar en nuevas formas de hacer las cosas', 'tipo' => 'A'],
+            ['texto' => 'Disfruto actividades que no tengan instrucciones o reglas estrictas', 'tipo' => 'A'],
+            ['texto' => 'Me considero una persona creativa e intuitiva', 'tipo' => 'A'],
+            ['texto' => 'Prefiero proyectos que me permitan expresar mi individualidad', 'tipo' => 'A'],
+            ['texto' => 'Me interesa el significado emocional o estético de las cosas', 'tipo' => 'A'],
+            ['texto' => 'Disfruto apreciando el arte, la música, el cine o la literatura', 'tipo' => 'A'],
+            
+            // Preguntas tipo Social (S)
+            ['texto' => 'Me gusta ayudar a otras personas con sus problemas', 'tipo' => 'S'],
+            ['texto' => 'Disfruto enseñando o compartiendo conocimientos con los demás', 'tipo' => 'S'],
+            ['texto' => 'Me interesa entender las motivaciones y comportamientos de las personas', 'tipo' => 'S'],
+            ['texto' => 'Prefiero trabajar en equipo en lugar de individualmente', 'tipo' => 'S'],
+            ['texto' => 'Me gusta facilitar la comunicación entre personas o grupos', 'tipo' => 'S'],
+            ['texto' => 'Disfruto escuchando y ofreciendo apoyo emocional a los demás', 'tipo' => 'S'],
+            ['texto' => 'Me considero una persona empática y comprensiva', 'tipo' => 'S'],
+            ['texto' => 'Prefiero trabajar para mejorar el bienestar de las personas', 'tipo' => 'S'],
+            ['texto' => 'Me interesa participar en actividades comunitarias o de voluntariado', 'tipo' => 'S'],
+            ['texto' => 'Disfruto organizando eventos sociales o grupales', 'tipo' => 'S'],
+            
+            // Preguntas tipo Emprendedor (E)
+            ['texto' => 'Me gusta liderar grupos o proyectos', 'tipo' => 'E'],
+            ['texto' => 'Disfruto persuadiendo o influyendo en otras personas', 'tipo' => 'E'],
+            ['texto' => 'Me interesa iniciar y desarrollar mis propios proyectos o negocios', 'tipo' => 'E'],
+            ['texto' => 'Prefiero tomar decisiones y asumir responsabilidades', 'tipo' => 'E'],
+            ['texto' => 'Me gusta competir y superar desafíos para alcanzar objetivos', 'tipo' => 'E'],
+            ['texto' => 'Disfruto negociando y llegando a acuerdos ventajosos', 'tipo' => 'E'],
+            ['texto' => 'Me considero una persona ambiciosa y orientada al logro', 'tipo' => 'E'],
+            ['texto' => 'Prefiero roles donde pueda motivar y dirigir a otros', 'tipo' => 'E'],
+            ['texto' => 'Me interesa la estrategia y la planificación para obtener resultados', 'tipo' => 'E'],
+            ['texto' => 'Disfruto hablando en público o presentando ideas', 'tipo' => 'E'],
+            
+            // Preguntas tipo Convencional (C)
+            ['texto' => 'Me gusta trabajar con datos, números o registros de manera ordenada', 'tipo' => 'C'],
+            ['texto' => 'Disfruto siguiendo procedimientos claros y bien definidos', 'tipo' => 'C'],
+            ['texto' => 'Me interesa organizar información y mantener sistemas eficientes', 'tipo' => 'C'],
+            ['texto' => 'Prefiero entornos de trabajo estructurados y predecibles', 'tipo' => 'C'],
+            ['texto' => 'Me gusta prestar atención a los detalles y la precisión', 'tipo' => 'C'],
+            ['texto' => 'Disfruto completando tareas que requieren meticulosidad', 'tipo' => 'C'],
+            ['texto' => 'Me considero una persona responsable y confiable', 'tipo' => 'C'],
+            ['texto' => 'Prefiero seguir reglas establecidas en lugar de improvisar', 'tipo' => 'C'],
+            ['texto' => 'Me interesa mantener registros exactos y actualizados', 'tipo' => 'C'],
+            ['texto' => 'Disfruto clasificando y organizando información o materiales', 'tipo' => 'C'],
+        ];
+        
+        foreach ($preguntas as $pregunta) {
+            DB::table('preguntas')->insert([
+                'texto' => $pregunta['texto'],
+                'tipo' => $pregunta['tipo'],
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+        }
+        
+        return "Se actualizaron " . count($preguntas) . " preguntas para el test RIASEC.";
     }
 }
