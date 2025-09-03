@@ -4,263 +4,443 @@
 @section('title', 'Panel Superadministrador')
 
 @section('content')
-<!-- Contenedor principal con Alpine.js para manejar el estado -->
-<div class="flex min-h-screen bg-gray-50" x-data="{ opcion: 'bienvenida', sidebarOpen: true }">
-    <!-- Menú lateral con animación para mostrarse/ocultarse -->
-    <aside class="bg-gradient-to-b from-blue-800 to-blue-900 text-white py-8 px-4 flex flex-col items-start fixed left-0 top-16 bottom-0 z-10 shadow-lg transition-all duration-300"
-           :class="sidebarOpen ? 'w-64' : 'w-20'">
-        
-        <!-- Cabecera del menú lateral -->
-        <div class="flex items-center mb-8 px-2 justify-between w-full">
-            <!-- Logo y título - se oculta el texto cuando la barra está colapsada -->
-            <div class="flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-3 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <h2 class="text-xl font-bold text-blue-100 transition-opacity duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 hidden'">Panel Admin</h2>
-            </div>
-            
-            <!-- Botón para colapsar/expandir el menú -->
-            <button @click="sidebarOpen = !sidebarOpen" class="text-blue-300 hover:text-white focus:outline-none">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                          :d="sidebarOpen ? 'M11 19l-7-7 7-7m8 14l-7-7 7-7' : 'M13 5l7 7-7 7M5 5l7 7-7 7'" />
-                </svg>
-            </button>
-        </div>
-        
-        <!-- Menú de navegación -->
-        <nav class="w-full">
-            <ul class="space-y-2 w-full">
-                <!-- Elemento de menú con texto que se oculta cuando la barra está colapsada -->
-                <li>
-                    <button @click="opcion = 'informes'" class="w-full flex items-center px-4 py-3 rounded-lg transition-all duration-200"
-                    :class="opcion === 'informes' ? 'bg-blue-700 shadow-md' : 'hover:bg-blue-700/50'">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        <span class="transition-opacity duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 hidden'">Ver Informes</span>
-                    </button>
-                </li>
-                <li>
-                    <button @click="opcion = 'estadisticas'" class="w-full flex items-center px-4 py-3 rounded-lg transition-all duration-200"
-                    :class="opcion === 'estadisticas' ? 'bg-blue-700 shadow-md' : 'hover:bg-blue-700/50'">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                        <span class="transition-opacity duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 hidden'">Estadísticas</span>
-                    </button>
-                </li>
-                <li>
-                    <!-- Enlace directo con texto que se oculta -->
-                    <a href="{{ route('admin.usuarios.index') }}" class="w-full flex items-center px-4 py-3 rounded-lg transition-all duration-200 hover:bg-blue-700/50">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                        <span class="transition-opacity duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 hidden'">Gestionar Usuarios</span>
-                    </a>
-                </li>
-                
-                <!-- Sección de gestión académica con iconos descriptivos -->
-                <li class="pt-2">
-                    <a href="{{ route('admin.preguntas.index') }}" class="w-full flex items-center px-4 py-3 bg-green-700 hover:bg-green-800 rounded-lg transition-all duration-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span class="transition-opacity duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 hidden'">Gestionar Preguntas</span>
-                    </a>
-                </li>
-                
-                <li class="pt-2">
-                    <a href="{{ route('admin.carreras.index') }}" class="w-full flex items-center px-4 py-3 bg-indigo-700 hover:bg-indigo-800 rounded-lg transition-all duration-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                        </svg>
-                        <span class="transition-opacity duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 hidden'">Gestionar Carreras</span>
-                    </a>
-                </li>
+<div class="bg-blue-900 min-h-screen" x-data="panelApp">
+    <div class="flex">
+        <!-- Panel lateral -->
+        <div class="w-64 bg-blue-800 min-h-screen p-4 text-white">
+            <h2 class="flex items-center text-xl mb-6">
+                <span class="mr-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </span>
+                Panel Admin
+            </h2>
 
-                <li class="pt-2">
-                    <a href="{{ route('admin.universidades.index') }}" class="w-full flex items-center px-4 py-3 bg-yellow-600 hover:bg-yellow-700 rounded-lg transition-all duration-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            <!-- Menú lateral -->
+            <nav class="mt-6">
+                <a href="#" @click.prevent="opcion = 'informes'" class="flex items-center p-3 mb-2 rounded hover:bg-blue-700">
+                    <span class="mr-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
-                        <span class="transition-opacity duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 hidden'">Gestionar Universidades</span>
-                    </a>
-                </li>
+                    </span>
+                    Ver Informes
+                </a>
 
-                <li class="pt-2">
-                    <a href="{{ route('admin.carrera-universidad.index') }}" class="w-full flex items-center px-4 py-3 bg-pink-600 hover:bg-pink-700 rounded-lg transition-all duration-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                <a href="#" @click.prevent="opcion = 'estadisticas'" class="flex items-center p-3 mb-2 rounded hover:bg-blue-700">
+                    <span class="mr-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                         </svg>
-                        <span class="transition-opacity duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 hidden'">Asociar Carreras-Universidades</span>
-                    </a>
-                </li>
-                
-                <li class="pt-2">
-                    <a href="{{ route('admin.tipos-personalidad.index') }}" class="w-full flex items-center px-4 py-3 bg-orange-600 hover:bg-orange-700 rounded-lg transition-all duration-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
+                    </span>
+                    Estadísticas
+                </a>
+
+                <!-- Gestión de Usuarios -->
+                <a href="{{ route('admin.usuarios.index') }}" class="flex items-center p-3 mb-2 rounded hover:bg-blue-700">
+                    <span class="mr-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                         </svg>
-                        <span class="transition-opacity duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 hidden'">Gestionar RIASEC</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-        
-        <!-- Información del usuario conectado - Se oculta el nombre cuando la barra está colapsada -->
-        <div class="mt-auto pt-6 w-full px-2">
-            <div class="bg-blue-700/30 rounded-lg p-3 text-sm text-blue-200">
-                <p class="transition-opacity duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 hidden'">Sesión activa como:</p>
-                <p class="font-semibold truncate transition-opacity duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 hidden'">{{ Auth::user()->name }}</p>
-                <!-- Mostrar solo las iniciales cuando está colapsado -->
-                <p class="font-semibold text-center transition-opacity duration-300" :class="sidebarOpen ? 'opacity-0 hidden' : 'opacity-100'">
-                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                </p>
-            </div>
+                    </span>
+                    Gestionar Usuarios
+                </a>
+
+                <!-- Gestión de Preguntas -->
+                <a href="{{ route('admin.preguntas.index') }}" class="flex items-center p-3 mb-2 rounded hover:bg-blue-700">
+                    <span class="mr-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </span>
+                    Gestionar Preguntas
+                </a>
+
+                <!-- Gestión de Carreras -->
+                <a href="{{ route('admin.carreras.index') }}" class="flex items-center p-3 mb-2 rounded hover:bg-blue-700">
+                    <span class="mr-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                    </span>
+                    Gestionar Carreras
+                </a>
+
+                <!-- Gestión de Universidades -->
+                <a href="{{ route('admin.universidades.index') }}" class="flex items-center p-3 mb-2 rounded hover:bg-blue-700">
+                    <span class="mr-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                    </span>
+                    Gestionar Universidades
+                </a>
+
+                <!-- Asociar Carreras-Universidades -->
+                <a href="{{ route('admin.carrera-universidad.index') }}" class="flex items-center p-3 mb-2 rounded hover:bg-blue-700">
+                    <span class="mr-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path>
+                        </svg>
+                    </span>
+                    Asociar Carreras
+                </a>
+
+                <!-- Gestión de Tipos de Personalidad -->
+                <a href="{{ route('admin.tipos-personalidad.index') }}" class="flex items-center p-3 mb-2 rounded hover:bg-blue-700">
+                    <span class="mr-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </span>
+                    Tipos de Personalidad
+                </a>
+            </nav>
         </div>
-    </aside>
-    
-    <!-- Contenido principal - Se ajusta automáticamente cuando la barra cambia de tamaño -->
-    <main class="flex-1 p-6 transition-all duration-300" :class="sidebarOpen ? 'ml-64' : 'ml-20'">
-        <!-- Panel de bienvenida -->
-        <div class="mx-auto max-w-5xl fade-in" x-show="opcion === 'bienvenida'">
-            <div class="bg-white rounded-xl shadow-md overflow-hidden">
-                <!-- Encabezado con degradado -->
-                <div class="bg-gradient-to-r from-blue-500 to-indigo-600 p-6">
-                    <h1 class="text-3xl font-bold text-white">Panel del Superadministrador</h1>
-                    <p class="text-blue-100 mt-2">Gestiona todos los aspectos del sistema de orientación vocacional</p>
+
+        <!-- Contenido principal -->
+        <div class="flex-1 p-8">
+            <!-- Panel de informes -->
+            <div class="mx-auto max-w-5xl fade-in" x-show="opcion === 'informes'">
+                <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6">
+                        <h1 class="text-2xl font-bold text-white">Panel de Informes</h1>
+                        <p class="text-blue-100 mt-1">Información general y reportes del sistema</p>
+                    </div>
+                    <div class="p-6">
+                        <p>Selecciona una opción del menú lateral para acceder a diferentes secciones del panel.</p>
+                        
+                        <!-- Resumen de recursos del sistema -->
+                        <div class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <!-- Tarjeta de usuarios -->
+                            <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                                <div class="flex items-center">
+                                    <div class="bg-blue-100 p-3 rounded-full">
+                                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-lg font-semibold text-gray-700">Usuarios</h3>
+                                        <a href="{{ route('admin.usuarios.index') }}" class="text-blue-500 hover:underline">Administrar →</a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tarjeta de carreras -->
+                            <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                                <div class="flex items-center">
+                                    <div class="bg-green-100 p-3 rounded-full">
+                                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-lg font-semibold text-gray-700">Carreras</h3>
+                                        <a href="{{ route('admin.carreras.index') }}" class="text-green-500 hover:underline">Administrar →</a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tarjeta de universidades -->
+                            <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                                <div class="flex items-center">
+                                    <div class="bg-purple-100 p-3 rounded-full">
+                                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-lg font-semibold text-gray-700">Universidades</h3>
+                                        <a href="{{ route('admin.universidades.index') }}" class="text-purple-500 hover:underline">Administrar →</a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tarjeta de preguntas -->
+                            <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                                <div class="flex items-center">
+                                    <div class="bg-amber-100 p-3 rounded-full">
+                                        <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-lg font-semibold text-gray-700">Preguntas</h3>
+                                        <a href="{{ route('admin.preguntas.index') }}" class="text-amber-500 hover:underline">Administrar →</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                
-                <!-- Sección de tarjetas de acceso rápido -->
-                <div class="p-6">
-                    <!-- Primera fila: Informes, Usuarios, Estadísticas -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                        <div class="bg-blue-50 p-4 rounded-lg text-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-blue-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            <h3 class="font-semibold text-lg">Informes</h3>
-                            <p class="text-gray-600 text-sm">Visualiza los resultados de los tests</p>
-                            <button @click="opcion = 'informes'" class="mt-3 text-blue-700 hover:text-blue-900 text-sm">Acceder →</button>
-                        </div>
-                        <div class="bg-green-50 p-4 rounded-lg text-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-green-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
-                            <h3 class="font-semibold text-lg">Usuarios</h3>
-                            <p class="text-gray-600 text-sm">Administra cuentas y permisos</p>
-                            <a href="{{ route('admin.usuarios.index') }}" class="mt-3 inline-block text-green-700 hover:text-green-900 text-sm">Acceder →</a>
-                        </div>
-                        <div class="bg-purple-50 p-4 rounded-lg text-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-purple-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                            </svg>
-                            <h3 class="font-semibold text-lg">Estadísticas</h3>
-                            <p class="text-gray-600 text-sm">Analiza resultados y tendencias</p>
-                            <button @click="opcion = 'estadisticas'" class="mt-3 text-purple-700 hover:text-purple-900 text-sm">Acceder →</button>
-                        </div>
+            </div>
+
+            <!-- Panel de estadísticas -->
+            <div class="mx-auto max-w-5xl fade-in" x-show="opcion === 'estadisticas'">
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="bg-gradient-to-r from-purple-500 to-purple-600 p-6">
+                        <h1 class="text-2xl font-bold text-white">Panel de Estadísticas</h1>
+                        <p class="text-purple-100 mt-1">Análisis y tendencias del sistema de orientación vocacional</p>
                     </div>
                     
-                    <!-- Segunda fila: Preguntas, Carreras, Universidades -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                        <div class="bg-green-50 p-4 rounded-lg text-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-green-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <h3 class="font-semibold text-lg">Preguntas</h3>
-                            <p class="text-gray-600 text-sm">Configura las preguntas del test</p>
-                            <a href="{{ route('admin.preguntas.index') }}" class="mt-3 inline-block text-green-700 hover:text-green-900 text-sm">Acceder →</a>
+                    <!-- Tarjetas de métricas principales -->
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <!-- Tarjeta Tests Completados -->
+                            <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200 shadow-sm">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-blue-600 text-sm font-medium">Tests Completados</p>
+                                        <h3 class="text-3xl font-bold text-blue-800">{{ $totalTests }}</h3>
+                                    </div>
+                                    <div class="bg-blue-500 rounded-full p-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <p class="text-blue-600 text-sm mt-2">
+                                    <span class="font-medium">{{ $testsUltimaSemana }}</span> en la última semana
+                                </p>
+                            </div>
+                            
+                            <!-- Tarjeta Usuarios Registrados -->
+                            <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl border border-green-200 shadow-sm">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-green-600 text-sm font-medium">Usuarios Registrados</p>
+                                        <h3 class="text-3xl font-bold text-green-800">{{ $totalUsuarios }}</h3>
+                                    </div>
+                                    <div class="bg-green-500 rounded-full p-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <p class="text-green-600 text-sm mt-2">
+                                    @if($totalUsuarios > 0)
+                                        <span class="font-medium">{{ round($totalTests/$totalUsuarios, 1) }}</span> tests por usuario
+                                    @else
+                                        <span class="font-medium">0</span> tests por usuario
+                                    @endif
+                                </p>
+                            </div>
+                            
+                            <!-- Tarjeta Tasa de Finalización -->
+                            <div class="bg-gradient-to-br from-amber-50 to-amber-100 p-4 rounded-xl border border-amber-200 shadow-sm">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-amber-600 text-sm font-medium">Tasa de Finalización</p>
+                                        <h3 class="text-3xl font-bold text-amber-800">{{ $tasaConversion }}%</h3>
+                                    </div>
+                                    <div class="bg-amber-500 rounded-full p-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <p class="text-amber-600 text-sm mt-2">
+                                    <span class="font-medium">{{ $testsIniciados - $testsCompletados }}</span> tests sin completar
+                                </p>
+                            </div>
                         </div>
-                        <div class="bg-indigo-50 p-4 rounded-lg text-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-indigo-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                            </svg>
-                            <h3 class="font-semibold text-lg">Carreras</h3>
-                            <p class="text-gray-600 text-sm">Gestiona las carreras disponibles</p>
-                            <a href="{{ route('admin.carreras.index') }}" class="mt-3 inline-block text-indigo-700 hover:text-indigo-900 text-sm">Acceder →</a>
+                        
+                        <!-- Sección de Personalidades RIASEC -->
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-8">
+                            <h3 class="text-lg font-semibold text-gray-700 mb-4">Tipos de Personalidad RIASEC</h3>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estudiantes</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Porcentaje</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        @php $total = $porTipoPersonalidad->sum('total'); @endphp
+                                        @forelse($porTipoPersonalidad as $tipo)
+                                            <tr>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    {{ $tipo->tipo_primario }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                        {{ $tipo->total }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    @php $porcentaje = $total > 0 ? round(($tipo->total / $total) * 100, 1) : 0; @endphp
+                                                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                                        <div class="bg-blue-600 h-2.5 rounded-full" style="width: {{ $porcentaje }}%"></div>
+                                                    </div>
+                                                    <span class="text-sm text-gray-500">{{ $porcentaje }}%</span>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">
+                                                    No hay datos disponibles.
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                        <div class="bg-yellow-50 p-4 rounded-lg text-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-yellow-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                            </svg>
-                            <h3 class="font-semibold text-lg">Universidades</h3>
-                            <p class="text-gray-600 text-sm">Administra las instituciones educativas</p>
-                            <a href="{{ route('admin.universidades.index') }}" class="mt-3 inline-block text-yellow-700 hover:text-yellow-900 text-sm">Acceder →</a>
+                        
+                        <!-- Sección de Universidades -->
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-8">
+                            <h3 class="text-lg font-semibold text-gray-700 mb-4">Carreras por Universidad</h3>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Universidad</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Carreras Institucionales</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Carreras</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Distribución</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        @forelse($universidadesConCarreras as $universidad)
+                                            <tr>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    {{ $universidad->nombre }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                        {{ $universidad->carreras_institucionales }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    {{ $universidad->total_carreras }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    @if($universidad->total_carreras > 0)
+                                                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                                            <div class="bg-green-600 h-2.5 rounded-full" style="width: {{ ($universidad->carreras_institucionales / $universidad->total_carreras) * 100 }}%"></div>
+                                                        </div>
+                                                        <span class="text-sm text-gray-500">
+                                                            {{ round(($universidad->carreras_institucionales / $universidad->total_carreras) * 100) }}% institucionales
+                                                        </span>
+                                                    @else
+                                                        <span class="text-sm text-gray-500">Sin carreras</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+                                                    No hay datos disponibles.
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Gráficos -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                            <!-- Top Carreras Recomendadas -->
+                            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                                <h3 class="text-lg font-semibold text-gray-700 mb-4">Top Carreras Recomendadas</h3>
+                                <div class="overflow-auto max-h-60">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Carrera</th>
+                                                <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Recomendaciones</th>
+                                                <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Match Promedio</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            @forelse($carrerasMasRecomendadas as $carrera)
+                                                <tr>
+                                                    <td class="px-4 py-2">{{ $carrera->nombre }}</td>
+                                                    <td class="px-4 py-2">
+                                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                            {{ $carrera->total }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-4 py-2">
+                                                        {{ round($carrera->match_promedio, 1) }}%
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="3" class="px-4 py-2 text-center text-sm text-gray-500">
+                                                        No hay datos disponibles.
+                                                    </td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <!-- Áreas de Conocimiento -->
+                            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                                <h3 class="text-lg font-semibold text-gray-700 mb-4">Áreas de Conocimiento</h3>
+                                <div class="overflow-auto max-h-60">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Área</th>
+                                                <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                                                <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Distribución</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            @php $totalAreas = $porAreaConocimiento->sum('total'); @endphp
+                                            @forelse($porAreaConocimiento as $area)
+                                                <tr>
+                                                    <td class="px-4 py-2">{{ $area->area_conocimiento }}</td>
+                                                    <td class="px-4 py-2">
+                                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800">
+                                                            {{ $area->total }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-4 py-2">
+                                                        @php $porcentajeArea = $totalAreas > 0 ? round(($area->total / $totalAreas) * 100, 1) : 0; @endphp
+                                                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                                            <div class="bg-indigo-600 h-2.5 rounded-full" style="width: {{ $porcentajeArea }}%"></div>
+                                                        </div>
+                                                        <span class="text-sm text-gray-500">{{ $porcentajeArea }}%</span>
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="3" class="px-4 py-2 text-center text-sm text-gray-500">
+                                                        No hay datos disponibles.
+                                                    </td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    
-                    <!-- Tercera fila: Asociación Carreras-Universidades, Perfiles RIASEC -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-pink-50 p-4 rounded-lg text-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-pink-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-                            </svg>
-                            <h3 class="font-semibold text-lg">Asociar Carreras-Universidades</h3>
-                            <p class="text-gray-600 text-sm">Vincular carreras con las universidades que las ofrecen</p>
-                            <a href="{{ route('admin.carrera-universidad.index') }}" class="mt-3 inline-block text-pink-700 hover:text-pink-900 text-sm">Acceder →</a>
-                        </div>
-
-                        <div class="bg-orange-50 p-4 rounded-lg text-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-orange-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
-                            </svg>
-                            <h3 class="font-semibold text-lg">Tipos de Personalidad</h3>
-                            <p class="text-gray-600 text-sm">Gestiona los perfiles RIASEC y sus descripciones</p>
-                            <a href="{{ route('admin.tipos-personalidad.index') }}" class="mt-3 inline-block text-orange-700 hover:text-orange-900 text-sm">Acceder →</a>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
-
-        <!-- Sección de informes -->
-        <div class="mx-auto max-w-4xl fade-in" x-show="opcion === 'informes'">
-            <div class="bg-white rounded-xl shadow-md overflow-hidden">
-                <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6">
-                    <h1 class="text-2xl font-bold text-white">Informes</h1>
-                    <p class="text-blue-100 mt-1">Visualiza y descarga los resultados de los tests</p>
-                </div>
-                <div class="p-6">
-                    <p class="text-gray-700 mb-6">Aquí puedes ver y descargar los informes generados por los usuarios.</p>
-                    <!-- Contenido de los informes -->
-                </div>
-            </div>
-        </div>
-
-        <!-- Sección de usuarios (se mantiene para compatibilidad) -->
-        <div class="mx-auto max-w-5xl fade-in" x-show="opcion === 'usuarios'">
-            <div class="bg-white rounded-xl shadow-md overflow-hidden">
-                <div class="bg-gradient-to-r from-green-500 to-green-600 p-6 mb-4">
-                    <h1 class="text-2xl font-bold text-white">Gestión de Usuarios</h1>
-                    <p class="text-green-100 mt-1">Administra los usuarios y sus permisos en el sistema</p>
-                </div>
-                @livewire('usuarios-gestion')
-            </div>
-        </div>
-
-        <!-- Sección de estadísticas -->
-        <div class="mx-auto max-w-4xl fade-in" x-show="opcion === 'estadisticas'">
-            <div class="bg-white rounded-xl shadow-md overflow-hidden">
-                <div class="bg-gradient-to-r from-purple-500 to-purple-600 p-6">
-                    <h1 class="text-2xl font-bold text-white">Estadísticas</h1>
-                    <p class="text-purple-100 mt-1">Analiza tendencias y métricas</p>
-                </div>
-                <div class="p-6">
-                    <p class="text-gray-700 mb-6">Consulta estadísticas y reportes generales del sistema.</p>
-                    <!-- Contenido de las estadísticas -->
-                </div>
-            </div>
-        </div>
-    </main>
+    </div>
 </div>
 
-<!-- Estilos para las animaciones -->
+<!-- Alpine.js para controlar las pestañas -->
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('panelApp', () => ({
+            opcion: 'informes'
+        }))
+    })
+</script>
+
 <style>
-    /* Animación de entrada suave para los paneles */
     .fade-in {
         animation: fadeIn 0.3s ease-in-out;
     }
@@ -270,14 +450,4 @@
         to { opacity: 1; transform: translateY(0); }
     }
 </style>
-
-<!-- Scripts adicionales para manejar eventos de la página -->
-<script>
-    // Detectar si hay un hash en la URL para mostrar una sección específica
-    document.addEventListener('DOMContentLoaded', function() {
-        if(window.location.hash === '#usuarios') {
-            document.querySelector('[x-data]').__x.$data.opcion = 'usuarios';
-        }
-    });
-</script>
 @endsection

@@ -1,5 +1,6 @@
 <?php
 
+
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ProfileController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\CarreraController;
 use App\Http\Controllers\UniversidadController;
 use App\Http\Controllers\CarreraUniversidadController;
 use App\Http\Controllers\TipoPersonalidadController;
+use App\Http\Controllers\EstadisticasController;
 
 // Página de bienvenida
 Route::get('/welcome', function () {
@@ -40,9 +42,8 @@ Route::get('/', function () {
 Route::get('/dashboard', [CuestionarioController::class, 'mostrar'])
     ->middleware(['auth'])
     ->name('dashboard');
-    
 
-// DASHBOARD PARA COORDINADOR - SIN PREFIJOS NI MIDDLEWARE PERSONALIZADO
+// DASHBOARD PARA COORDINADOR
 Route::get('/coordinador-dashboard', [CoordinadorController::class, 'dashboard'])
     ->middleware(['auth'])
     ->name('coordinador.dashboard');
@@ -59,8 +60,10 @@ Route::get('/coordinador-estudiante/{id}', [CoordinadorController::class, 'detal
 Route::get('/coordinador-estadisticas', [CoordinadorController::class, 'estadisticas'])
     ->middleware(['auth'])
     ->name('coordinador.estadisticas');
+
 Route::post('/test/{test}/retroalimentacion', [TestController::class, 'guardarRetroalimentacion'])
     ->name('test.retroalimentacion');
+
 // RESTO DE RUTAS PROTEGIDAS
 Route::middleware(['auth'])->group(function () {
     // Gestión de perfil
@@ -68,27 +71,25 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     
-    // Informes (para superadmin)
+    // IMPORTANTE: Ruta para informes (panel superadmin)
     Route::get('/informes', [InformeController::class, 'index'])->name('informes.index');
+
+    // Ruta para estadísticas en iframe (sin barras de navegación)
+    Route::get('/admin/estadisticas-iframe', [EstadisticasController::class, 'iframe'])
+        ->name('admin.estadisticas.iframe');
     
     // Cuestionario
     Route::post('/dashboard', [CuestionarioController::class, 'guardar'])->name('cuestionario.guardar');
     
     // SISTEMA DE TEST VOCACIONAL
-    // Rutas para iniciar y realizar test
     Route::get('/test/iniciar', [TestController::class, 'iniciar'])->name('test.iniciar');
     Route::get('/test/{test}/continuar', [TestController::class, 'continuar'])->name('test.continuar');
     Route::post('/test/guardar', [TestController::class, 'guardar'])->name('test.guardar');
-    
-    // Rutas para ver y gestionar resultados
     Route::get('/test/{test}/resultados', [TestController::class, 'resultados'])->name('test.resultados');
     Route::get('/test/historial', [TestController::class, 'historial'])->name('test.historial');
     Route::delete('/test/{test}/eliminar', [TestController::class, 'eliminar'])->name('test.eliminar');
-    
-    // Ruta para mostrar el test en dashboard
     Route::get('/test/mostrar', [TestController::class, 'mostrar'])->name('test.mostrar');
 });
-    Route::middleware(['auth'])->get('/dashboard', [TestController::class, 'dashboard'])->name('dashboard');
 
 // SISTEMA DE ADMINISTRACIÓN - CON RESTRICCIÓN DE ROL SUPERADMIN
 Route::prefix('s')->name('admin.')->middleware(['auth'])->group(function () {
@@ -99,17 +100,12 @@ Route::prefix('s')->name('admin.')->middleware(['auth'])->group(function () {
     // Rutas para gestión de carreras
     Route::resource('carreras', CarreraController::class);
     
-    
     // Rutas para gestión de universidades
     Route::resource('universidades', UniversidadController::class)->parameters([
         'universidades' => 'universidad'
     ]);
-
-    Route::get('admin/universidades/{universidad}', [UniversidadController::class, 'show'])->name('admin.universidades.show');
     
-    
-    Route::delete('admin/carrera-universidad/{carrera}/{universidad}', [CarreraUniversidadController::class, 'destroy'])->name('admin.carrera-universidad.destroy');
-    // Rutas para gestión de tipos de personalidad RIASEC (ahora con destroy habilitado)
+    // Rutas para gestión de tipos de personalidad RIASEC
     Route::resource('tipos-personalidad', TipoPersonalidadController::class);
     
     // Rutas para gestión de asociaciones carrera-universidad
@@ -121,11 +117,18 @@ Route::prefix('s')->name('admin.')->middleware(['auth'])->group(function () {
         
     Route::post('carrera-universidad', [CarreraUniversidadController::class, 'store'])
         ->name('carrera-universidad.store');
+    
+    // Añadidas rutas de edición y actualización dentro del grupo correcto
+    Route::get('carrera-universidad/{carrera}/{universidad}/edit', [CarreraUniversidadController::class, 'edit'])
+        ->name('carrera-universidad.edit');
+        
+    Route::put('carrera-universidad/{carrera}/{universidad}', [CarreraUniversidadController::class, 'update'])
+        ->name('carrera-universidad.update');
         
     Route::delete('carrera-universidad/{carrera}/{universidad}', [CarreraUniversidadController::class, 'destroy'])
         ->name('carrera-universidad.destroy');
-
-    Route::resource('admin/carrera-universidad', \App\Http\Controllers\CarreraUniversidadController::class);
+    
+    // Eliminada ruta duplicada con prefijo 'admin/carrera-universidad'
 });
 
 require __DIR__.'/auth.php';

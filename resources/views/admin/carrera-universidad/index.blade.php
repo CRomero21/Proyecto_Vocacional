@@ -55,8 +55,8 @@
                                 @endif
                             </td>
                             <td class="px-4 py-2 flex gap-2">
-                                <a href="{{ route('admin.carrera-universidad.edit', $rel->id) }}" class="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded text-xs font-bold shadow transition">Editar</a>
-                                <form action="{{ route('admin.carrera-universidad.destroy', $rel->id) }}" method="POST" onsubmit="return confirm('¿Seguro que deseas eliminar esta asignación?');">
+                                <a href="{{ route('admin.carrera-universidad.edit', ['carrera' => $rel->carrera_id, 'universidad' => $rel->universidad_id]) }}" class="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded text-xs font-bold shadow transition">Editar</a>
+                                <form action="{{ route('admin.carrera-universidad.destroy', ['carrera' => $rel->carrera_id, 'universidad' => $rel->universidad_id]) }}" method="POST" onsubmit="return confirm('¿Seguro que deseas eliminar esta asignación?');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-bold shadow transition">Eliminar</button>
