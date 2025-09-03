@@ -4,7 +4,7 @@
 <div class="container mx-auto px-4 py-6">
     <div class="max-w-3xl mx-auto">
         <div class="bg-white shadow-lg rounded-2xl p-8">
-            <h1 class="text-3xl font-bold text-blue-700 mb-2">Test Vocacional</h1>
+            <h1 class="text-3xl font-bold text-blue-700 mb-2">Test Vocacionales</h1>
             <p class="text-gray-600 mb-6">Responde según tu nivel de identificación con cada afirmación. ¡No hay respuestas correctas o incorrectas!</p>
 
             <form action="{{ route('test.guardar') }}" method="POST">

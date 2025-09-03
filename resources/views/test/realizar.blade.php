@@ -4,7 +4,7 @@
 <div class="container mx-auto px-4 py-6">
     <div class="max-w-4xl mx-auto">
         <div class="bg-white shadow-md rounded-lg p-6">
-            <h1 class="text-2xl font-bold text-gray-800 mb-4">Test Vocacional</h1>
+            <h1 class="text-2xl font-bold text-gray-800 mb-4">Test Vocacionale</h1>
             <p class="text-gray-600 mb-6">Responde las siguientes preguntas según qué tanto te identifiques con cada afirmación. Esto nos ayudará a determinar tu perfil vocacional.</p>
 
             <form action="{{ route('test.guardar') }}" method="POST">
