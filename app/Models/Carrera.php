@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,47 +15,26 @@ class Carrera extends Model
         'area_conocimiento',
         'es_institucional',
         'imagen',
-        'tipo_primario',
-        'tipo_secundario',
-        'tipo_terciario',
-        // agrega otros campos si los tienes
+        'duracion',
+        'perfil_egreso',
+        'perfil_ingreso'
     ];
 
     /**
-     * Relación con universidades (muchos a muchos)
+     * Relación con CarreraTipo (uno a muchos)
      */
-    public function universidades()
+    public function carreraTipos()
     {
-        return $this->belongsToMany(Universidad::class, 'carrera_universidad')
-            ->withPivot('modalidad', 'duracion', 'costo_semestre', 'requisitos', 'disponible')
-            ->withTimestamps();
+        return $this->hasMany(CarreraTipo::class, 'carrera_id');
     }
+
+    /**
+     * Relación con CarreraTipo (uno a uno - para compatibilidad)
+     */
     public function carreraTipo()
     {
-        return $this->hasOne(\App\Models\CarreraTipo::class, 'carrera_id');
+        return $this->hasOne(CarreraTipo::class, 'carrera_id');
     }
 
-    /**
-     * Relación con el tipo RIASEC primario
-     */
-    public function tipoPrimario()
-    {
-        return $this->belongsTo(\App\Models\TipoPersonalidad::class, 'tipo_primario', 'codigo');
-    }
-
-    /**
-     * Relación con el tipo RIASEC secundario
-     */
-    public function tipoSecundario()
-    {
-        return $this->belongsTo(\App\Models\TipoPersonalidad::class, 'tipo_secundario', 'codigo');
-    }
-
-    /**
-     * Relación con el tipo RIASEC terciario
-     */
-    public function tipoTerciario()
-    {
-        return $this->belongsTo(\App\Models\TipoPersonalidad::class, 'tipo_terciario', 'codigo');
-    }
+    // Otras relaciones que tengas...
 }
