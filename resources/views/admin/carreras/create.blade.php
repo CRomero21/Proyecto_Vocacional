@@ -18,6 +18,7 @@
             @csrf
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Campos básicos de carrera (igual que antes) -->
                 <div>
                     <label for="nombre" class="block text-sm font-medium text-gray-700 mb-1">Nombre de la Carrera*</label>
                     <input type="text" name="nombre" id="nombre" value="{{ old('nombre') }}" required
@@ -55,7 +56,6 @@
                     @enderror
                 </div>
 
-                <!-- ...el resto de tu formulario permanece igual... -->
                 <div class="md:col-span-2">
                     <label for="descripcion" class="block text-sm font-medium text-gray-700 mb-1">Descripción*</label>
                     <textarea name="descripcion" id="descripcion" rows="3"
@@ -114,57 +114,74 @@
                 </div>
             </div>
 
+            <!-- NUEVA SECCIÓN MEJORADA: Perfiles RIASEC múltiples -->
             <div class="mt-6 border-t border-gray-200 pt-4">
-                <h3 class="text-lg font-medium text-gray-900">Perfil RIASEC de la Carrera</h3>
-                <p class="text-sm text-gray-500 mb-4">Asocia esta carrera con los tipos de personalidad vocacional más relevantes.</p>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="flex justify-between items-center mb-4">
                     <div>
-                        <label for="tipo_primario" class="block text-sm font-medium text-gray-700 mb-1">Tipo Primario*</label>
-                        <select name="tipo_primario" id="tipo_primario" required
-                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                            <option value="">Seleccionar tipo...</option>
-                            @foreach($tiposPersonalidad as $tipo)
-                                <option value="{{ $tipo->codigo }}" 
-                                        style="background-color: {{ $tipo->color_hex }}20" 
-                                        {{ old('tipo_primario') == $tipo->codigo ? 'selected' : '' }}>
-                                    {{ $tipo->codigo }} - {{ $tipo->nombre }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('tipo_primario')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                        <h3 class="text-lg font-medium text-gray-900">Perfiles RIASEC de la Carrera</h3>
+                        <p class="text-sm text-gray-500">Asocia esta carrera con múltiples combinaciones de tipos de personalidad.</p>
                     </div>
+                    <button type="button" onclick="agregarCombinacionRIASEC()" 
+                            class="bg-green-500 hover:bg-green-600 text-white text-sm px-3 py-1.5 rounded flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+                        </svg>
+                        Agregar Combinación
+                    </button>
+                </div>
+                
+                <!-- Contenedor para combinaciones RIASEC -->
+                <div id="riasec-container">
+                    <!-- Combinación inicial -->
+                    <div class="riasec-combination mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="font-medium text-gray-800">Combinación #1</h4>
+                            <button type="button" onclick="eliminarCombinacion(this)" class="text-red-500 hover:text-red-700" style="display:none;">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo Primario*</label>
+                                <select name="combinaciones[0][tipo_primario]" required
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                                    <option value="">Seleccionar tipo...</option>
+                                    @foreach($tiposRIASEC as $codigo => $nombre)
+                                        <option value="{{ $codigo }}" {{ old('tipo_primario') == $codigo ? 'selected' : '' }}>
+                                            {{ $codigo }} - {{ $nombre }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
 
-                    <div>
-                        <label for="tipo_secundario" class="block text-sm font-medium text-gray-700 mb-1">Tipo Secundario</label>
-                        <select name="tipo_secundario" id="tipo_secundario"
-                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                            <option value="">Ninguno (opcional)</option>
-                            @foreach($tiposPersonalidad as $tipo)
-                                <option value="{{ $tipo->codigo }}"
-                                        style="background-color: {{ $tipo->color_hex }}20"
-                                        {{ old('tipo_secundario') == $tipo->codigo ? 'selected' : '' }}>
-                                    {{ $tipo->codigo }} - {{ $tipo->nombre }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo Secundario</label>
+                                <select name="combinaciones[0][tipo_secundario]"
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                                    <option value="">Ninguno (opcional)</option>
+                                    @foreach($tiposRIASEC as $codigo => $nombre)
+                                        <option value="{{ $codigo }}" {{ old('tipo_secundario') == $codigo ? 'selected' : '' }}>
+                                            {{ $codigo }} - {{ $nombre }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
 
-                    <div>
-                        <label for="tipo_terciario" class="block text-sm font-medium text-gray-700 mb-1">Tipo Terciario</label>
-                        <select name="tipo_terciario" id="tipo_terciario"
-                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                            <option value="">Ninguno (opcional)</option>
-                            @foreach($tiposPersonalidad as $tipo)
-                                <option value="{{ $tipo->codigo }}"
-                                        style="background-color: {{ $tipo->color_hex }}20"
-                                        {{ old('tipo_terciario') == $tipo->codigo ? 'selected' : '' }}>
-                                    {{ $tipo->codigo }} - {{ $tipo->nombre }}
-                                </option>
-                            @endforeach
-                        </select>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo Terciario</label>
+                                <select name="combinaciones[0][tipo_terciario]"
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                                    <option value="">Ninguno (opcional)</option>
+                                    @foreach($tiposRIASEC as $codigo => $nombre)
+                                        <option value="{{ $codigo }}" {{ old('tipo_terciario') == $codigo ? 'selected' : '' }}>
+                                            {{ $codigo }} - {{ $nombre }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -177,4 +194,100 @@
         </form>
     </div>
 </div>
+
+<script>
+    let combinacionCount = 1;
+    
+    function agregarCombinacionRIASEC() {
+        combinacionCount++;
+        
+        const container = document.getElementById('riasec-container');
+        const template = `
+            <div class="riasec-combination mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="font-medium text-gray-800">Combinación #${combinacionCount}</h4>
+                    <button type="button" onclick="eliminarCombinacion(this)" class="text-red-500 hover:text-red-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tipo Primario*</label>
+                        <select name="combinaciones[${combinacionCount-1}][tipo_primario]" required
+                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                            <option value="">Seleccionar tipo...</option>
+                            @foreach($tiposRIASEC as $codigo => $nombre)
+                                <option value="{{ $codigo }}">{{ $codigo }} - {{ $nombre }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tipo Secundario</label>
+                        <select name="combinaciones[${combinacionCount-1}][tipo_secundario]"
+                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                            <option value="">Ninguno (opcional)</option>
+                            @foreach($tiposRIASEC as $codigo => $nombre)
+                                <option value="{{ $codigo }}">{{ $codigo }} - {{ $nombre }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tipo Terciario</label>
+                        <select name="combinaciones[${combinacionCount-1}][tipo_terciario]"
+                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                            <option value="">Ninguno (opcional)</option>
+                            @foreach($tiposRIASEC as $codigo => $nombre)
+                                <option value="{{ $codigo }}">{{ $codigo }} - {{ $nombre }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Añadir nueva combinación al contenedor
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = template;
+        container.appendChild(wrapper.firstElementChild);
+        
+        // Mostrar el botón de eliminar en la primera combinación si hay más de una
+        if (combinacionCount > 1) {
+            const firstCombination = container.querySelector('.riasec-combination:first-child button');
+            if (firstCombination) {
+                firstCombination.style.display = 'block';
+            }
+        }
+    }
+    
+    function eliminarCombinacion(button) {
+        const combination = button.closest('.riasec-combination');
+        combination.remove();
+        
+        // Renumerar las combinaciones
+        document.querySelectorAll('.riasec-combination').forEach((el, index) => {
+            el.querySelector('h4').textContent = `Combinación #${index + 1}`;
+            
+            // Actualizar los índices de los campos
+            el.querySelectorAll('select').forEach(select => {
+                const name = select.name;
+                const fieldType = name.substring(name.lastIndexOf('[') + 1, name.lastIndexOf(']'));
+                select.name = `combinaciones[${index}][${fieldType}]`;
+            });
+        });
+        
+        combinacionCount--;
+        
+        // Ocultar el botón de eliminar si solo queda una combinación
+        if (combinacionCount === 1) {
+            const firstCombination = document.querySelector('.riasec-combination:first-child button');
+            if (firstCombination) {
+                firstCombination.style.display = 'none';
+            }
+        }
+    }
+</script>
 @endsection

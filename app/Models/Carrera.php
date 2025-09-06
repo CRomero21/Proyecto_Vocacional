@@ -35,6 +35,15 @@ class Carrera extends Model
     {
         return $this->hasOne(CarreraTipo::class, 'carrera_id');
     }
+    // Dentro de la clase Carrera
+    public function universidades()
+    {
+        // Asumiendo una relación muchos a muchos
+        return $this->belongsToMany(Universidad::class, 'carrera_universidad');
+        
+        // O una relación uno a muchos
+        // return $this->hasMany(Universidad::class);
+    }
 
     // Otras relaciones que tengas...
 }

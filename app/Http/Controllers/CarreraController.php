@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Carrera;
+use App\Models\CarreraTipo;
 use App\Models\TipoPersonalidad;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 
 class CarreraController extends Controller
@@ -14,27 +16,35 @@ class CarreraController extends Controller
      */
     public function index(Request $request)
     {
-        $carreras = Carrera::with('carreraTipo')
-            ->when($request->search, function($query, $search) {
-                return $query->where('nombre', 'like', "%{$search}%")
-                    ->orWhere('area_conocimiento', 'like', "%{$search}%");
-            })
-            ->when($request->area_conocimiento, function($query, $area_conocimiento) {
-                return $query->where('area_conocimiento', $area_conocimiento);
-            })
-            ->when(
-                $request->filled('es_institucional'),
-                function($query) use ($request) {
-                    return $query->where('es_institucional', $request->es_institucional);
-                }
-            )
-            ->orderBy('nombre', 'asc')
-            ->paginate(10)
-            ->appends($request->except('page'));
-
-        // Obtener áreas disponibles para filtrado
-        $areas_conocimiento = Carrera::distinct('area_conocimiento')->pluck('area_conocimiento');
-
+        $query = Carrera::with('carreraTipos');
+        
+        // Filtrar por nombre (búsqueda)
+        if ($request->filled('search')) {
+            $query->where('nombre', 'LIKE', '%' . $request->search . '%');
+        }
+        
+        // Filtrar por área de conocimiento
+        if ($request->filled('area_conocimiento')) {
+            $query->where('area_conocimiento', $request->area_conocimiento);
+        }
+        
+        // Filtrar por es_institucional
+        if ($request->filled('es_institucional')) {
+            $query->where('es_institucional', $request->es_institucional);
+        }
+        
+        // Obtener áreas únicas para el filtro
+        $areas_conocimiento = Carrera::select('area_conocimiento')
+                        ->distinct()
+                        ->whereNotNull('area_conocimiento')
+                        ->orderBy('area_conocimiento')
+                        ->pluck('area_conocimiento');
+        
+        // Ordenar y paginar
+        $carreras = $query->orderBy('nombre', 'asc')
+                          ->paginate(10)
+                          ->appends($request->except('page'));
+        
         return view('admin.carreras.index', compact('carreras', 'areas_conocimiento'));
     }
 
@@ -44,8 +54,23 @@ class CarreraController extends Controller
     public function create()
     {
         $tiposPersonalidad = TipoPersonalidad::all();
-        $areas = Carrera::distinct('area_conocimiento')->pluck('area_conocimiento')->filter()->values();
-        return view('admin.carreras.create', compact('tiposPersonalidad', 'areas'));
+        $areas = Carrera::distinct('area_conocimiento')
+            ->whereNotNull('area_conocimiento')
+            ->orderBy('area_conocimiento')
+            ->pluck('area_conocimiento')
+            ->filter()
+            ->values();
+            
+        $tiposRIASEC = [
+            'R' => 'Realista',
+            'I' => 'Investigador',
+            'A' => 'Artístico',
+            'S' => 'Social',
+            'E' => 'Emprendedor',
+            'C' => 'Convencional'
+        ];
+        
+        return view('admin.carreras.create', compact('tiposPersonalidad', 'areas', 'tiposRIASEC'));
     }
 
     /**
@@ -59,9 +84,10 @@ class CarreraController extends Controller
             'duracion' => 'nullable|string|max:100',
             'perfil_ingreso' => 'nullable|string|max:1000',
             'perfil_egreso' => 'nullable|string|max:1000',
-            'tipo_primario' => 'required|string|max:10',
-            'tipo_secundario' => 'nullable|string|max:10',
-            'tipo_terciario' => 'nullable|string|max:10',
+            'combinaciones' => 'required|array|min:1',
+            'combinaciones.*.tipo_primario' => 'required|string|size:1',
+            'combinaciones.*.tipo_secundario' => 'nullable|string|size:1',
+            'combinaciones.*.tipo_terciario' => 'nullable|string|size:1',
             'imagen' => 'nullable|image|max:2048',
             'nueva_area' => 'nullable|string|max:255',
         ]);
@@ -92,13 +118,14 @@ class CarreraController extends Controller
         $carrera->imagen = $imagenPath;
         $carrera->save();
 
-        // Guardar en carrera_tipo
-        DB::table('carrera_tipo')->insert([
-            'carrera_id' => $carrera->id,
-            'tipo_primario' => $validated['tipo_primario'] ?? null,
-            'tipo_secundario' => $validated['tipo_secundario'] ?? null,
-            'tipo_terciario' => $validated['tipo_terciario'] ?? null,
-        ]);
+        // Guardar todas las combinaciones RIASEC
+        foreach ($request->combinaciones as $combinacion) {
+            $carrera->carreraTipos()->create([
+                'tipo_primario' => $combinacion['tipo_primario'] ?? null,
+                'tipo_secundario' => $combinacion['tipo_secundario'] ?? null,
+                'tipo_terciario' => $combinacion['tipo_terciario'] ?? null,
+            ]);
+        }
 
         return redirect()->route('admin.carreras.index')
             ->with('success', 'Carrera creada exitosamente');
@@ -109,8 +136,8 @@ class CarreraController extends Controller
      */
     public function show(Carrera $carrera)
     {
-        // Cargar relaciones con universidades y tipo de personalidad
-        $carrera->load(['universidades']);
+        // Cargar relaciones con universidades y tipos RIASEC
+        $carrera->load(['universidades', 'carreraTipos']);
         
         return view('admin.carreras.show', compact('carrera'));
     }
@@ -121,8 +148,23 @@ class CarreraController extends Controller
     public function edit(Carrera $carrera)
     {
         $tiposPersonalidad = TipoPersonalidad::all();
-        $areas = Carrera::distinct('area_conocimiento')->pluck('area_conocimiento')->filter()->values();
-        return view('admin.carreras.edit', compact('carrera', 'tiposPersonalidad', 'areas'));
+        $areas = Carrera::distinct('area_conocimiento')
+            ->whereNotNull('area_conocimiento')
+            ->orderBy('area_conocimiento')
+            ->pluck('area_conocimiento')
+            ->filter()
+            ->values();
+            
+        $tiposRIASEC = [
+            'R' => 'Realista',
+            'I' => 'Investigador',
+            'A' => 'Artístico',
+            'S' => 'Social',
+            'E' => 'Emprendedor',
+            'C' => 'Convencional'
+        ];
+        
+        return view('admin.carreras.edit', compact('carrera', 'tiposPersonalidad', 'areas', 'tiposRIASEC'));
     }
 
     /**
@@ -136,9 +178,10 @@ class CarreraController extends Controller
             'duracion' => 'nullable|string|max:100',
             'perfil_ingreso' => 'nullable|string|max:1000',
             'perfil_egreso' => 'nullable|string|max:1000',
-            'tipo_primario' => 'required|string|max:10',
-            'tipo_secundario' => 'nullable|string|max:10',
-            'tipo_terciario' => 'nullable|string|max:10',
+            'combinaciones' => 'required|array|min:1',
+            'combinaciones.*.tipo_primario' => 'required|string|size:1',
+            'combinaciones.*.tipo_secundario' => 'nullable|string|size:1',
+            'combinaciones.*.tipo_terciario' => 'nullable|string|size:1',
             'imagen' => 'nullable|image|max:2048',
             'nueva_area' => 'nullable|string|max:255',
         ]);
@@ -150,6 +193,11 @@ class CarreraController extends Controller
 
         // Manejo de imagen
         if ($request->hasFile('imagen')) {
+            // Eliminar imagen anterior si existe
+            if ($carrera->imagen) {
+                Storage::disk('public')->delete($carrera->imagen);
+            }
+            
             $imagenPath = $request->file('imagen')->store('carreras', 'public');
             $carrera->imagen = $imagenPath;
         }
@@ -163,15 +211,39 @@ class CarreraController extends Controller
         $carrera->es_institucional = $request->has('es_institucional');
         $carrera->save();
 
-        // Actualizar o crear en carrera_tipo
-        DB::table('carrera_tipo')->updateOrInsert(
-            ['carrera_id' => $carrera->id],
-            [
-                'tipo_primario' => $validated['tipo_primario'] ?? null,
-                'tipo_secundario' => $validated['tipo_secundario'] ?? null,
-                'tipo_terciario' => $validated['tipo_terciario'] ?? null,
-            ]
-        );
+        // Obtener IDs existentes para identificar los eliminados
+        $idsExistentes = $carrera->carreraTipos()->pluck('id')->toArray();
+        $idsEnviados = collect($request->combinaciones)
+                   ->filter(function($item) {
+                       return !empty($item['id']);
+                   })
+                   ->pluck('id')
+                   ->toArray();
+    
+        // Eliminar combinaciones que ya no existen
+        $idsAEliminar = array_diff($idsExistentes, $idsEnviados);
+        if (!empty($idsAEliminar)) {
+            CarreraTipo::whereIn('id', $idsAEliminar)->delete();
+        }
+    
+        // Actualizar o crear combinaciones
+        foreach ($request->combinaciones as $combinacion) {
+            if (!empty($combinacion['id'])) {
+                // Actualizar combinación existente
+                CarreraTipo::find($combinacion['id'])->update([
+                    'tipo_primario' => $combinacion['tipo_primario'],
+                    'tipo_secundario' => $combinacion['tipo_secundario'] ?? null,
+                    'tipo_terciario' => $combinacion['tipo_terciario'] ?? null,
+                ]);
+            } else {
+                // Crear nueva combinación
+                $carrera->carreraTipos()->create([
+                    'tipo_primario' => $combinacion['tipo_primario'],
+                    'tipo_secundario' => $combinacion['tipo_secundario'] ?? null,
+                    'tipo_terciario' => $combinacion['tipo_terciario'] ?? null,
+                ]);
+            }
+        }
 
         return redirect()->route('admin.carreras.show', $carrera)
             ->with('success', 'Carrera actualizada exitosamente');
@@ -187,8 +259,13 @@ class CarreraController extends Controller
             return back()->with('error', 'No se puede eliminar la carrera porque está asociada a universidades');
         }
 
-        // Eliminar también de carrera_tipo
-        DB::table('carrera_tipo')->where('carrera_id', $carrera->id)->delete();
+        // Eliminar las combinaciones RIASEC de la carrera
+        $carrera->carreraTipos()->delete();
+        
+        // Eliminar imagen si existe
+        if ($carrera->imagen) {
+            Storage::disk('public')->delete($carrera->imagen);
+        }
 
         $carrera->delete();
 

@@ -1,4 +1,5 @@
 <?php
+// filepath: c:\Users\USUARIO\Desktop\laravel\Proyecto_Vocacional\app\Http\Controllers\CoordinadorController.php
 
 namespace App\Http\Controllers;
 
@@ -6,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Test;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class CoordinadorController extends Controller
 {
@@ -14,6 +17,9 @@ class CoordinadorController extends Controller
         $this->middleware('auth');
     }
     
+    /**
+     * Muestra el dashboard principal del coordinador
+     */
     public function dashboard()
     {
         // Verificar manualmente si el usuario es coordinador
@@ -22,58 +28,206 @@ class CoordinadorController extends Controller
         }
         
         try {
+            // Datos básicos para el dashboard
             $totalEstudiantes = User::where('role', 'estudiante')->count();
-            $totalTests = Test::count();
-            $ultimosTests = Test::with('user')->latest()->take(5)->get();
             
-            return view('coordinador.dashboard', compact('totalEstudiantes', 'totalTests', 'ultimosTests'));
+            // Tests completados
+            $totalTests = Test::where('completado', true)->count();
+            
+            // Tests iniciados (todos)
+            $testsIniciados = Test::count();
+            
+            // Calcular tasa de conversión
+            $tasaConversion = $testsIniciados > 0 
+                ? round(($totalTests / $testsIniciados) * 100) . '%'
+                : '0%';
+            
+            // Últimos tests para mostrar actividad reciente
+            $ultimosTests = Test::with('user')
+                ->latest()
+                ->take(5)
+                ->get();
+            
+            // Tendencias recientes
+            $fechaUltimaSemana = Carbon::now()->subDays(7);
+            $testsUltimaSemana = Test::where('created_at', '>=', $fechaUltimaSemana)->count();
+            
+            // Estudiantes por departamento (para posibles gráficos)
+            $estudiantesPorDepartamento = User::where('role', 'estudiante')
+                ->select('departamento', DB::raw('count(*) as total'))
+                ->whereNotNull('departamento')
+                ->groupBy('departamento')
+                ->orderBy('total', 'desc')
+                ->take(5)
+                ->get();
+            
+            return view('coordinador.dashboard', compact(
+                'totalEstudiantes',
+                'totalTests',
+                'testsIniciados',
+                'tasaConversion',
+                'ultimosTests',
+                'testsUltimaSemana',
+                'estudiantesPorDepartamento'
+            ));
+            
         } catch (\Exception $e) {
-            // Si hay un error, cargar la vista sin datos
-            return view('coordinador.dashboard');
+            // Si hay un error, registrar el error y cargar la vista con datos mínimos
+            \Log::error('Error en dashboard del coordinador: ' . $e->getMessage());
+            
+            return view('coordinador.dashboard', [
+                'totalEstudiantes' => 0,
+                'totalTests' => 0,
+                'testsIniciados' => 0,
+                'tasaConversion' => '0%',
+                'ultimosTests' => collect(),
+                'error' => 'Ocurrió un error al cargar los datos. Por favor, inténtelo de nuevo.'
+            ]);
         }
     }
     
+    /**
+     * Muestra la lista de estudiantes para informes
+     */
     public function informes()
     {
-        try {
-            $estudiantes = User::where('role', 'estudiante')->get();
-            return view('coordinador.informes', compact('estudiantes'));
-        } catch (\Exception $e) {
-            return view('coordinador.informes');
-        }
-    }
-    
-    public function detalleEstudiante($id)
-    {
-        try {
-            $estudiante = User::findOrFail($id);
-            return view('coordinador.detalle-estudiante', compact('estudiante'));
-        } catch (\Exception $e) {
-            return redirect()->route('coordinador.informes')
-                ->with('error', 'Estudiante no encontrado');
-        }
-    }
-   
-    public function estadisticas()
-    {
-        // Verificar manualmente si el usuario es coordinador
+        // Verificar permisos
         if (Auth::user()->role !== 'coordinador') {
             return redirect('/')->with('error', 'No tienes permiso para acceder a esta página');
         }
         
         try {
-            // Aquí puedes agregar la lógica para generar estadísticas
+            $estudiantes = User::where('role', 'estudiante')
+                ->withCount(['tests' => function($query) {
+                    $query->where('completado', true);
+                }])
+                ->orderBy('created_at', 'desc')
+                ->paginate(20);
+                
+            return view('coordinador.informes', compact('estudiantes'));
+        } catch (\Exception $e) {
+            \Log::error('Error en informes: ' . $e->getMessage());
+            return view('coordinador.informes', [
+                'estudiantes' => collect(),
+                'error' => 'Ocurrió un error al cargar los datos de estudiantes.'
+            ]);
+        }
+    }
+    
+    /**
+     * Muestra el detalle de un estudiante específico
+     */
+    public function detalleEstudiante($id)
+    {
+        // Verificar permisos
+        if (Auth::user()->role !== 'coordinador') {
+            return redirect('/')->with('error', 'No tienes permiso para acceder a esta página');
+        }
+        
+        try {
+            $estudiante = User::findOrFail($id);
+            
+            // Verificar que sea un estudiante
+            if ($estudiante->role !== 'estudiante') {
+                return redirect()->route('coordinador.informes')
+                    ->with('error', 'El usuario seleccionado no es un estudiante');
+            }
+            
+            // Obtener los tests del estudiante
+            $tests = Test::where('user_id', $id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+                
+            return view('coordinador.detalle-estudiante', compact('estudiante', 'tests'));
+        } catch (\Exception $e) {
+            \Log::error('Error en detalle estudiante: ' . $e->getMessage());
+            return redirect()->route('coordinador.informes')
+                ->with('error', 'Estudiante no encontrado o error al cargar sus datos');
+        }
+    }
+   
+    /**
+     * Muestra estadísticas generales
+     */
+    public function estadisticas()
+    {
+        // Verificar permisos
+        if (Auth::user()->role !== 'coordinador') {
+            return redirect('/')->with('error', 'No tienes permiso para acceder a esta página');
+        }
+        
+        try {
+            // Estadísticas básicas
             $totalEstudiantes = User::where('role', 'estudiante')->count();
-            $completadosTests = Test::count();
+            $completadosTests = Test::where('completado', true)->count();
             $promedioResultados = Test::avg('puntuacion') ?? 0;
+            
+            // Estudiantes por departamento
+            $estudiantesPorDepartamento = User::where('role', 'estudiante')
+                ->select('departamento', DB::raw('count(*) as total'))
+                ->whereNotNull('departamento')
+                ->groupBy('departamento')
+                ->orderBy('total', 'desc')
+                ->get();
+                
+            // Tests por mes (para gráfico de tendencia)
+            $testsPorMes = DB::table('tests')
+                ->select(DB::raw('DATE_FORMAT(created_at, "%b %Y") as mes, COUNT(*) as total'))
+                ->where('completado', true)
+                ->groupBy('mes')
+                ->orderBy(DB::raw('MIN(created_at)'))
+                ->get();
+                
+            // Tipos de personalidad más comunes (si existe ese campo)
+            $tiposPersonalidad = DB::table('tests')
+                ->select('tipo_primario', DB::raw('COUNT(*) as total'))
+                ->where('completado', true)
+                ->whereNotNull('tipo_primario')
+                ->groupBy('tipo_primario')
+                ->orderBy('total', 'desc')
+                ->get();
             
             return view('coordinador.estadisticas', compact(
                 'totalEstudiantes', 
                 'completadosTests', 
-                'promedioResultados'
+                'promedioResultados',
+                'estudiantesPorDepartamento',
+                'testsPorMes',
+                'tiposPersonalidad'
             ));
         } catch (\Exception $e) {
-            return view('coordinador.estadisticas');
+            \Log::error('Error en estadísticas: ' . $e->getMessage());
+            return view('coordinador.estadisticas', [
+                'error' => 'No se pudieron cargar las estadísticas. Por favor, inténtelo de nuevo.'
+            ]);
         }
+    }
+    
+    /**
+     * Redirecciona a la vista de estadísticas avanzadas del admin
+     */
+    public function estadisticasAvanzadas()
+    {
+        // Verificar permisos
+        if (Auth::user()->role !== 'coordinador') {
+            return redirect('/')->with('error', 'No tienes permiso para acceder a esta página');
+        }
+        
+        // Simplemente redirigir a la ruta de estadísticas del admin
+        return redirect()->route('admin.estadisticas.index');
+    }
+    
+    /**
+     * Redirecciona a la vista de informes avanzados del admin
+     */
+    public function informesAvanzados()
+    {
+        // Verificar permisos
+        if (Auth::user()->role !== 'coordinador') {
+            return redirect('/')->with('error', 'No tienes permiso para acceder a esta página');
+        }
+        
+        // Simplemente redirigir a la ruta de informes avanzados del admin
+        return redirect()->route('admin.informes-avanzados.index');
     }
 }

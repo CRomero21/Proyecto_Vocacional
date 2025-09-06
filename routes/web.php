@@ -16,8 +16,7 @@ use App\Http\Controllers\TipoPersonalidadController;
 use App\Http\Controllers\EstadisticasController;
 use App\Http\Controllers\InformeAvanzadoController;
 // Importar el nuevo controlador para tipos RIASEC
-use App\Http\Controllers\Admin\CarreraTipoController;
-use App\Models\CarreraTipo;
+use App\Http\Controllers\CarreraTipoController;
 
 // Página de bienvenida
 Route::get('/welcome', function () {
@@ -125,11 +124,11 @@ Route::prefix('s')->name('admin.')->middleware(['auth'])->group(function () {
     Route::resource('carreras', CarreraController::class);
     
     // NUEVAS RUTAS: Gestión de tipos RIASEC para carreras
-    Route::get('carreras/{carrera}/tipos', [CarreraTipo::class, 'edit'])
+    Route::get('carreras/{carrera}/tipos', [CarreraTipoController::class, 'edit'])
         ->name('carreras.tipos.edit');
-    Route::post('carreras/{carrera}/tipos', [CarreraTipo::class, 'store'])
+    Route::post('carreras/{carrera}/tipos', [CarreraTipoController::class, 'store'])
         ->name('carreras.tipos.store');
-    Route::delete('carreras/{carrera}/tipos/{tipo}', [CarreraTipo::class, 'destroy'])
+    Route::delete('carreras/{carrera}/tipos/{tipo}', [CarreraTipoController::class, 'destroy'])
         ->name('carreras.tipos.destroy');
     
     // Rutas para gestión de universidades
