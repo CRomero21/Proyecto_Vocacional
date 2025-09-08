@@ -106,6 +106,14 @@ Route::get('/admin/estadisticas', [EstadisticasController::class, 'index'])
     ->middleware(['auth'])
     ->name('admin.estadisticas.index');
 
+// Rutas para estadísticas
+
+// En web.php, reemplaza la línea 130-132 (<?php y siguientes) por:
+// Rutas para estadísticas
+Route::get('/estadisticas', [App\Http\Controllers\EstadisticasController::class, 'index'])->name('admin.estadisticas.index');
+Route::get('/estadisticas/excel', [App\Http\Controllers\EstadisticasController::class, 'exportarExcel'])->name('admin.estadisticas.excel');
+Route::get('/estadisticas/pdf', [App\Http\Controllers\EstadisticasController::class, 'exportarPdf'])->name('admin.estadisticas.pdf');
+
 // SISTEMA DE ADMINISTRACIÓN - CON RESTRICCIÓN DE ROL SUPERADMIN
 Route::prefix('s')->name('admin.')->middleware(['auth'])->group(function () {
     // Ruta principal de estadísticas
