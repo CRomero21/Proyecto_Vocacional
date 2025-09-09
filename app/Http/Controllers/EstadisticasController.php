@@ -421,8 +421,78 @@ class EstadisticasController extends Controller
             ]);
         }
     }
-    
     public function exportarExcel()
+    {
+        try {
+            // Preparar datos
+            $periodo = 30; // Por defecto últimos 30 días
+            $fechaDesde = Carbon::now()->subDays($periodo);
+            
+            // Crear una nueva instancia de Spreadsheet
+            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Estadísticas');
+            
+            // Agregar cabecera
+            $sheet->setCellValue('A1', 'ESTADÍSTICAS DEL SISTEMA VOCACIONAL');
+            $sheet->setCellValue('A2', 'Generado el:');
+            $sheet->setCellValue('B2', Carbon::now()->format('d/m/Y H:i'));
+            $sheet->setCellValue('A3', 'Periodo:');
+            $sheet->setCellValue('B3', 'Últimos 30 días');
+            
+            // Dar formato a la cabecera
+            $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+            $sheet->mergeCells('A1:D1');
+            
+            // Resumen general
+            $sheet->setCellValue('A5', 'RESUMEN GENERAL');
+            $sheet->getStyle('A5')->getFont()->setBold(true);
+            
+            $sheet->setCellValue('A6', 'Total Usuarios');
+            $sheet->setCellValue('B6', User::where('created_at', '>=', $fechaDesde)->count());
+            
+            $sheet->setCellValue('A7', 'Tests Iniciados');
+            $testsIniciados = Test::where('created_at', '>=', $fechaDesde)->count();
+            $sheet->setCellValue('B7', $testsIniciados);
+            
+            $sheet->setCellValue('A8', 'Tests Completados');
+            $testsCompletados = Test::where('created_at', '>=', $fechaDesde)->where('completado', 1)->count();
+            $sheet->setCellValue('B8', $testsCompletados);
+            
+            $sheet->setCellValue('A9', 'Tasa de Completitud');
+            $sheet->setCellValue('B9', $testsIniciados > 0 ? round(($testsCompletados / $testsIniciados) * 100, 1) . '%' : '0%');
+            
+            // Ajustar ancho de columnas
+            $sheet->getColumnDimension('A')->setWidth(30);
+            $sheet->getColumnDimension('B')->setWidth(20);
+            
+            // Crear el archivo Excel
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            
+            // Crear respuesta HTTP
+            $fileName = 'estadisticas_vocacional_' . Carbon::now()->format('d_m_Y') . '.xlsx';
+            
+            // Guardar en buffer de memoria
+            ob_start();
+            $writer->save('php://output');
+            $content = ob_get_clean();
+            
+            // Crear respuesta HTTP
+            return response($content)
+                ->header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"')
+                ->header('Content-Length', strlen($content))
+                ->header('Cache-Control', 'max-age=0');
+                
+        } catch (\Exception $e) {
+            Log::error('Error al exportar a Excel: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+            
+            return redirect()->route('admin.estadisticas.index')
+                ->with('error', 'Error al exportar a Excel: ' . $e->getMessage());
+        }
+    }
+    
+    public function exportarCSV()
     {
         try {
             // Preparar datos
