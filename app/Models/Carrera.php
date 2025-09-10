@@ -46,4 +46,9 @@ class Carrera extends Model
     }
 
     // Otras relaciones que tengas...
+
+    public function carreraRecommendations()
+    {
+        return $this->hasMany(CarreraRecommendation::class);
+    }
 }

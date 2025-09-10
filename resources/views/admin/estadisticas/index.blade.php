@@ -409,14 +409,26 @@
             console.error('Error al inicializar:', e);
         }
         
-        // Configuración de colores
+        // Configuración de colores mejorada
         const colores = {
-            azules: ['rgba(59, 130, 246, 0.7)', 'rgba(37, 99, 235, 0.7)', 'rgba(29, 78, 216, 0.7)'],
-            morados: ['rgba(139, 92, 246, 0.7)', 'rgba(124, 58, 237, 0.7)', 'rgba(109, 40, 217, 0.7)'],
-            verdes: ['rgba(16, 185, 129, 0.7)', 'rgba(5, 150, 105, 0.7)', 'rgba(4, 120, 87, 0.7)'],
-            naranjas: ['rgba(249, 115, 22, 0.7)', 'rgba(234, 88, 12, 0.7)', 'rgba(194, 65, 12, 0.7)'],
-            rosas: ['rgba(236, 72, 153, 0.7)', 'rgba(219, 39, 119, 0.7)', 'rgba(190, 24, 93, 0.7)'],
-            grises: ['rgba(107, 114, 128, 0.7)', 'rgba(75, 85, 99, 0.7)', 'rgba(55, 65, 81, 0.7)']
+            azules: ['rgba(59, 130, 246, 0.8)', 'rgba(37, 99, 235, 0.8)', 'rgba(29, 78, 216, 0.8)'],
+            morados: ['rgba(139, 92, 246, 0.8)', 'rgba(124, 58, 237, 0.8)', 'rgba(109, 40, 217, 0.8)'],
+            verdes: ['rgba(16, 185, 129, 0.8)', 'rgba(5, 150, 105, 0.8)', 'rgba(4, 120, 87, 0.8)'],
+            naranjas: ['rgba(249, 115, 22, 0.8)', 'rgba(234, 88, 12, 0.8)', 'rgba(194, 65, 12, 0.8)'],
+            rosas: ['rgba(236, 72, 153, 0.8)', 'rgba(219, 39, 119, 0.8)', 'rgba(190, 24, 93, 0.8)'],
+            grises: ['rgba(107, 114, 128, 0.8)', 'rgba(75, 85, 99, 0.8)', 'rgba(55, 65, 81, 0.8)'],
+            pastel: [
+                'rgba(255, 99, 132, 0.8)',
+                'rgba(54, 162, 235, 0.8)',
+                'rgba(255, 206, 86, 0.8)',
+                'rgba(75, 192, 192, 0.8)',
+                'rgba(153, 102, 255, 0.8)',
+                'rgba(255, 159, 64, 0.8)',
+                'rgba(199, 199, 199, 0.8)',
+                'rgba(83, 102, 255, 0.8)',
+                'rgba(78, 235, 133, 0.8)',
+                'rgba(255, 99, 255, 0.8)'
+            ]
         };
         
         // Datos geográficos
@@ -468,38 +480,55 @@
             datasets: [{
                 label: 'Distribución',
                 data: personalidadData,
-                backgroundColor: [
-                    colores.azules[0], colores.morados[0], colores.verdes[0], 
-                    colores.naranjas[0], colores.rosas[0], colores.grises[0]
-                ],
+                backgroundColor: colores.pastel.slice(0, personalidadLabels.length),
                 borderWidth: 1
             }]
         };
 
-        // Datos carreras
+        // Datos carreras - CORREGIDO
         let carrerasMasRecomendadas = [];
         let carrerasLabels = [];
         let carrerasData = [];
+        let carrerasMatch = [];
         
+        // Reemplazar la sección donde procesa los datos de carreras
         try {
-            carrerasMasRecomendadas = @json($carrerasMasRecomendadas ?? []);
-            if (carrerasMasRecomendadas && Array.isArray(carrerasMasRecomendadas)) {
-                carrerasMasRecomendadas.forEach(item => {
-                    carrerasLabels.push(item.nombre);
-                    carrerasData.push(item.total);
-                });
+            // Obtener datos y mostrar para depuración
+            const carrerasRaw = @json($carrerasMasRecomendadas ?? []);
+            console.log('Datos de carreras crudos:', carrerasRaw);
+            
+            // Siempre asumimos que es un array simple (no un objeto complejo)
+            if (carrerasRaw && Array.isArray(carrerasRaw) && carrerasRaw.length > 0) {
+                carrerasMasRecomendadas = carrerasRaw;
+                
+                // Extraer propiedades de forma segura
+                carrerasLabels = carrerasMasRecomendadas.map(item => item.nombre || 'Sin nombre');
+                carrerasData = carrerasMasRecomendadas.map(item => parseInt(item.total || 0));
+                carrerasMatch = carrerasMasRecomendadas.map(item => parseFloat(item.match_promedio || 0));
+                
+                console.log('Datos de carreras procesados correctamente');
+            } else {
+                console.warn('No hay datos de carreras disponibles');
+                carrerasLabels = ['No hay datos disponibles'];
+                carrerasData = [0];
             }
         } catch(e) {
             console.error('Error al procesar datos de carreras:', e);
+            carrerasLabels = ['Error de procesamiento'];
+            carrerasData = [0];
         }
         
+        // Datasets para el gráfico de carreras
         const datosCarreras = {
             labels: carrerasLabels,
             datasets: [{
-                label: 'Recomendaciones',
+                label: 'Total Recomendaciones',
                 data: carrerasData,
-                backgroundColor: colores.morados,
-                borderWidth: 1
+                backgroundColor: colores.pastel,
+                borderWidth: 1,
+                borderColor: colores.pastel.map(color => color.replace('0.8', '1')),
+                barPercentage: 0.7,
+                categoryPercentage: 0.8
             }]
         };
         
@@ -509,6 +538,8 @@
         
         try {
             const distribucionPorEdad = @json($distribucionPorEdad ?? []);
+            console.log('Datos de edad crudos:', distribucionPorEdad);
+            
             if (distribucionPorEdad && Array.isArray(distribucionPorEdad)) {
                 // Si los datos vienen como array de objetos con rango y total
                 if (distribucionPorEdad.length > 0 && 'rango' in distribucionPorEdad[0]) {
@@ -534,39 +565,48 @@
             datasets: [{
                 label: 'Usuarios por Rango de Edad',
                 data: distribucionEdadData,
-                backgroundColor: colores.azules,
-                borderWidth: 1
+                backgroundColor: [
+                    'rgba(102, 126, 234, 0.8)',
+                    'rgba(104, 109, 224, 0.8)',
+                    'rgba(126, 214, 223, 0.8)',
+                    'rgba(129, 236, 236, 0.8)',
+                    'rgba(72, 219, 251, 0.8)'
+                ],
+                borderWidth: 1,
+                borderRadius: 4
             }]
         };
         
-        // Obtener datos de género desde el controlador
+        // Obtener datos de género desde el controlador - CORREGIDO
         let distribucionGeneroLabels = ['Femenino', 'Masculino', 'No especificado'];
         let distribucionGeneroData = [0, 0, 0];
         
         try {
             const distribucionPorGenero = @json($distribucionPorGenero ?? []);
+            console.log('Datos de género crudos:', distribucionPorGenero);
             
-            // Si es un objeto con propiedades para cada género
-            if (distribucionPorGenero && typeof distribucionPorGenero === 'object' && !Array.isArray(distribucionPorGenero)) {
-                if ('femenino' in distribucionPorGenero) {
-                    distribucionGeneroData[0] = distribucionPorGenero.femenino || 0;
-                }
-                if ('masculino' in distribucionPorGenero) {
-                    distribucionGeneroData[1] = distribucionPorGenero.masculino || 0;
-                }
-                if ('otro' in distribucionPorGenero) {
-                    distribucionGeneroData[2] = distribucionPorGenero.otro || 0;
-                }
-            } 
-            // Si es un array de objetos con genero y total
-            else if (distribucionPorGenero && Array.isArray(distribucionPorGenero)) {
+            // Si es un array de objetos con genero y total (formato nuevo)
+            if (distribucionPorGenero && Array.isArray(distribucionPorGenero)) {
                 distribucionGeneroLabels = [];
                 distribucionGeneroData = [];
-                distribucionPorGenero.forEach(item => {
-                    if ('genero' in item && 'total' in item) {
-                        distribucionGeneroLabels.push(item.genero);
-                        distribucionGeneroData.push(item.total);
-                    }
+                
+                // Asegurarnos de que los géneros aparezcan en el orden correcto para aplicar los colores correctamente
+                const ordenGeneros = {
+                    'Femenino': 0,
+                    'Masculino': 1,
+                    'No especificado': 2
+                };
+                
+                // Ordenar el array por el orden predefinido
+                const generoOrdenado = [...distribucionPorGenero].sort((a, b) => {
+                    const ordenA = ordenGeneros[a.genero] !== undefined ? ordenGeneros[a.genero] : 999;
+                    const ordenB = ordenGeneros[b.genero] !== undefined ? ordenGeneros[b.genero] : 999;
+                    return ordenA - ordenB;
+                });
+                
+                generoOrdenado.forEach(item => {
+                    distribucionGeneroLabels.push(item.genero);
+                    distribucionGeneroData.push(item.total);
                 });
             }
             console.log('Datos de género procesados:', {labels: distribucionGeneroLabels, data: distribucionGeneroData});
@@ -574,17 +614,30 @@
             console.error('Error al procesar datos de género:', e);
         }
         
+        // Colores específicos para cada género - Rosa para Femenino, Azul para Masculino, Gris para No especificado
+        const coloresGenero = [];
+        distribucionGeneroLabels.forEach(genero => {
+            if (genero === 'Femenino') {
+                coloresGenero.push('rgba(236, 72, 153, 0.8)'); // Rosa
+            } else if (genero === 'Masculino') {
+                coloresGenero.push('rgba(59, 130, 246, 0.8)'); // Azul
+            } else {
+                coloresGenero.push('rgba(107, 114, 128, 0.8)'); // Gris
+            }
+        });
+        
         const distribucionGenero = {
             labels: distribucionGeneroLabels,
             datasets: [{
                 data: distribucionGeneroData,
-                backgroundColor: [colores.rosas[0], colores.azules[0], colores.grises[0]],
+                backgroundColor: coloresGenero,
                 borderWidth: 1
             }]
         };
         
-        // Crear gráficos
+        // Crear gráficos con opciones mejoradas
         try {
+            // Gráfico de Edad
             if(document.getElementById('chartEdad')) {
                 new Chart(document.getElementById('chartEdad'), {
                     type: 'bar',
@@ -595,12 +648,41 @@
                         plugins: {
                             legend: {
                                 display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `Total: ${context.raw} usuarios`;
+                                    }
+                                }
                             }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0
+                                },
+                                grid: {
+                                    display: true,
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        },
+                        animation: {
+                            duration: 1500,
+                            easing: 'easeOutQuart'
                         }
                     }
                 });
             }
             
+            // Gráfico de Género
             if(document.getElementById('chartGenero')) {
                 new Chart(document.getElementById('chartGenero'), {
                     type: 'doughnut',
@@ -608,15 +690,35 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        cutout: '60%',
                         plugins: {
                             legend: {
-                                position: 'right'
+                                position: 'right',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 15
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = Math.round((context.raw / total) * 100);
+                                        return `${context.label}: ${context.raw} (${percentage}%)`;
+                                    }
+                                }
                             }
+                        },
+                        animation: {
+                            animateRotate: true,
+                            animateScale: true,
+                            duration: 1500
                         }
                     }
                 });
             }
             
+            // Gráfico de Departamentos
             if(document.getElementById('chartDepartamentos')) {
                 new Chart(document.getElementById('chartDepartamentos'), {
                     type: 'bar',
@@ -629,11 +731,32 @@
                             legend: {
                                 display: false
                             }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0
+                                },
+                                grid: {
+                                    display: true,
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        },
+                        animation: {
+                            duration: 1500
                         }
                     }
                 });
             }
             
+            // Gráfico de Tipos de Personalidad
             if(document.getElementById('chartTiposPersonalidad')) {
                 new Chart(document.getElementById('chartTiposPersonalidad'), {
                     type: 'pie',
@@ -643,13 +766,31 @@
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                position: 'right'
+                                position: 'right',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 15
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = Math.round((context.raw / total) * 100);
+                                        return `${context.label}: ${context.raw} (${percentage}%)`;
+                                    }
+                                }
                             }
+                        },
+                        animation: {
+                            animateRotate: true,
+                            duration: 1500
                         }
                     }
                 });
             }
             
+            // Gráfico de Carreras - CORREGIDO
             if(document.getElementById('chartCarreras')) {
                 new Chart(document.getElementById('chartCarreras'), {
                     type: 'bar',
@@ -657,10 +798,48 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        indexAxis: 'y', // Gráfico horizontal para mejor visualización de nombres largos
                         plugins: {
                             legend: {
                                 display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `Total recomendaciones: ${context.raw}`;
+                                    }
+                                }
                             }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0
+                                },
+                                grid: {
+                                    display: true,
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        const label = this.getLabelForValue(value);
+                                        // Truncar etiquetas largas
+                                        if (label.length > 25) {
+                                            return label.substring(0, 22) + '...';
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        animation: {
+                            duration: 1500
                         }
                     }
                 });

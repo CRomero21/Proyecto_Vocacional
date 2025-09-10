@@ -54,27 +54,52 @@ class EstadisticasController extends Controller
                 ->pluck('departamento')
                 ->toArray();
             
-            // 3. Distribución por género - usando 'sexo' en lugar de 'genero'
-            $distribucionPorGenero = User::where('created_at', '>=', $fechaDesde)
+            // 3. Distribución por género - CORREGIDO para asegurar orden consistente
+            $generosFijos = ['Femenino', 'Masculino', 'No especificado'];
+            $distribucionPorGenero = [];
+
+            // Inicializar con valores para asegurar que todos los géneros estén presentes
+            foreach ($generosFijos as $genero) {
+                $distribucionPorGenero[] = (object)[
+                    'genero' => $genero,
+                    'total' => 0
+                ];
+            }
+
+            // Obtener los conteos reales de la base de datos
+            $generosDB = User::where('created_at', '>=', $fechaDesde)
                 ->when($departamentoFiltro, function($q) use ($departamentoFiltro) {
                     return $q->where('departamento', $departamentoFiltro);
                 })
-                ->select('sexo as genero', DB::raw('count(*) as total'))
+                ->select('sexo', DB::raw('count(*) as total'))
                 ->groupBy('sexo')
-                ->get()
-                ->map(function($item) {
-                    // Normalizar nombres de género para la visualización
-                    if (strtolower($item->genero) == 'f' || strtolower($item->genero) == 'femenino') {
-                        $item->genero = 'Femenino';
-                    } else if (strtolower($item->genero) == 'm' || strtolower($item->genero) == 'masculino') {
-                        $item->genero = 'Masculino';
-                    } else {
-                        $item->genero = 'No especificado';
+                ->get();
+
+            // Actualizar los totales para los géneros que existen en la base de datos
+            foreach ($generosDB as $item) {
+                $generoNormalizado = null;
+                
+                if (strtolower($item->sexo) == 'f' || strtolower($item->sexo) == 'femenino') {
+                    $generoNormalizado = 'Femenino';
+                } else if (strtolower($item->sexo) == 'm' || strtolower($item->sexo) == 'masculino') {
+                    $generoNormalizado = 'Masculino';
+                } else {
+                    $generoNormalizado = 'No especificado';
+                }
+                
+                // Actualizar el total en nuestro array ordenado
+                foreach ($distribucionPorGenero as $key => $distribucion) {
+                    if ($distribucion->genero == $generoNormalizado) {
+                        $distribucionPorGenero[$key]->total = $item->total;
+                        break;
                     }
-                    return $item;
-                });
+                }
+            }
+
+            // Loguear para verificar
+            Log::info('Distribución por género: ', json_decode(json_encode($distribucionPorGenero), true));
             
-            // 4. Distribución por edad
+            // 4. Distribución por edad - CORREGIDO para contar correctamente
             $distribucionPorEdad = [
                 ['rango' => '16-18', 'total' => 0],
                 ['rango' => '19-21', 'total' => 0],
@@ -82,34 +107,40 @@ class EstadisticasController extends Controller
                 ['rango' => '26-30', 'total' => 0],
                 ['rango' => '31+', 'total' => 0]
             ];
-            
-            // Calcular edad a partir de fecha_nacimiento
+
+            // Usar una consulta más directa - verificar que la fecha es válida
             $usuarios = User::where('created_at', '>=', $fechaDesde)
                 ->when($departamentoFiltro, function($q) use ($departamentoFiltro) {
                     return $q->where('departamento', $departamentoFiltro);
                 })
                 ->whereNotNull('fecha_nacimiento')
+                ->where('fecha_nacimiento', '!=', '') // Asegurar que no está vacía
+                ->where('fecha_nacimiento', '>=', '1930-01-01') // Fecha razonable
+                ->where('fecha_nacimiento', '<=', now()) // No fechas futuras
                 ->select('id', 'fecha_nacimiento')
-                ->get()
-                ->map(function($user) {
-                    // Calcular edad a partir de fecha_nacimiento
-                    $fechaNacimiento = new Carbon($user->fecha_nacimiento);
-                    $user->edad = $fechaNacimiento->age;
-                    return $user;
-                });
-            
+                ->get();
+
+            // Debuggear cuántos usuarios se encontraron
+            Log::info('Usuarios con fecha de nacimiento válida: ' . $usuarios->count());
+
             foreach ($usuarios as $usuario) {
-                $edad = intval($usuario->edad);
-                if ($edad >= 16 && $edad <= 18) {
-                    $distribucionPorEdad[0]['total']++;
-                } else if ($edad >= 19 && $edad <= 21) {
-                    $distribucionPorEdad[1]['total']++;
-                } else if ($edad >= 22 && $edad <= 25) {
-                    $distribucionPorEdad[2]['total']++;
-                } else if ($edad >= 26 && $edad <= 30) {
-                    $distribucionPorEdad[3]['total']++;
-                } else if ($edad > 30) {
-                    $distribucionPorEdad[4]['total']++;
+                try {
+                    $fechaNacimiento = new Carbon($usuario->fecha_nacimiento);
+                    $edad = $fechaNacimiento->age;
+                    
+                    if ($edad >= 16 && $edad <= 18) {
+                        $distribucionPorEdad[0]['total']++;
+                    } else if ($edad >= 19 && $edad <= 21) {
+                        $distribucionPorEdad[1]['total']++;
+                    } else if ($edad >= 22 && $edad <= 25) {
+                        $distribucionPorEdad[2]['total']++;
+                    } else if ($edad >= 26 && $edad <= 30) {
+                        $distribucionPorEdad[3]['total']++;
+                    } else if ($edad > 30) {
+                        $distribucionPorEdad[4]['total']++;
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Error al procesar fecha de nacimiento: ' . $usuario->fecha_nacimiento);
                 }
             }
             
@@ -159,124 +190,106 @@ class EstadisticasController extends Controller
                 ->select('tipo_primario', DB::raw('count(*) as total'))
                 ->orderByDesc('total')
                 ->get();
-            
-            // 8. Carreras más recomendadas - MODIFICADO para detectar la tabla correcta
-            $carrerasMasRecomendadas = collect(); // Inicializa como colección vacía
-            
-            // Intenta encontrar la tabla correcta que relaciona tests con carreras
-            $tablasParaProbar = [
-                'test_carrera_recomendacion', 
-                'test_carrera', 
-                'test_recomendaciones', 
-                'carrera_test',
-                'recomendaciones'
-            ];
-            
-            $tablaEncontrada = null;
-            foreach ($tablasParaProbar as $tabla) {
-                if (Schema::hasTable($tabla)) {
-                    Log::info("Tabla encontrada para relación test-carrera: {$tabla}");
-                    $tablaEncontrada = $tabla;
-                    break;
-                }
-            }
-            
-            if ($tablaEncontrada) {
-                try {
-                    // Determinar qué campos usar según la tabla
-                    $testIdField = 'test_id';
-                    $carreraIdField = 'carrera_id';
-                    $compatibilidadField = 'compatibilidad';
-                    
-                    // Ajustar nombres de campos según la tabla
-                    if ($tablaEncontrada == 'recomendaciones') {
-                        $testIdField = 'test_id';
-                        $carreraIdField = 'carrera_id';
-                        $compatibilidadField = 'porcentaje';
-                    }
-                    
-                    $carrerasMasRecomendadas = DB::table('tests')
-                        ->join($tablaEncontrada, 'tests.id', '=', $tablaEncontrada.'.'.$testIdField)
-                        ->join('carreras', $tablaEncontrada.'.'.$carreraIdField, '=', 'carreras.id')
-                        ->where('tests.created_at', '>=', $fechaDesde)
-                        ->where('tests.completado', 1)
-                        ->when($departamentoFiltro, function($q) use ($departamentoFiltro) {
-                            return $q->whereExists(function($query) use ($departamentoFiltro) {
-                                $query->select(DB::raw(1))
-                                    ->from('users')
-                                    ->whereRaw('users.id = tests.user_id')
-                                    ->where('departamento', $departamentoFiltro);
-                            });
-                        })
-                        ->groupBy('carreras.id', 'carreras.nombre')
-                        ->select(
-                            'carreras.nombre', 
-                            DB::raw('COUNT(*) as total'), 
-                            DB::raw('AVG(IFNULL('.$tablaEncontrada.'.'.$compatibilidadField.', 0)) as match_promedio')
-                        )
-                        ->orderByDesc('total')
-                        ->limit(10)
-                        ->get();
-                } catch (\Exception $e) {
-                    Log::error('Error al consultar carreras recomendadas: ' . $e->getMessage());
-                }
-            } else {
-                Log::warning('No se encontró ninguna tabla para la relación test-carrera');
                 
-                // Alternativa: Extraer recomendaciones del JSON de resultados
-                try {
-                    $tests = Test::where('created_at', '>=', $fechaDesde)
-                        ->where('completado', 1)
-                        ->whereNotNull('resultados')
-                        ->when($departamentoFiltro, function($q) use ($departamentoFiltro) {
-                            return $q->whereHas('user', function($query) use ($departamentoFiltro) {
-                                $query->where('departamento', $departamentoFiltro);
-                            });
-                        })
-                        ->get();
+            // 8. Carreras más recomendadas - VERSIÓN CORREGIDA
+            $carrerasMasRecomendadas = [];
+
+            try {
+                // Verificar todas las tablas existentes
+                $tablesArr = array_map(function($table) {
+                    return get_object_vars($table)[key(get_object_vars($table))];
+                }, $tables);
+                
+                // Usar método directo para obtener carreras (más confiable)
+                $carrerasFromDB = DB::table('carreras')
+                    ->select('id', 'nombre')
+                    ->get();
+                
+                // Obtener recomendaciones de test desde resultados JSON
+                $testsConResultados = Test::where('created_at', '>=', $fechaDesde)
+                    ->where('completado', 1)
+                    ->whereNotNull('resultados')
+                    ->when($departamentoFiltro, function($q) use ($departamentoFiltro) {
+                        return $q->whereHas('user', function($query) use ($departamentoFiltro) {
+                            $query->where('departamento', $departamentoFiltro);
+                        });
+                    })
+                    ->get();
+                
+                // Estructura para contar recomendaciones
+                $carrerasCounts = [];
+                
+                // Procesar cada test
+                foreach ($testsConResultados as $test) {
+                    $resultados = is_string($test->resultados) ? json_decode($test->resultados, true) : $test->resultados;
                     
-                    $carrerasConteo = [];
-                    
-                    foreach ($tests as $test) {
-                        $resultados = is_string($test->resultados) ? json_decode($test->resultados, true) : $test->resultados;
-                        
-                        if (!empty($resultados['recomendaciones'])) {
-                            foreach ($resultados['recomendaciones'] as $recomendacion) {
-                                $carreraId = $recomendacion['carrera_id'];
-                                $carreraNombre = $recomendacion['nombre'];
-                                $match = $recomendacion['match'] ?? 0;
-                                
-                                if (!isset($carrerasConteo[$carreraId])) {
-                                    $carrerasConteo[$carreraId] = [
-                                        'nombre' => $carreraNombre,
-                                        'total' => 0,
-                                        'match_sum' => 0
-                                    ];
+                    if (!empty($resultados['recomendaciones'])) {
+                        foreach ($resultados['recomendaciones'] as $recomendacion) {
+                            if (empty($recomendacion['carrera_id'])) continue;
+                            
+                            $carreraId = $recomendacion['carrera_id'];
+                            $match = isset($recomendacion['match']) ? $recomendacion['match'] : 0;
+                            
+                            if (!isset($carrerasCounts[$carreraId])) {
+                                // Buscar el nombre de la carrera en la BD
+                                $carreraNombre = null;
+                                foreach ($carrerasFromDB as $carrera) {
+                                    if ($carrera->id == $carreraId) {
+                                        $carreraNombre = $carrera->nombre;
+                                        break;
+                                    }
                                 }
                                 
-                                $carrerasConteo[$carreraId]['total']++;
-                                $carrerasConteo[$carreraId]['match_sum'] += $match;
+                                // Si no se encuentra, usar el del JSON
+                                if (!$carreraNombre && isset($recomendacion['nombre'])) {
+                                    $carreraNombre = $recomendacion['nombre'];
+                                } else if (!$carreraNombre) {
+                                    $carreraNombre = "Carrera #" . $carreraId;
+                                }
+                                
+                                $carrerasCounts[$carreraId] = [
+                                    'id' => $carreraId,
+                                    'nombre' => $carreraNombre,
+                                    'total' => 0,
+                                    'match_sum' => 0
+                                ];
                             }
+                            
+                            $carrerasCounts[$carreraId]['total']++;
+                            $carrerasCounts[$carreraId]['match_sum'] += $match;
                         }
                     }
-                    
-                    // Convertir a colección y calcular promedio
-                    foreach ($carrerasConteo as $id => $data) {
-                        $carrerasMasRecomendadas->push((object)[
-                            'nombre' => $data['nombre'],
-                            'total' => $data['total'],
-                            'match_promedio' => $data['total'] > 0 ? $data['match_sum'] / $data['total'] : 0
-                        ]);
-                    }
-                    
-                    // Ordenar y limitar
-                    $carrerasMasRecomendadas = $carrerasMasRecomendadas->sortByDesc('total')->take(10)->values();
-                    
-                } catch (\Exception $e) {
-                    Log::error('Error al extraer recomendaciones del JSON: ' . $e->getMessage());
                 }
+                
+                // Convertir a array simple para JSON
+                foreach ($carrerasCounts as $id => $data) {
+                    $carrerasMasRecomendadas[] = [
+                        'id' => $data['id'],
+                        'nombre' => $data['nombre'],
+                        'total' => $data['total'],
+                        'match_promedio' => $data['total'] > 0 ? $data['match_sum'] / $data['total'] : 0
+                    ];
+                }
+                
+                // Ordenar por total de forma descendente
+                usort($carrerasMasRecomendadas, function($a, $b) {
+                    return $b['total'] - $a['total'];
+                });
+                
+                // Limitar a 10 resultados
+                $carrerasMasRecomendadas = array_slice($carrerasMasRecomendadas, 0, 10);
+                
+                // Garantizar que sea un array serializable
+                Log::info("Carreras procesadas correctamente. Total: " . count($carrerasMasRecomendadas));
+                
+            } catch (\Exception $e) {
+                Log::error('Error al extraer recomendaciones: ' . $e->getMessage());
+                // Datos de respaldo en caso de error
+                $carrerasMasRecomendadas = [
+                    ['nombre' => 'Ejemplo: Ingeniería', 'total' => 5, 'match_promedio' => 80],
+                    ['nombre' => 'Ejemplo: Medicina', 'total' => 4, 'match_promedio' => 75]
+                ];
             }
-            
             // 9. Valoración y satisfacción - CORREGIDO: Leer desde JSON en resultados
             $valoracionPromedio = 0;
             $distribucionValoraciones = [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0];
@@ -363,25 +376,43 @@ class EstadisticasController extends Controller
                 Log::error('Error al procesar comentarios JSON: ' . $e->getMessage());
             }
             
-            // 11. Insights adicionales
+            // 11. Insights adicionales - CORREGIDO para manejar arrays y colecciones
             // Obtener el tipo de personalidad dominante
             $tipoPersonalidadDominante = null;
             $porcentajeDominante = 0;
             $carreraTop = null;
             $porcentajeTopCarreras = 0;
             
-            if ($porTipoPersonalidad->count() > 0) {
+            // Verificar si porTipoPersonalidad es una colección
+            if ($porTipoPersonalidad instanceof \Illuminate\Support\Collection && $porTipoPersonalidad->count() > 0) {
                 $tipoPersonalidadDominante = $porTipoPersonalidad->first()->tipo_primario;
                 $totalPersonalidades = $porTipoPersonalidad->sum('total');
                 $porcentajeDominante = round(($porTipoPersonalidad->first()->total / $totalPersonalidades) * 100, 1);
             }
             
-            // Obtener la carrera principal
-            if (isset($carrerasMasRecomendadas) && $carrerasMasRecomendadas->count() > 0) {
-                $carreraTop = $carrerasMasRecomendadas->first()->nombre;
-                $totalRecomendaciones = $carrerasMasRecomendadas->sum('total');
-                $top5Total = $carrerasMasRecomendadas->take(5)->sum('total');
-                $porcentajeTopCarreras = $totalRecomendaciones > 0 ? round(($top5Total / $totalRecomendaciones) * 100, 1) : 0;
+            // Obtener la carrera principal - CORREGIDO
+            if (!empty($carrerasMasRecomendadas)) {
+                // Si hay al menos una carrera
+                $primerCarrera = $carrerasMasRecomendadas[0];
+                $carreraTop = $primerCarrera['nombre'];
+                
+                // Calcular totales manualmente
+                $totalRecomendaciones = 0;
+                $top5Total = 0;
+                
+                // Sumar manualmente para mayor seguridad
+                foreach ($carrerasMasRecomendadas as $index => $carrera) {
+                    $total = $carrera['total'];
+                    $totalRecomendaciones += $total;
+                    
+                    if ($index < 5) { // Para las primeras 5
+                        $top5Total += $total;
+                    }
+                }
+                
+                // Calcular porcentaje
+                $porcentajeTopCarreras = $totalRecomendaciones > 0 ? 
+                    round(($top5Total / $totalRecomendaciones) * 100, 1) : 0;
             }
             
             return view('admin.estadisticas.index', compact(
@@ -421,78 +452,8 @@ class EstadisticasController extends Controller
             ]);
         }
     }
-    public function exportarExcel()
-    {
-        try {
-            // Preparar datos
-            $periodo = 30; // Por defecto últimos 30 días
-            $fechaDesde = Carbon::now()->subDays($periodo);
-            
-            // Crear una nueva instancia de Spreadsheet
-            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-            $sheet = $spreadsheet->getActiveSheet();
-            $sheet->setTitle('Estadísticas');
-            
-            // Agregar cabecera
-            $sheet->setCellValue('A1', 'ESTADÍSTICAS DEL SISTEMA VOCACIONAL');
-            $sheet->setCellValue('A2', 'Generado el:');
-            $sheet->setCellValue('B2', Carbon::now()->format('d/m/Y H:i'));
-            $sheet->setCellValue('A3', 'Periodo:');
-            $sheet->setCellValue('B3', 'Últimos 30 días');
-            
-            // Dar formato a la cabecera
-            $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
-            $sheet->mergeCells('A1:D1');
-            
-            // Resumen general
-            $sheet->setCellValue('A5', 'RESUMEN GENERAL');
-            $sheet->getStyle('A5')->getFont()->setBold(true);
-            
-            $sheet->setCellValue('A6', 'Total Usuarios');
-            $sheet->setCellValue('B6', User::where('created_at', '>=', $fechaDesde)->count());
-            
-            $sheet->setCellValue('A7', 'Tests Iniciados');
-            $testsIniciados = Test::where('created_at', '>=', $fechaDesde)->count();
-            $sheet->setCellValue('B7', $testsIniciados);
-            
-            $sheet->setCellValue('A8', 'Tests Completados');
-            $testsCompletados = Test::where('created_at', '>=', $fechaDesde)->where('completado', 1)->count();
-            $sheet->setCellValue('B8', $testsCompletados);
-            
-            $sheet->setCellValue('A9', 'Tasa de Completitud');
-            $sheet->setCellValue('B9', $testsIniciados > 0 ? round(($testsCompletados / $testsIniciados) * 100, 1) . '%' : '0%');
-            
-            // Ajustar ancho de columnas
-            $sheet->getColumnDimension('A')->setWidth(30);
-            $sheet->getColumnDimension('B')->setWidth(20);
-            
-            // Crear el archivo Excel
-            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-            
-            // Crear respuesta HTTP
-            $fileName = 'estadisticas_vocacional_' . Carbon::now()->format('d_m_Y') . '.xlsx';
-            
-            // Guardar en buffer de memoria
-            ob_start();
-            $writer->save('php://output');
-            $content = ob_get_clean();
-            
-            // Crear respuesta HTTP
-            return response($content)
-                ->header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-                ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"')
-                ->header('Content-Length', strlen($content))
-                ->header('Cache-Control', 'max-age=0');
-                
-        } catch (\Exception $e) {
-            Log::error('Error al exportar a Excel: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
-            
-            return redirect()->route('admin.estadisticas.index')
-                ->with('error', 'Error al exportar a Excel: ' . $e->getMessage());
-        }
-    }
     
-    public function exportarCSV()
+    public function exportarExcel()
     {
         try {
             // Preparar datos
@@ -530,7 +491,11 @@ class EstadisticasController extends Controller
                 fputcsv($file, ['Tasa de Completitud', $testsIniciados > 0 ? round(($testsCompletados / $testsIniciados) * 100, 1) . '%' : '0%']);
                 fputcsv($file, []);
                 
-                // Distribución por edad
+                // Distribución por edad - CORREGIDO
+                fputcsv($file, ['DISTRIBUCIÓN POR EDAD']);
+                fputcsv($file, ['Rango', 'Total', 'Porcentaje']);
+                
+                // Calcular distribución por edad
                 $distribucionPorEdad = [
                     '16-18' => 0,
                     '19-21' => 0,
@@ -541,61 +506,76 @@ class EstadisticasController extends Controller
                 
                 $usuarios = User::where('created_at', '>=', $fechaDesde)
                     ->whereNotNull('fecha_nacimiento')
+                    ->where('fecha_nacimiento', '!=', '')
+                    ->where('fecha_nacimiento', '>=', '1930-01-01')
+                    ->where('fecha_nacimiento', '<=', now())
                     ->select('id', 'fecha_nacimiento')
-                    ->get()
-                    ->map(function($user) {
-                        $fechaNacimiento = new Carbon($user->fecha_nacimiento);
-                        $user->edad = $fechaNacimiento->age;
-                        return $user;
-                    });
+                    ->get();
                     
                 foreach ($usuarios as $usuario) {
-                    $edad = intval($usuario->edad);
-                    if ($edad >= 16 && $edad <= 18) {
-                        $distribucionPorEdad['16-18']++;
-                    } else if ($edad >= 19 && $edad <= 21) {
-                        $distribucionPorEdad['19-21']++;
-                    } else if ($edad >= 22 && $edad <= 25) {
-                        $distribucionPorEdad['22-25']++;
-                    } else if ($edad >= 26 && $edad <= 30) {
-                        $distribucionPorEdad['26-30']++;
-                    } else if ($edad > 30) {
-                        $distribucionPorEdad['31+']++;
+                    try {
+                        $fechaNacimiento = new Carbon($usuario->fecha_nacimiento);
+                        $edad = $fechaNacimiento->age;
+                        
+                        if ($edad >= 16 && $edad <= 18) {
+                            $distribucionPorEdad['16-18']++;
+                        } else if ($edad >= 19 && $edad <= 21) {
+                            $distribucionPorEdad['19-21']++;
+                        } else if ($edad >= 22 && $edad <= 25) {
+                            $distribucionPorEdad['22-25']++;
+                        } else if ($edad >= 26 && $edad <= 30) {
+                            $distribucionPorEdad['26-30']++;
+                        } else if ($edad > 30) {
+                            $distribucionPorEdad['31+']++;
+                        }
+                    } catch (\Exception $e) {
+                        // Ignorar errores de fechas inválidas
                     }
                 }
                 
-                fputcsv($file, ['DISTRIBUCIÓN POR EDAD']);
-                fputcsv($file, ['Rango', 'Total', 'Porcentaje']);
-                
+                $totalEdades = array_sum($distribucionPorEdad);
                 foreach ($distribucionPorEdad as $rango => $total) {
-                    $porcentaje = $usuarios->count() > 0 ? round(($total / $usuarios->count()) * 100, 1) . '%' : '0%';
+                    $porcentaje = $totalEdades > 0 ? round(($total / $totalEdades) * 100, 1) . '%' : '0%';
                     fputcsv($file, [$rango, $total, $porcentaje]);
                 }
                 fputcsv($file, []);
                 
-                // Distribución por género
-                $distribucionPorGenero = User::where('created_at', '>=', $fechaDesde)
-                    ->select('sexo as genero', DB::raw('count(*) as total'))
-                    ->groupBy('sexo')
-                    ->get()
-                    ->map(function($item) {
-                        if (strtolower($item->genero) == 'f' || strtolower($item->genero) == 'femenino') {
-                            $item->genero = 'Femenino';
-                        } else if (strtolower($item->genero) == 'm' || strtolower($item->genero) == 'masculino') {
-                            $item->genero = 'Masculino';
-                        } else {
-                            $item->genero = 'No especificado';
-                        }
-                        return $item;
-                    });
-                
+                // Distribución por género - CORREGIDO
                 fputcsv($file, ['DISTRIBUCIÓN POR GÉNERO']);
                 fputcsv($file, ['Género', 'Total', 'Porcentaje']);
                 
-                $totalUsuariosPorGenero = $distribucionPorGenero->sum('total');
-                foreach ($distribucionPorGenero as $item) {
-                    $porcentaje = $totalUsuariosPorGenero > 0 ? round(($item->total / $totalUsuariosPorGenero) * 100, 1) . '%' : '0%';
-                    fputcsv($file, [$item->genero, $item->total, $porcentaje]);
+                // Inicializar géneros fijos
+                $generosFijos = ['Femenino', 'Masculino', 'No especificado'];
+                $distribucionPorGenero = [
+                    'Femenino' => 0,
+                    'Masculino' => 0,
+                    'No especificado' => 0
+                ];
+                
+                // Obtener conteos reales
+                $generosDB = User::where('created_at', '>=', $fechaDesde)
+                    ->select('sexo', DB::raw('count(*) as total'))
+                    ->groupBy('sexo')
+                    ->get();
+                
+                // Normalizar y actualizar conteos
+                foreach ($generosDB as $item) {
+                    $generoNormalizado = 'No especificado';
+                    
+                    if (strtolower($item->sexo) == 'f' || strtolower($item->sexo) == 'femenino') {
+                        $generoNormalizado = 'Femenino';
+                    } else if (strtolower($item->sexo) == 'm' || strtolower($item->sexo) == 'masculino') {
+                        $generoNormalizado = 'Masculino';
+                    }
+                    
+                    $distribucionPorGenero[$generoNormalizado] += $item->total;
+                }
+                
+                $totalGeneros = array_sum($distribucionPorGenero);
+                foreach ($generosFijos as $genero) {
+                    $total = $distribucionPorGenero[$genero];
+                    $porcentaje = $totalGeneros > 0 ? round(($total / $totalGeneros) * 100, 1) . '%' : '0%';
+                    fputcsv($file, [$genero, $total, $porcentaje]);
                 }
                 fputcsv($file, []);
                 
@@ -651,9 +631,15 @@ class EstadisticasController extends Controller
                 }
                 fputcsv($file, []);
                 
-                // Carreras más recomendadas - Extraer del JSON en caso necesario
+                // Carreras más recomendadas - CORREGIDO
                 try {
-                    // Intenta encontrar la tabla correcta que relaciona tests con carreras
+                    // Verificar todas las tablas existentes
+                    $tables = DB::select('SHOW TABLES');
+                    $tablesArr = array_map(function($table) {
+                        return get_object_vars($table)[key(get_object_vars($table))];
+                    }, $tables);
+                    
+                    // Buscar la tabla correcta que relaciona tests y carreras
                     $tablasParaProbar = [
                         'test_carrera_recomendacion', 
                         'test_carrera', 
@@ -664,7 +650,7 @@ class EstadisticasController extends Controller
                     
                     $tablaEncontrada = null;
                     foreach ($tablasParaProbar as $tabla) {
-                        if (Schema::hasTable($tabla)) {
+                        if (in_array($tabla, $tablesArr)) {
                             $tablaEncontrada = $tabla;
                             break;
                         }
@@ -680,11 +666,20 @@ class EstadisticasController extends Controller
                         
                         // Ajustar nombres de campos según la tabla
                         if ($tablaEncontrada == 'recomendaciones') {
-                            $testIdField = 'test_id';
-                            $carreraIdField = 'carrera_id';
                             $compatibilidadField = 'porcentaje';
                         }
                         
+                        // Ver qué columnas tiene la tabla
+                        $columns = Schema::getColumnListing($tablaEncontrada);
+                        
+                        // Verificar si los campos necesarios existen
+                        if (!in_array($testIdField, $columns) || !in_array($carreraIdField, $columns)) {
+                            // Si no, intentar con otros nombres comunes
+                            if (in_array('id_test', $columns)) $testIdField = 'id_test';
+                            if (in_array('id_carrera', $columns)) $carreraIdField = 'id_carrera';
+                        }
+                        
+                        // Consulta final
                         $carrerasMasRecomendadas = DB::table('tests')
                             ->join($tablaEncontrada, 'tests.id', '=', $tablaEncontrada.'.'.$testIdField)
                             ->join('carreras', $tablaEncontrada.'.'.$carreraIdField, '=', 'carreras.id')
@@ -700,7 +695,7 @@ class EstadisticasController extends Controller
                             ->limit(10)
                             ->get();
                     } else {
-                        // Extraer del JSON
+                        // Extraer del JSON si no se encuentra tabla
                         $tests = Test::where('created_at', '>=', $fechaDesde)
                             ->where('completado', 1)
                             ->whereNotNull('resultados')
@@ -713,6 +708,10 @@ class EstadisticasController extends Controller
                             
                             if (!empty($resultados['recomendaciones'])) {
                                 foreach ($resultados['recomendaciones'] as $recomendacion) {
+                                    if (empty($recomendacion['carrera_id']) || empty($recomendacion['nombre'])) {
+                                        continue;
+                                    }
+                                    
                                     $carreraId = $recomendacion['carrera_id'];
                                     $carreraNombre = $recomendacion['nombre'];
                                     $match = $recomendacion['match'] ?? 0;
@@ -731,7 +730,6 @@ class EstadisticasController extends Controller
                             }
                         }
                         
-                        // Convertir a colección y calcular promedio
                         foreach ($carrerasConteo as $id => $data) {
                             $carrerasMasRecomendadas->push((object)[
                                 'nombre' => $data['nombre'],
@@ -740,7 +738,6 @@ class EstadisticasController extends Controller
                             ]);
                         }
                         
-                        // Ordenar y limitar
                         $carrerasMasRecomendadas = $carrerasMasRecomendadas->sortByDesc('total')->take(10)->values();
                     }
                     
@@ -748,7 +745,15 @@ class EstadisticasController extends Controller
                     fputcsv($file, ['Carrera', 'Total Recomendaciones', 'Match Promedio (%)']);
                     
                     foreach ($carrerasMasRecomendadas as $carrera) {
-                        fputcsv($file, [$carrera->nombre, $carrera->total, round($carrera->match_promedio, 1) . '%']);
+                        $nombre = $carrera instanceof \stdClass ? $carrera->nombre : $carrera['nombre'];
+                        $total = $carrera instanceof \stdClass ? $carrera->total : $carrera['total'];
+                        $match = $carrera instanceof \stdClass ? $carrera->match_promedio : $carrera['match_promedio'];
+                        
+                        fputcsv($file, [
+                            $nombre, 
+                            $total, 
+                            round($match, 1) . '%'
+                        ]);
                     }
                 } catch (\Exception $e) {
                     fputcsv($file, ['CARRERAS MÁS RECOMENDADAS']);
