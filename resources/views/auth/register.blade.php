@@ -1,3 +1,4 @@
+
 <x-guest-layout>
     <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-white relative">        <!-- Elementos decorativos de fondo -->
         <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 opacity-20">
@@ -212,14 +213,14 @@
 
                     <!-- Nombre -->
                     <div>
-                        <x-input-label for="name" :value="__('Nombre y apellido')" />
+                        <x-input-label for="name" :value="__('Nombre y apellido')" class="text-black" />
                         <div class="mt-1 relative rounded-md shadow-sm">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                 </svg>
                             </div>
-                            <x-text-input id="name" class="pl-10 block mt-1 w-full bg-white" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" placeholder="Ingresa tu nombre y apellido" />
+                            <x-text-input id="name" class="pl-10 block mt-1 w-full bg-white text-black border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" placeholder="Ingresa tu nombre y apellido" />
                         </div>
                         <x-input-error :messages="$errors->get('name')" class="mt-2" />
                     </div>
@@ -229,12 +230,15 @@
                         <div>
                             <x-input-label for="fecha_nacimiento" :value="__('Fecha de nacimiento')" />
                             <div class="mt-1 relative rounded-md shadow-sm">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <x-text-input id="fecha_nacimiento" class="pl-10 block mt-1 w-full bg-white" type="date" name="fecha_nacimiento" :value="old('fecha_nacimiento')" required />
+                                <!-- Quitado el icono/logo de la izquierda -->
+                                <x-text-input 
+                                    id="fecha_nacimiento" 
+                                    class="block mt-1 w-full bg-white" 
+                                    type="date" 
+                                    name="fecha_nacimiento" 
+                                    :value="old('fecha_nacimiento')" 
+                                    required 
+                                />
                             </div>
                             <x-input-error :messages="$errors->get('fecha_nacimiento')" class="mt-2" />
                         </div>
@@ -474,7 +478,7 @@
                                         viewBox="0 0 24 24" 
                                         stroke="currentColor"
                                         style="display: none;">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268-2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                                     </svg>
                                 </button>
                             </div>

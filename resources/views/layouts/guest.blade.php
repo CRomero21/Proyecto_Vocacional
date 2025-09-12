@@ -82,7 +82,7 @@
             <div class="absolute top-2/3 left-1/3 w-32 h-32 rounded-full bg-[#051a9a]/20 animate-float-delay-2"></div>
             
             <!-- Patrón de puntos -->
-            <div class="absolute inset-0 dot-pattern opacity-10"></div>
+            <div class="absolute inset-0 dot-pattern opacity-15"></div>
             
             <!-- Contenido del panel -->
             <div class="relative z-10 flex flex-col items-center justify-center h-full text-white p-8">

@@ -8,6 +8,7 @@ use App\Models\CarreraTipo;
 use App\Models\TipoPersonalidad;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class CarreraController extends Controller
 {
@@ -252,6 +253,7 @@ class CarreraController extends Controller
     /**
      * Remove the specified resource from storage.
      */
+    
     public function destroy(Carrera $carrera)
     {
         // Verificar si tiene universidades asociadas
@@ -259,14 +261,23 @@ class CarreraController extends Controller
             return back()->with('error', 'No se puede eliminar la carrera porque está asociada a universidades');
         }
 
-        // Eliminar las combinaciones RIASEC de la carrera
+        // Eliminar recomendaciones asociadas (test_carrera_recomendacion)
+        DB::table('test_carrera_recomendacion')->where('carrera_id', $carrera->id)->delete();
+
+        // Eliminar combinaciones RIASEC de la carrera
         $carrera->carreraTipos()->delete();
-        
+
+        // Eliminar asociaciones con universidades (opcional, si tienes la tabla)
+        if (Schema::hasTable('carrera_universidad')) {
+            DB::table('carrera_universidad')->where('carrera_id', $carrera->id)->delete();
+        }
+
         // Eliminar imagen si existe
         if ($carrera->imagen) {
             Storage::disk('public')->delete($carrera->imagen);
         }
 
+        // Eliminar la carrera
         $carrera->delete();
 
         return redirect()->route('admin.carreras.index')

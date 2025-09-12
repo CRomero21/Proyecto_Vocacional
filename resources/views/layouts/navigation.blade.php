@@ -34,8 +34,8 @@
                                 </div>
                             </x-nav-link>
                             
-                            <x-nav-link :href="route('coordinador.informes')" :active="request()->routeIs('coordinador.informes')" class="group">
-                                <div class="flex items-center px-4 py-2 rounded-md transition-all {{ request()->routeIs('coordinador.informes') ? 'bg-[#131e58] text-white' : 'text-white hover:bg-white/10' }}">
+                            <x-nav-link :href="route('admin.informes-avanzados.index')" :active="request()->routeIs('admin.informes-avanzados.*')" class="group">
+                                <div class="flex items-center px-4 py-2 rounded-md transition-all {{ request()->routeIs('admin.informes-avanzados.*') ? 'bg-[#131e58] text-white' : 'text-white hover:bg-white/10' }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
@@ -43,8 +43,8 @@
                                 </div>
                             </x-nav-link>
                             
-                            <x-nav-link :href="route('coordinador.estadisticas')" :active="request()->routeIs('coordinador.estadisticas')" class="group">
-                                <div class="flex items-center px-4 py-2 rounded-md transition-all {{ request()->routeIs('coordinador.estadisticas') ? 'bg-[#131e58] text-white' : 'text-white hover:bg-white/10' }}">
+                            <x-nav-link :href="route('admin.estadisticas.index')" :active="request()->routeIs('admin.estadisticas.*')" class="group">
+                                <div class="flex items-center px-4 py-2 rounded-md transition-all {{ request()->routeIs('admin.estadisticas.*') ? 'bg-[#131e58] text-white' : 'text-white hover:bg-white/10' }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />

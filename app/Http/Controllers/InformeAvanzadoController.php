@@ -17,9 +17,6 @@ class InformeAvanzadoController extends Controller
 {
     public function index(Request $request)
     {
-        // Obtener informes recientes
-        $informesRecientes = Informe::latest()->take(10)->get();
-        
         // Variables para la vista
         $departamentos = [];
         $instituciones = [];
@@ -34,11 +31,22 @@ class InformeAvanzadoController extends Controller
         if ($request->route('id')) {
             $informeCargado = Informe::find($request->route('id'));
             if ($informeCargado) {
+                // Verificación de permisos: solo propietario o superadmin
+                if (auth()->user()->role !== 'superadmin' && $informeCargado->user_id !== auth()->id()) {
+                    abort(403, 'No tienes permiso para ver este informe.');
+                }
                 $datos = json_decode($informeCargado->datos, true);
                 $tipoInforme = $informeCargado->tipo;
                 $filtrosAplicados = json_decode($informeCargado->filtros, true) ?? [];
             }
         }
+
+        // Filtrar informes recientes por usuario (solo superadmin ve todos)
+        $query = Informe::latest()->take(10);
+        if (auth()->user()->role !== 'superadmin') {
+            $query->where('user_id', auth()->id());
+        }
+        $informesRecientes = $query->get();
         
         // Si se está generando un nuevo informe
         if ($request->has('tipo_informe') && !$informeCargado) {
@@ -100,9 +108,9 @@ class InformeAvanzadoController extends Controller
     
     public function exportar(Request $request)
     {
-        \Log::info('=== INICIO EXPORTACIÓN ===');
-        \Log::info('Método HTTP: ' . $request->method());
-        \Log::info('Todos los datos del request', ['request_data' => $request->all()]);
+        Log::info('=== INICIO EXPORTACIÓN ===');
+        Log::info('Método HTTP: ' . $request->method());
+        Log::info('Todos los datos del request', ['request_data' => $request->all()]);
         
         try {
             // Aumentar límites de memoria y tiempo de ejecución
@@ -119,8 +127,8 @@ class InformeAvanzadoController extends Controller
                 $id = reset($id); // Obtener el primer elemento si es array
             }
             
-            \Log::info("Parámetros: formato=$formato, tipo=$tipo, id=$id");
-            \Log::info("Datos raw recibidos", ['raw_data' => $datosRaw]);
+            Log::info("Parámetros: formato=$formato, tipo=$tipo, id=$id");
+            Log::info("Datos raw recibidos", ['raw_data' => $datosRaw]);
             
             // Validar parámetros
             if (!in_array($formato, ['excel', 'pdf'])) {
@@ -131,10 +139,14 @@ class InformeAvanzadoController extends Controller
             
             // Caso 1: Cargar desde informe guardado
             if ($id && !is_array($id)) {
-                \Log::info("Cargando desde informe guardado ID: $id");
-                $informe = \App\Models\Informe::find($id);
+                Log::info("Cargando desde informe guardado ID: $id");
+                $informe = Informe::find($id);
                 if (!$informe) {
                     throw new \Exception("El informe solicitado no existe");
+                }
+                // Verificación de permisos: solo propietario o superadmin
+                if (auth()->user()->role !== 'superadmin' && $informe->user_id !== auth()->id()) {
+                    throw new \Exception("No tienes permiso para exportar este informe.");
                 }
                 $datos = $informe->datos;
                 $tipo = $informe->tipo;
@@ -149,7 +161,7 @@ class InformeAvanzadoController extends Controller
             } 
             // Caso 2: Datos enviados directamente
             elseif ($datosRaw && $datosRaw !== '' && $datosRaw !== '[]') {
-                \Log::info("Procesando datos enviados directamente");
+                Log::info("Procesando datos enviados directamente");
                 $datos = json_decode($datosRaw, true);
                 if (json_last_error() !== JSON_ERROR_NONE) {
                     throw new \Exception("Error al decodificar los datos enviados: " . json_last_error_msg());
@@ -160,7 +172,7 @@ class InformeAvanzadoController extends Controller
                 throw new \Exception("No se proporcionaron datos para exportar. Genere un informe primero.");
             }
 
-            \Log::info("Datos procesados correctamente, tipo: " . gettype($datos) . ", cantidad: " . (is_array($datos) ? count($datos) : 'N/A'));
+            Log::info("Datos procesados correctamente, tipo: " . gettype($datos) . ", cantidad: " . (is_array($datos) ? count($datos) : 'N/A'));
 
             if (empty($datos)) {
                 throw new \Exception("Los datos del informe están vacíos");
@@ -173,17 +185,17 @@ class InformeAvanzadoController extends Controller
             
             // Generar archivo según formato
             if ($formato === 'excel') {
-                \Log::info("Generando Excel...");
+                Log::info("Generando Excel...");
                 return $this->exportarExcel($datos, $tipo);
-            } else if ($formato === 'pdf') {
-                \Log::info("Generando PDF...");
+            } elseif ($formato === 'pdf') {
+                Log::info("Generando PDF...");
                 return $this->exportarPDF($datos, $tipo);
             } else {
                 throw new \Exception("Formato de exportación no válido");
             }
             
         } catch (\Exception $e) {
-            \Log::error("Error en exportación: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+            Log::error("Error en exportación: " . $e->getMessage() . "\n" . $e->getTraceAsString());
             
             // Redirigir con mensaje de error
             return redirect()->back()->with('error', 'Error al exportar: ' . $e->getMessage());
@@ -237,7 +249,7 @@ class InformeAvanzadoController extends Controller
             exit;
             
         } catch (\Exception $e) {
-            \Log::error("Error en exportarExcel: " . $e->getMessage());
+            Log::error("Error en exportarExcel: " . $e->getMessage());
             throw new \Exception("Error al generar el archivo Excel: " . $e->getMessage());
         }
     }
@@ -260,7 +272,7 @@ class InformeAvanzadoController extends Controller
             return $pdf->download($filename);
             
         } catch (\Exception $e) {
-            \Log::error("Error en exportarPDF: " . $e->getMessage());
+            Log::error("Error en exportarPDF: " . $e->getMessage());
             throw new \Exception("Error al generar el archivo PDF: " . $e->getMessage());
         }
     }
@@ -384,7 +396,8 @@ class InformeAvanzadoController extends Controller
         // Aplicar filtros
         if ($request->filled('departamento')) {
             $query->where('departamento', $request->departamento);
-        }if ($request->filled('ciudad')) {
+        }
+        if ($request->filled('ciudad')) {
             $query->where('ciudad', $request->ciudad);
         }
         if ($request->filled('genero')) {
@@ -403,7 +416,7 @@ class InformeAvanzadoController extends Controller
             $query->whereHas('test.carrerasRecomendadas', function($q) use ($request) {
                 $q->where('area_conocimiento', $request->area_conocimiento);
             });
-        }  
+        }
         
         return $query->get()->toArray();
     }
@@ -511,7 +524,7 @@ class InformeAvanzadoController extends Controller
             ->join('carreras', 'test_carrera_recomendacion.carrera_id', '=', 'carreras.id')
             ->select('carreras.nombre', 'carreras.area_conocimiento', 
                     DB::raw('COUNT(*) as total'), 
-                    DB::raw('AVG(test_carrera_recomendacion.match_percentage) as match_promedio'))
+                    DB::raw('AVG(test_carrera_recomendacion.match_porcentaje) as match_promedio'))
             ->groupBy('carreras.id', 'carreras.nombre', 'carreras.area_conocimiento');
         
         $resultados = $query->get();
@@ -526,7 +539,7 @@ class InformeAvanzadoController extends Controller
     
     private function prepararDatosGrafico($datos, $tipo)
     {
-        if (empty($datos)) return null;
+        if (!is_array($datos) || empty($datos)) return null;
         
         switch ($tipo) {
             case 'distribucion_demografica':
@@ -560,7 +573,7 @@ class InformeAvanzadoController extends Controller
     
     private function generarInsights($datos, $tipo)
     {
-        if (empty($datos)) return [];
+        if (!is_array($datos) || empty($datos)) return [];
         
         $insights = [];
         

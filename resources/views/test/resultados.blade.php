@@ -10,7 +10,14 @@
     @endif
 
     <div class="bg-white rounded-xl shadow-md overflow-hidden p-6 mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-4">Resultados de tu Test Vocacional</h1>
+        <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-4">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2 md:mb-0">Resultados de tu Test Vocacional</h1>
+            <!-- Botón Exportar PDF -->
+            <a href="{{ route('test.exportarPDF', $test->id) }}" target="_blank"
+                class="inline-block px-6 py-2 bg-red-600 text-white font-semibold rounded-md hover:bg-red-700 transition">
+                <i class="fas fa-file-pdf mr-2"></i> Descargar resultados en PDF
+            </a>
+        </div>
         
         <div class="mb-6">
             <p class="text-gray-600">
@@ -192,28 +199,6 @@
                                         {{ $recomendacion['descripcion'] }}
                                     </div>
                                     
-                                    @if(!empty($recomendacion['habilidades']))
-                                        <div class="mt-3">
-                                            <p class="text-xs text-gray-500 mb-1">Habilidades requeridas:</p>
-                                            <div class="flex flex-wrap gap-1">
-                                                @foreach($recomendacion['habilidades'] as $habilidad)
-                                                    <span class="inline-block px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700">
-                                                        {{ $habilidad }}
-                                                    </span>
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                    @endif
-                                    
-                                    @if(!empty($recomendacion['campo_laboral']))
-                                        <div class="mt-2">
-                                            <p class="text-xs text-gray-600">
-                                                <span class="font-medium">Campo laboral:</span> 
-                                                {{ $recomendacion['campo_laboral'] }}
-                                            </p>
-                                        </div>
-                                    @endif
-                                    
                                     @if(!empty($recomendacion['universidades']))
                                         <div class="mt-3">
                                             <button class="text-sm text-blue-600 hover:text-blue-800" 
@@ -224,18 +209,20 @@
                                             <div id="carrera-{{ $recomendacion['carrera_id'] }}" class="hidden mt-2 border-t pt-2">
                                                 @foreach($recomendacion['universidades'] as $universidad)
                                                     <div class="mb-2 text-sm">
-                                                        <p class="font-medium">{{ $universidad->nombre }}</p>
+                                                        <p class="font-medium">{{ is_array($universidad) ? $universidad['nombre'] : $universidad->nombre }}</p>
                                                         <p class="text-xs text-gray-600">
-                                                            {{ $universidad->departamento }} - {{ $universidad->tipo }}
-                                                            @if($universidad->acreditada)
+                                                            {{ is_array($universidad) ? $universidad['departamento'] : $universidad->departamento }} - 
+                                                            {{ is_array($universidad) ? $universidad['tipo'] : $universidad->tipo }}
+                                                            @if((is_array($universidad) ? $universidad['acreditada'] : $universidad->acreditada))
                                                                 <span class="text-green-600">• Acreditada</span>
                                                             @endif
                                                         </p>
                                                         <p class="text-xs text-gray-500">
-                                                            {{ $universidad->modalidad }} - {{ $universidad->duracion }}
+                                                            {{ is_array($universidad) ? $universidad['modalidad'] : $universidad->modalidad }} - 
+                                                            {{ is_array($universidad) ? $universidad['duracion'] : $universidad->duracion }}
                                                         </p>
-                                                        @if($universidad->sitio_web)
-                                                            <a href="{{ $universidad->sitio_web }}" target="_blank" 
+                                                        @if((is_array($universidad) ? $universidad['sitio_web'] : $universidad->sitio_web))
+                                                            <a href="{{ is_array($universidad) ? $universidad['sitio_web'] : $universidad->sitio_web }}" target="_blank" 
                                                                class="text-xs text-blue-600 hover:underline">
                                                                 Visitar sitio web
                                                             </a>
@@ -256,7 +243,7 @@
                     $carrerasSecundarias = collect($resultados['recomendaciones'])
                         ->where('es_primaria', false)
                         ->sortByDesc('match')
-                        ->take(3);
+                        ->take(6);
                 @endphp
                 
                 @if(count($carrerasSecundarias) > 0)
@@ -280,12 +267,37 @@
                                             {{ $recomendacion['descripcion'] }}
                                         </div>
                                         
-                                        @if(!empty($recomendacion['campo_laboral']))
-                                            <div class="mt-2">
-                                                <p class="text-xs text-gray-600">
-                                                    <span class="font-medium">Campo laboral:</span> 
-                                                    {{ $recomendacion['campo_laboral'] }}
-                                                </p>
+                                        @if(!empty($recomendacion['universidades']))
+                                            <div class="mt-3">
+                                                <button class="text-sm text-blue-600 hover:text-blue-800" 
+                                                        onclick="toggleUniversidades('carrera-{{ $recomendacion['carrera_id'] }}-sec')">
+                                                    Ver universidades ({{ count($recomendacion['universidades']) }})
+                                                </button>
+                                                
+                                                <div id="carrera-{{ $recomendacion['carrera_id'] }}-sec" class="hidden mt-2 border-t pt-2">
+                                                    @foreach($recomendacion['universidades'] as $universidad)
+                                                        <div class="mb-2 text-sm">
+                                                            <p class="font-medium">{{ is_array($universidad) ? $universidad['nombre'] : $universidad->nombre }}</p>
+                                                            <p class="text-xs text-gray-600">
+                                                                {{ is_array($universidad) ? $universidad['departamento'] : $universidad->departamento }} - 
+                                                                {{ is_array($universidad) ? $universidad['tipo'] : $universidad->tipo }}
+                                                                @if((is_array($universidad) ? $universidad['acreditada'] : $universidad->acreditada))
+                                                                    <span class="text-green-600">• Acreditada</span>
+                                                                @endif
+                                                            </p>
+                                                            <p class="text-xs text-gray-500">
+                                                                {{ is_array($universidad) ? $universidad['modalidad'] : $universidad->modalidad }} - 
+                                                                {{ is_array($universidad) ? $universidad['duracion'] : $universidad->duracion }}
+                                                            </p>
+                                                            @if((is_array($universidad) ? $universidad['sitio_web'] : $universidad->sitio_web))
+                                                                <a href="{{ is_array($universidad) ? $universidad['sitio_web'] : $universidad->sitio_web }}" target="_blank" 
+                                                                   class="text-xs text-blue-600 hover:underline">
+                                                                    Visitar sitio web
+                                                                </a>
+                                                            @endif
+                                                        </div>
+                                                    @endforeach
+                                                </div>
                                             </div>
                                         @endif
                                     </div>

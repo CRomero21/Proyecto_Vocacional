@@ -132,6 +132,8 @@ Route::middleware(['auth'])->group(function () {
     */
     Route::post('/dashboard', [CuestionarioController::class, 'guardar'])->name('cuestionario.guardar');
     
+
+    Route::get('/test/{test}/exportar-pdf', [TestController::class, 'exportarPDF'])->name('test.exportarPDF');
     /*
     |--------------------------------------------------------------------------
     | SISTEMA DE TEST VOCACIONAL

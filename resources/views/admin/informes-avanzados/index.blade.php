@@ -147,6 +147,7 @@
                             </div>
                         </div>
                     </div>
+                    
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Área de Conocimiento</label>
                         <select name="area_conocimiento" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
@@ -241,9 +242,9 @@
             
             <!-- Informes guardados -->
             <div class="p-6 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4">Informes Recientes</h2>
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">Mis Informes Recientes</h2>
                 
-                <div class="overflow-x-auto bg-gray-50 rounded-lg">
+                <div class="overflow-x-auto bg-gray-50 rounded-lg max-h-64 overflow-y-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead>
                             <tr>
@@ -279,6 +280,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex space-x-2">
+                                        <form method="POST" action="{{ route('admin.informes-avanzados.exportar') }}" class="inline">
                                             @csrf
                                             <input type="hidden" name="id" value="{{ $informe->id }}">
                                             <input type="hidden" name="formato" value="excel">
@@ -761,6 +763,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 type: 'bar',
                 data: {
                     labels: datosGrafico.labels,
+                    data: datosGrafico.datos,
                     datasets: [{
                         label: datosGrafico.titulo || 'Datos',
                         data: datosGrafico.datos,

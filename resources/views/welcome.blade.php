@@ -26,7 +26,6 @@
                 <nav class="hidden md:ml-6 md:flex md:items-center md:space-x-8">
                     <a href="#caracteristicas" class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition duration-150">Características</a>
                     <a href="#como-funciona" class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition duration-150">Cómo funciona</a>
-                    <a href="#testimonios" class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition duration-150">Testimonios</a>
                     <a href="#contacto" class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition duration-150">Contacto</a>
                     
                     <div class="ml-6 flex items-center">
@@ -101,14 +100,7 @@
                         </a>
                     </div>
                     <div class="mt-8 flex flex-wrap justify-center md:justify-start gap-8">
-                        <div class="flex items-center">
-                            <div class="flex -space-x-2">
-                                <img class="inline-block h-8 w-8 rounded-full ring-2 ring-white" src="https://randomuser.me/api/portraits/women/17.jpg" alt="">
-                                <img class="inline-block h-8 w-8 rounded-full ring-2 ring-white" src="https://randomuser.me/api/portraits/men/4.jpg" alt="">
-                                <img class="inline-block h-8 w-8 rounded-full ring-2 ring-white" src="https://randomuser.me/api/portraits/women/3.jpg" alt="">
-                            </div>
-                            <span class="ml-3 text-sm text-blue-100">Más de <span class="font-semibold text-white">5,000+</span> estudiantes</span>
-                        </div>
+                        
                         <div class="flex items-center">
                             <div class="flex text-yellow-400">
                                 <i class="fas fa-star"></i>
@@ -357,25 +349,23 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div class="col-span-1 md:col-span-2">
                     <div class="flex items-center">
-                        <img src="{{ asset('images/logo_uno_se.png') }}" alt="Logo" class="h-10 w-auto">
+                        <img src="{{ asset('images/logo_uno_blanco.png') }}" alt="Logo" class="h-10 w-auto">
                         <span class="ml-3 text-xl font-bold text-white">Orientación<span class="text-blue-400">Vocacional</span></span>
                     </div>
                     <p class="mt-4 text-sm text-gray-400 max-w-md">
                         Plataforma de orientación vocacional basada en el modelo RIASEC para ayudar a estudiantes a encontrar su camino profesional ideal.
                     </p>
                     <div class="mt-6 flex space-x-4">
-                        <a href="#" class="text-gray-400 hover:text-white">
+                        <a href="https://www.facebook.com/UnoYacuiba?locale=es_LA" class="text-gray-400 hover:text-white">
                             <i class="fab fa-facebook-f"></i>
                         </a>
-                        <a href="#" class="text-gray-400 hover:text-white">
-                            <i class="fab fa-twitter"></i>
+                        <a href="https://www.tiktok.com/@unoyacuiba?is_from_webapp=1&sender_device=pc" class="text-gray-400 hover:text-white">
+                            <i class="fab fa-tiktok"></i>
                         </a>
-                        <a href="#" class="text-gray-400 hover:text-white">
+                        <a href="https://www.instagram.com/uno_yacuiba?utm_source=ig_web_button_share_sheet&igsh=MWN6cDNxZXkzZ3FsZg==" class="text-gray-400 hover:text-white">
                             <i class="fab fa-instagram"></i>
                         </a>
-                        <a href="#" class="text-gray-400 hover:text-white">
-                            <i class="fab fa-youtube"></i>
-                        </a>
+                        
                     </div>
                 </div>
                 
@@ -389,13 +379,7 @@
                             <a href="#" class="text-gray-400 hover:text-white text-sm">Método RIASEC</a>
                         </li>
                         <li>
-                            <a href="#" class="text-gray-400 hover:text-white text-sm">Base científica</a>
-                        </li>
-                        <li>
-                            <a href="#" class="text-gray-400 hover:text-white text-sm">Preguntas frecuentes</a>
-                        </li>
-                        <li>
-                            <a href="#" class="text-gray-400 hover:text-white text-sm">Blog</a>
+                            <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9819525/" class="text-gray-400 hover:text-white text-sm">Base científica</a>
                         </li>
                     </ul>
                 </div>
@@ -405,29 +389,25 @@
                     <ul class="mt-4 space-y-2">
                         <li class="flex items-start">
                             <i class="fas fa-map-marker-alt mt-1 mr-2 text-gray-400"></i>
-                            <span class="text-sm text-gray-400">Universidad Nacional, Ciudad Universitaria</span>
+                            <span class="text-sm text-gray-400">Calle Sucre entre  C/ Martin Barroso y C/Comercio</span>
                         </li>
                         <li class="flex items-start">
                             <i class="fas fa-envelope mt-1 mr-2 text-gray-400"></i>
-                            <span class="text-sm text-gray-400">correoprueba@gmail.com</span>
+                            <span class="text-sm text-gray-400">informaciones@yba.uno.edu.bo</span>
                         </li>
                         <li class="flex items-start">
                             <i class="fas fa-phone-alt mt-1 mr-2 text-gray-400"></i>
-                            <span class="text-sm text-gray-400">aqui va el numero de informaciones</span>
+                            <span class="text-sm text-gray-400">+591 76050098</span>
                         </li>
                     </ul>
                 </div>
             </div>
             
-            <div class="mt-12 pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center">
+            <div class="mt-12 pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-center items-center">
                 <p class="text-sm text-gray-400">
                     &copy; {{ date('Y') }} Orientación Vocacional. Todos los derechos reservados.
                 </p>
-                <div class="mt-4 md:mt-0 flex space-x-6">
-                    <a href="#" class="text-sm text-gray-400 hover:text-white">Política de Privacidad</a>
-                    <a href="#" class="text-sm text-gray-400 hover:text-white">Términos de Servicio</a>
-                    <a href="#" class="text-sm text-gray-400 hover:text-white">Cookies</a>
-                </div>
+                
             </div>
         </div>
     </footer>
