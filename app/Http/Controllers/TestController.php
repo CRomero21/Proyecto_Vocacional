@@ -6,8 +6,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Test;
 use App\Models\Pregunta;
-use App\Models\Carrera;
-use App\Models\TipoPersonalidad;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Auth;
@@ -20,7 +18,6 @@ class TestController extends Controller
         $this->middleware('auth');
     }
 
-    // Iniciar un nuevo test
     public function iniciar()
     {
         $testPendiente = Test::where('user_id', auth()->id())
@@ -45,7 +42,6 @@ class TestController extends Controller
         ]);
     }
 
-    // Continuar un test pendiente
     public function continuar(Test $test)
     {
         if ($test->user_id !== auth()->id()) {
@@ -64,7 +60,6 @@ class TestController extends Controller
         ]);
     }
 
-    // Mostrar dashboard (no se usa para resultados individuales)
     public function mostrar(Request $request)
     {
         $preguntas = null;
@@ -78,7 +73,6 @@ class TestController extends Controller
         return view('dashboard', compact('preguntas', 'test_id'));
     }
 
-    // Dashboard para el usuario autenticado
     public function dashboard()
     {
         $user = Auth::user();
@@ -105,7 +99,6 @@ class TestController extends Controller
         ]);
     }
 
-    // Mostrar resultados de un test específico
     public function resultados(Test $test)
     {
         $user = auth()->user();
@@ -120,11 +113,20 @@ class TestController extends Controller
         }
 
         $tiposPersonalidad = $this->tiposPersonalidad();
+        $resultados = $this->getResultadosArray($test->resultados);
 
-        return view('test.resultados', compact('test', 'tiposPersonalidad'));
+        $carrerasPrincipales = $resultados['recomendaciones']['afines'] ?? [];
+        $carrerasSecundarias = $resultados['recomendaciones']['relacionadas'] ?? [];
+
+        return view('test.resultados', compact(
+            'test',
+            'tiposPersonalidad',
+            'resultados',
+            'carrerasPrincipales',
+            'carrerasSecundarias'
+        ));
     }
 
-    // Guardar respuestas y procesar resultados
     public function guardar(Request $request)
     {
         $request->validate([
@@ -139,7 +141,6 @@ class TestController extends Controller
             abort(403, 'No autorizado');
         }
 
-        // Calcular puntajes y porcentajes por tipo RIASEC
         $puntajes = [
             'R' => 0, 'I' => 0, 'A' => 0, 'S' => 0, 'E' => 0, 'C' => 0
         ];
@@ -175,32 +176,29 @@ class TestController extends Controller
         }
 
         arsort($puntajes);
-        $tiposDominantes = array_keys($puntajes);
-        $tipoPrimario = $tiposDominantes[0] ?? null;
-        $tipoSecundario = $tiposDominantes[1] ?? null;
-
-        // Si hay empate, elegir por promedio
         $valoresPuntaje = array_values($puntajes);
-        if (count($valoresPuntaje) >= 2 && $valoresPuntaje[0] === $valoresPuntaje[1]) {
-            $tiposEmpatados = [];
-            $valorEmpatado = $valoresPuntaje[0];
-            foreach ($puntajes as $tipo => $valor) {
-                if ($valor === $valorEmpatado) {
-                    $tiposEmpatados[$tipo] = $promedios[$tipo];
-                }
+
+        $topValues = [];
+        for ($i = 0; $i < 3; $i++) {
+            $topValues[] = $valoresPuntaje[$i] ?? null;
+        }
+        $topValues = array_unique($topValues);
+
+        $tiposUsuario = [];
+        foreach ($puntajes as $tipo => $valor) {
+            if (in_array($valor, $topValues)) {
+                $tiposUsuario[] = $tipo;
             }
-            arsort($tiposEmpatados);
-            $tiposOrdenados = array_keys($tiposEmpatados);
-            $tipoPrimario = $tiposOrdenados[0] ?? null;
-            $tipoSecundario = $tiposOrdenados[1] ?? null;
         }
 
-        // Obtener recomendaciones de carreras con el algoritmo mejorado
-        $recomendaciones = $this->obtenerRecomendacionesFlexibles($tipoPrimario, $tipoSecundario, $porcentajes);
+        $tipoPrimario = $tiposUsuario[0] ?? null;
+        $tipoSecundario = $tiposUsuario[1] ?? null;
+
+        $recomendaciones = $this->obtenerRecomendacionesFlexibles($tiposUsuario, $porcentajes);
 
         if ($recomendaciones === null) {
             $recomendaciones = [];
-            Log::warning('No se encontraron recomendaciones para el perfil RIASEC: ' . $tipoPrimario . '-' . $tipoSecundario);
+            Log::warning('No se encontraron recomendaciones para el perfil RIASEC: ' . implode('-', $tiposUsuario));
         }
 
         $resultados = [
@@ -224,17 +222,22 @@ class TestController extends Controller
         if (Schema::hasTable('test_carrera_recomendacion') && is_array($recomendaciones) && !empty($recomendaciones)) {
             DB::table('test_carrera_recomendacion')->where('test_id', $test->id)->delete();
             
-            foreach ($recomendaciones as $index => $recomendacion) {
-                DB::table('test_carrera_recomendacion')->insert([
-                    'test_id' => $test->id,
-                    'carrera_id' => $recomendacion['carrera_id'],
-                    'match_porcentaje' => $recomendacion['match'],
-                    'orden' => $index + 1,
-                    'es_primaria' => $recomendacion['es_primaria'] ?? true,
-                    'area_conocimiento' => $recomendacion['area'] ?? null,
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ]);
+            $orden = 1;
+            foreach (['afines', 'relacionadas'] as $bloque) {
+                if (!empty($recomendaciones[$bloque])) {
+                    foreach ($recomendaciones[$bloque] as $recomendacion) {
+                        DB::table('test_carrera_recomendacion')->insert([
+                            'test_id' => $test->id,
+                            'carrera_id' => $recomendacion['carrera_id'],
+                            'match_porcentaje' => $recomendacion['score'],
+                            'orden' => $orden++,
+                            'es_primaria' => ($bloque === 'afines'),
+                            'area_conocimiento' => $recomendacion['area'] ?? null,
+                            'created_at' => now(),
+                            'updated_at' => now()
+                        ]);
+                    }
+                }
             }
         }
 
@@ -242,7 +245,6 @@ class TestController extends Controller
             ->with('success', 'Resultados procesados correctamente.');
     }
 
-    // Guardar retroalimentación del usuario
     public function guardarRetroalimentacion(Request $request, Test $test)
     {
         $request->validate([
@@ -269,7 +271,6 @@ class TestController extends Controller
         return back()->with('success', '¡Gracias por tu retroalimentación! Nos ayudará a mejorar.');
     }
 
-    // Historial de tests del usuario
     public function historial()
     {
         $tests = Test::where('user_id', auth()->id())
@@ -280,7 +281,6 @@ class TestController extends Controller
         return view('test.historial', compact('tests'));
     }
 
-    // Eliminar un test y sus recomendaciones asociadas
     public function eliminar(Test $test)
     {
         if ($test->user_id !== auth()->id() && auth()->user()->role !== 'superadmin') {
@@ -296,159 +296,108 @@ class TestController extends Controller
         return redirect()->route('test.historial')
             ->with('success', 'Test eliminado correctamente.');
     }
-    
+
     /**
-     * Recomendaciones flexibles y realistas de carreras
-     * Siempre marca como principales las 3 carreras con mayor match.
+     * Matching flexible con score variado y universidades asociadas.
      */
-    private function obtenerRecomendacionesFlexibles($tipoPrimario, $tipoSecundario, $porcentajesUsuario = [])
+    private function obtenerRecomendacionesFlexibles($tiposUsuario, $porcentajesUsuario = [])
     {
-        try {
-            if (!$tipoPrimario) {
-                arsort($porcentajesUsuario);
-                $tiposClaves = array_keys($porcentajesUsuario);
-                $tipoPrimario = $tiposClaves[0] ?? 'R';
-                $tipoSecundario = $tiposClaves[1] ?? 'I';
+        $carreras = DB::table('carreras')
+            ->join('carrera_tipo', 'carreras.id', '=', 'carrera_tipo.carrera_id')
+            ->select(
+                'carreras.id',
+                'carreras.nombre',
+                'carreras.area_conocimiento',
+                'carreras.descripcion',
+                'carreras.es_institucional',
+                'carrera_tipo.tipo_primario',
+                'carrera_tipo.tipo_secundario',
+                'carrera_tipo.tipo_terciario'
+            )
+            ->get();
+
+        $recomendaciones = [];
+
+        foreach ($carreras as $carrera) {
+            $tiposCarrera = [
+                $carrera->tipo_primario,
+                $carrera->tipo_secundario,
+                $carrera->tipo_terciario
+            ];
+            $score = 0;
+            foreach ($tiposCarrera as $i => $tipo) {
+                if (isset($tiposUsuario[$i]) && $tiposUsuario[$i] === $tipo) {
+                    $score += 40;
+                } elseif (in_array($tipo, $tiposUsuario)) {
+                    $score += 20;
+                }
             }
+            $score += rand(0, 9);
 
-            $todasCarreras = DB::table('carreras')
-                ->leftJoin('carrera_tipo', 'carreras.id', '=', 'carrera_tipo.carrera_id')
-                ->select(
-                    'carreras.id', 
-                    'carreras.nombre', 
-                    'carreras.area_conocimiento', 
-                    'carreras.descripcion', 
-                    'carreras.es_institucional',
-                    'carrera_tipo.tipo_primario', 
-                    'carrera_tipo.tipo_secundario'
-                )
-                ->get();
+            // Depuración: Ver score raw
+            \Log::info("Carrera: " . $carrera->nombre . " - Score raw: " . $score);
 
-            if ($todasCarreras->isEmpty()) {
-                return [
-                    'afines' => [],
-                    'relacionadas' => []
+            // Normalizar a porcentaje (0-100%)
+            $scorePorcentaje = min(100, round(($score / 129) * 100));
+
+            // Depuración: Ver score porcentaje
+            \Log::info("Carrera: " . $carrera->nombre . " - Score porcentaje: " . $scorePorcentaje);
+
+            if ($scorePorcentaje > 0) {
+                // Universidades asociadas
+                $universidades = DB::table('carrera_universidad')
+                    ->join('universidades', 'carrera_universidad.universidad_id', '=', 'universidades.id')
+                    ->where('carrera_universidad.carrera_id', $carrera->id)
+                    ->select(
+                        'universidades.id',
+                        'universidades.nombre',
+                        'universidades.departamento',
+                        'universidades.tipo',
+                        'universidades.acreditada',
+                        'universidades.sitio_web'
+                    )
+                    ->get()
+                    ->toArray();
+
+                $recomendaciones[] = [
+                    'carrera_id' => $carrera->id,
+                    'nombre' => $carrera->nombre,
+                    'area' => $carrera->area_conocimiento,
+                    'descripcion' => $carrera->descripcion,
+                    'score' => $scorePorcentaje,  // Ahora es 0-100
+                    'tipos' => implode('-', $tiposCarrera),
+                    'universidades' => $universidades,
                 ];
             }
-
-            $carrerasConMatch = [];
-            foreach ($todasCarreras as $carrera) {
-                if (empty($carrera->tipo_primario)) $carrera->tipo_primario = 'R';
-                if (empty($carrera->tipo_secundario)) $carrera->tipo_secundario = 'I';
-
-                $match = $this->calcularMatchPersonalizado($carrera, $porcentajesUsuario);
-
-                if (!isset($carrerasConMatch[$carrera->id]) || $match > $carrerasConMatch[$carrera->id]['match']) {
-                    $carrerasConMatch[$carrera->id] = [
-                        'carrera_id' => $carrera->id,
-                        'nombre' => $carrera->nombre,
-                        'area' => $carrera->area_conocimiento,
-                        'descripcion' => $carrera->descripcion,
-                        'match' => $match,
-                        'es_institucional' => $carrera->es_institucional,
-                        'tipo_primario' => $carrera->tipo_primario,
-                    ];
-                }
-            }
-
-            // Ordenar por match descendente
-            $carrerasConMatch = array_values($carrerasConMatch);
-            usort($carrerasConMatch, function($a, $b) {
-                return $b['match'] <=> $a['match'];
-            });
-
-            // Separar afines y relacionadas
-            $afines = [];
-            $relacionadas = [];
-            foreach ($carrerasConMatch as $carrera) {
-                if ($carrera['tipo_primario'] === $tipoPrimario) {
-                    $afines[] = $carrera;
-                } else {
-                    $relacionadas[] = $carrera;
-                }
-            }
-
-            // Limita la cantidad si quieres
-            $afines = array_slice($afines, 0, 5);
-            $relacionadas = array_slice($relacionadas, 0, 5);
-
-            return [
-                'afines' => $afines,
-                'relacionadas' => $relacionadas
-            ];
-
-        } catch (\Exception $e) {
-            return [
-                'afines' => [],
-                'relacionadas' => []
-            ];
         }
-    }
-    /**
-     * Calcula el match personalizado y realista entre un perfil RIASEC y una carrera
-     * Ajuste: multiplica el resultado final por 1.5 para que los matches sean más altos.
-     */
-    private function calcularMatchPersonalizado($carrera, $porcentajesUsuario)
-    {
-        $compatibilidadRIASEC = [
-            'R' => ['R' => 1.0, 'I' => 0.15, 'A' => 0.05, 'S' => 0.01, 'E' => 0.1, 'C' => 0.1],
-            'I' => ['R' => 0.15, 'I' => 1.0, 'A' => 0.2, 'S' => 0.01, 'E' => 0.05, 'C' => 0.05],
-            'A' => ['R' => 0.05, 'I' => 0.2, 'A' => 1.0, 'S' => 0.15, 'E' => 0.1, 'C' => 0.01],
-            'S' => ['R' => 0.01, 'I' => 0.01, 'A' => 0.15, 'S' => 1.0, 'E' => 0.2, 'C' => 0.05],
-            'E' => ['R' => 0.1, 'I' => 0.05, 'A' => 0.1, 'S' => 0.2, 'E' => 1.0, 'C' => 0.15],
-            'C' => ['R' => 0.1, 'I' => 0.05, 'A' => 0.01, 'S' => 0.05, 'E' => 0.15, 'C' => 1.0]
+
+        usort($recomendaciones, fn($a, $b) => $b['score'] <=> $a['score']);
+
+        $afines = array_slice($recomendaciones, 0, 5);
+        $relacionadas = array_slice($recomendaciones, 5, 5);
+
+        return [
+            'afines' => $afines,
+            'relacionadas' => $relacionadas
         ];
-
-        arsort($porcentajesUsuario);
-        $tiposOrdenados = array_keys($porcentajesUsuario);
-        $tipoPrimarioUsuario = $tiposOrdenados[0] ?? null;
-        $tipoSecundarioUsuario = $tiposOrdenados[1] ?? null;
-        $tipoTerciarioUsuario = $tiposOrdenados[2] ?? null;
-
-        $pesoPrimario = 0.95;
-        $pesoSecundario = 0.04;
-        $pesoTerciario = 0.01;
-
-        $match = 0;
-        $pesoTotal = 0;
-
-        if (isset($carrera->tipo_primario)) {
-            foreach ($porcentajesUsuario as $tipoUsuario => $porcentaje) {
-                $factor = $compatibilidadRIASEC[$carrera->tipo_primario][$tipoUsuario] ?? 0;
-                $peso = 0;
-                if ($tipoUsuario == $tipoPrimarioUsuario) $peso = $pesoPrimario;
-                elseif ($tipoUsuario == $tipoSecundarioUsuario) $peso = $pesoSecundario;
-                elseif ($tipoUsuario == $tipoTerciarioUsuario) $peso = $pesoTerciario;
-                else continue;
-                $match += ($porcentaje * $factor * $peso / 100);
-                $pesoTotal += $factor * $peso;
-            }
-        }
-
-        if (isset($carrera->tipo_secundario)) {
-            foreach ($porcentajesUsuario as $tipoUsuario => $porcentaje) {
-                $factor = $compatibilidadRIASEC[$carrera->tipo_secundario][$tipoUsuario] ?? 0;
-                $peso = 0;
-                if ($tipoUsuario == $tipoPrimarioUsuario) $peso = $pesoSecundario;
-                elseif ($tipoUsuario == $tipoSecundarioUsuario) $peso = $pesoTerciario;
-                elseif ($tipoUsuario == $tipoTerciarioUsuario) $peso = 0.005;
-                else continue;
-                $match += ($porcentaje * $factor * $peso / 100);
-                $pesoTotal += $factor * $peso;
-            }
-        }
-
-        $matchFinal = $pesoTotal > 0 ? ($match / $pesoTotal) * 100 : 0;
-
-        if ($carrera->tipo_primario == $tipoPrimarioUsuario) {
-            $matchFinal += 20;
-        }
-
-        $matchFinal = min(round($matchFinal), 100);
-
-        return $matchFinal;
     }
-    // Exportar resultados a PDF
+    private function getResultadosArray($resultados)
+    {
+        return is_string($resultados) ? json_decode($resultados, true) : $resultados;
+    }
+
+    private function tiposPersonalidad()
+    {
+        return [
+            'R' => 'Personas prácticas y orientadas a la acción. Prefieren trabajar con objetos, máquinas, herramientas, plantas o animales.',
+            'I' => 'Personas analíticas, intelectuales y curiosas. Prefieren actividades que impliquen pensar, observar, investigar y resolver problemas.',
+            'A' => 'Personas creativas, intuitivas y sensibles. Disfrutan de la auto-expresión, la innovación y actividades sin una estructura clara.',
+            'S' => 'Personas amigables, colaborativas y empáticas. Disfrutan trabajando con otras personas, ayudando, enseñando o brindando asistencia.',
+            'E' => 'Personas persuasivas, ambiciosas y seguras. Prefieren liderar, convencer a otros y tomar riesgos para lograr objetivos.',
+            'C' => 'Personas organizadas, detallistas y precisas. Prefieren seguir procedimientos establecidos y trabajar con datos de manera ordenada.',
+        ];
+    }
+
     public function exportarPDF($id)
     {
         $test = \App\Models\Test::findOrFail($id);
@@ -460,7 +409,6 @@ class TestController extends Controller
             ->download('resultados_test_'.$test->id.'.pdf');
     }
 
-    // Informe avanzado (estadísticas generales)
     public function informes()
     {
         $porTipoPersonalidad = DB::table('test')
@@ -495,45 +443,5 @@ class TestController extends Controller
             'carrerasMasRecomendadas',
             'porAreaConocimiento'
         ));
-    }
-    
-    // Actualizar preguntas del test RIASEC
-    public function actualizarPreguntasRIASEC()
-    {
-        DB::table('preguntas')->truncate();
-        
-        $preguntas = [
-            // ... (preguntas por tipo RIASEC, igual que antes) ...
-        ];
-        
-        foreach ($preguntas as $pregunta) {
-            DB::table('preguntas')->insert([
-                'texto' => $pregunta['texto'],
-                'tipo' => $pregunta['tipo'],
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
-        }
-        
-        return "Se actualizaron " . count($preguntas) . " preguntas para el test RIASEC.";
-    }
-
-    // Métodos auxiliares para limpieza y reutilización
-
-    private function getResultadosArray($resultados)
-    {
-        return is_string($resultados) ? json_decode($resultados, true) : $resultados;
-    }
-
-    private function tiposPersonalidad()
-    {
-        return [
-            'R' => 'Personas prácticas y orientadas a la acción. Prefieren trabajar con objetos, máquinas, herramientas, plantas o animales.',
-            'I' => 'Personas analíticas, intelectuales y curiosas. Prefieren actividades que impliquen pensar, observar, investigar y resolver problemas.',
-            'A' => 'Personas creativas, intuitivas y sensibles. Disfrutan de la auto-expresión, la innovación y actividades sin una estructura clara.',
-            'S' => 'Personas amigables, colaborativas y empáticas. Disfrutan trabajando con otras personas, ayudando, enseñando o brindando asistencia.',
-            'E' => 'Personas persuasivas, ambiciosas y seguras. Prefieren liderar, convencer a otros y tomar riesgos para lograr objetivos.',
-            'C' => 'Personas organizadas, detallistas y precisas. Prefieren seguir procedimientos establecidos y trabajar con datos de manera ordenada.',
-        ];
     }
 }
