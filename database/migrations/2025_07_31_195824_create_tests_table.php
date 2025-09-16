@@ -19,7 +19,7 @@ return new class extends Migration
             // Campos para resultados vocacionales
             $table->string('tipo_primario')->nullable();
             $table->string('tipo_secundario')->nullable();
-            $table->json('resultados')->nullable();
+            $table->json('resultados')->nullable(false);
             $table->boolean('completado')->default(false);
             
             $table->timestamps();

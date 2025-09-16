@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -210,6 +209,17 @@ class TestController extends Controller
             'retroalimentacion' => null
         ];
 
+        // **CORRECCIÓN: Validaciones para evitar guardar si hay datos null**
+        if (empty($resultados['porcentajes']) || 
+            !is_array($resultados['porcentajes']) || 
+            array_sum($resultados['porcentajes']) === 0 || 
+            $tipoPrimario === null || 
+            empty($resultados['recomendaciones'])) {
+            return redirect()->back()->withErrors([
+                'error' => 'No se puede guardar el test porque faltan datos críticos (porcentajes, tipo primario o recomendaciones). Verifica que hayas respondido todas las preguntas correctamente.'
+            ])->withInput();
+        }
+
         $test->update([
             'tipo_primario' => $tipoPrimario,
             'tipo_secundario' => $tipoSecundario,
@@ -298,7 +308,9 @@ class TestController extends Controller
     }
 
     /**
-     * Matching flexible con score variado y universidades asociadas.
+     * Matching flexible con score variado, ponderado por porcentajes y universidades asociadas.
+     * Siempre incluye la carrera, incluso si no hay universidades.
+     * Asegura al menos 1 carrera institucional si no hay ninguna en las recomendaciones.
      */
     private function obtenerRecomendacionesFlexibles($tiposUsuario, $porcentajesUsuario = [])
     {
@@ -325,6 +337,8 @@ class TestController extends Controller
                 $carrera->tipo_terciario
             ];
             $score = 0;
+
+            // Coincidencias exactas y parciales
             foreach ($tiposCarrera as $i => $tipo) {
                 if (isset($tiposUsuario[$i]) && $tiposUsuario[$i] === $tipo) {
                     $score += 40;
@@ -332,7 +346,17 @@ class TestController extends Controller
                     $score += 20;
                 }
             }
-            $score += rand(0, 9);
+
+            // Bonus basado en porcentajes del perfil (para mayor precisión)
+            $bonusPerfil = 0;
+            foreach ($tiposCarrera as $tipo) {
+                if (isset($porcentajesUsuario[$tipo])) {
+                    $bonusPerfil += $porcentajesUsuario[$tipo] * 0.5;  // Pondera con 50% del porcentaje
+                }
+            }
+            $score += $bonusPerfil;
+
+            $score += rand(0, 9);  // Variación aleatoria
 
             // Depuración: Ver score raw
             \Log::info("Carrera: " . $carrera->nombre . " - Score raw: " . $score);
@@ -344,7 +368,7 @@ class TestController extends Controller
             \Log::info("Carrera: " . $carrera->nombre . " - Score porcentaje: " . $scorePorcentaje);
 
             if ($scorePorcentaje > 0) {
-                // Universidades asociadas
+                // Universidades asociadas (siempre incluir, con mensaje si no hay)
                 $universidades = DB::table('carrera_universidad')
                     ->join('universidades', 'carrera_universidad.universidad_id', '=', 'universidades.id')
                     ->where('carrera_universidad.carrera_id', $carrera->id)
@@ -359,28 +383,106 @@ class TestController extends Controller
                     ->get()
                     ->toArray();
 
+                // Si no hay universidades, mostrar mensaje claro
+                if (empty($universidades)) {
+                    $universidades = [
+                        [
+                            'id' => null,
+                            'nombre' => 'No hay universidades registradas para esta carrera.',
+                            'departamento' => 'Consulta con instituciones locales para más opciones.',
+                            'tipo' => null,
+                            'acreditada' => false,
+                            'sitio_web' => null
+                        ]
+                    ];
+                }
+
                 $recomendaciones[] = [
                     'carrera_id' => $carrera->id,
                     'nombre' => $carrera->nombre,
                     'area' => $carrera->area_conocimiento,
                     'descripcion' => $carrera->descripcion,
-                    'score' => $scorePorcentaje,  // Ahora es 0-100
+                    'es_institucional' => $carrera->es_institucional,
+                    'score' => $scorePorcentaje,
                     'tipos' => implode('-', $tiposCarrera),
                     'universidades' => $universidades,
                 ];
             }
         }
 
+        // Ordenar por score descendente
         usort($recomendaciones, fn($a, $b) => $b['score'] <=> $a['score']);
 
-        $afines = array_slice($recomendaciones, 0, 5);
-        $relacionadas = array_slice($recomendaciones, 5, 5);
+        // Filtrar para diversificar: Priorizar tipos principales (R, A, E)
+        $tiposPrincipales = array_slice($tiposUsuario, 0, 3);  // Top 3 tipos
+        $afines = [];
+        $relacionadas = [];
+        $seleccionadas = [];  // Evitar duplicados
+
+        foreach ($recomendaciones as $rec) {
+            if (in_array($rec['carrera_id'], $seleccionadas)) {
+                continue;
+            }
+
+            $tiposRec = explode('-', $rec['tipos']);
+            $coincidePrincipal = array_intersect($tiposRec, $tiposPrincipales);
+            if (count($coincidePrincipal) >= 2 && count($afines) < 5) {
+                $afines[] = $rec;
+                $seleccionadas[] = $rec['carrera_id'];
+            } elseif (count($relacionadas) < 5) {
+                $relacionadas[] = $rec;
+                $seleccionadas[] = $rec['carrera_id'];
+            }
+        }
+
+        // Si no hay suficientes, llenar con las mejores restantes (sin duplicados)
+        if (count($afines) < 5) {
+            foreach ($recomendaciones as $rec) {
+                if (!in_array($rec['carrera_id'], $seleccionadas) && count($afines) < 5) {
+                    $afines[] = $rec;
+                    $seleccionadas[] = $rec['carrera_id'];
+                }
+            }
+        }
+        if (count($relacionadas) < 5) {
+            foreach ($recomendaciones as $rec) {
+                if (!in_array($rec['carrera_id'], $seleccionadas) && count($relacionadas) < 5) {
+                    $relacionadas[] = $rec;
+                    $seleccionadas[] = $rec['carrera_id'];
+                }
+            }
+        }
+
+        // Asegurar al menos 1 carrera institucional si no hay ninguna
+        $tieneInstitucional = false;
+        foreach (array_merge($afines, $relacionadas) as $rec) {
+            if ($rec['es_institucional']) {
+                $tieneInstitucional = true;
+                break;
+            }
+        }
+
+        if (!$tieneInstitucional) {
+            foreach ($recomendaciones as $rec) {
+                if ($rec['es_institucional'] && !in_array($rec['carrera_id'], $seleccionadas)) {
+                    if (count($relacionadas) < 5) {
+                        $relacionadas[] = $rec;
+                        $seleccionadas[] = $rec['carrera_id'];
+                    } elseif (count($afines) < 5) {
+                        $afines[] = $rec;
+                        $seleccionadas[] = $rec['carrera_id'];
+                    }
+                    break;  // Añadir solo 1
+                }
+            }
+        }
 
         return [
             'afines' => $afines,
             'relacionadas' => $relacionadas
         ];
     }
+
     private function getResultadosArray($resultados)
     {
         return is_string($resultados) ? json_decode($resultados, true) : $resultados;
@@ -404,11 +506,57 @@ class TestController extends Controller
         $resultados = $this->getResultadosArray($test->resultados);
         $tiposPersonalidad = $this->tiposPersonalidad();
 
-        $titulo = 'Resultados de Test Vocacional';
-        return \PDF::loadView('test.resultados_pdf', compact('test', 'resultados', 'tiposPersonalidad', 'titulo'))
-            ->download('resultados_test_'.$test->id.'.pdf');
-    }
+        // Calcular tipos dominantes y recomendaciones (manejar empates)
+        $recomendacionesAreas = [];
+        if (!empty($resultados['porcentajes'])) {
+            $porcentajes = $resultados['porcentajes'];
+            arsort($porcentajes); // Ordenar de mayor a menor
+            
+            // Encontrar el porcentaje máximo
+            $maxPorcentaje = reset($porcentajes);
+            
+            // Identificar todos los tipos que tienen el porcentaje máximo (manejar empates)
+            $tiposDominantes = [];
+            foreach ($porcentajes as $tipo => $porcentaje) {
+                if ($porcentaje === $maxPorcentaje) {
+                    $tiposDominantes[] = $tipo;
+                } else {
+                    break; // Como está ordenado, podemos parar cuando encontremos un porcentaje menor
+                }
+            }
+            
+            // Mapeo de tipos RIASEC a áreas de estudio
+            $mapeoAreas = [
+                'R' => ['area' => 'Ingeniería, Tecnología o Ciencias Naturales', 'descripcion' => 'Áreas prácticas y técnicas que involucran trabajo con objetos, máquinas y resolución de problemas concretos, alineadas con tu enfoque realista y orientado a la acción.'],
+                'I' => ['area' => 'Ciencias, Matemáticas o Investigación', 'descripcion' => 'Áreas analíticas y científicas que requieren pensamiento lógico, observación y resolución de problemas complejos, ideales para tu curiosidad intelectual.'],
+                'A' => ['area' => 'Artes, Humanidades o Diseño', 'descripcion' => 'Áreas creativas y expresivas que permiten la innovación, auto-expresión y trabajo sin estructuras rígidas, perfectas para tu sensibilidad artística.'],
+                'S' => ['area' => 'Ciencias Sociales, Educación o Salud', 'descripcion' => 'Áreas relacionadas con personas, servicio y empatía, donde puedes ayudar, enseñar y trabajar en entornos colaborativos, aprovechando tu amabilidad social.'],
+                'E' => ['area' => 'Administración, Economía o Negocios', 'descripcion' => 'Áreas de liderazgo, gestión y toma de riesgos, donde puedes convencer a otros y lograr objetivos ambiciosos, reflejando tu personalidad emprendedora.'],
+                'C' => ['area' => 'Contabilidad, Finanzas o Administración', 'descripcion' => 'Áreas organizadas y detalladas que involucran procedimientos establecidos, datos y precisión, ideales para tu enfoque convencional y meticuloso.']
+            ];
+            
+            // Generar recomendaciones para cada tipo dominante
+            foreach ($tiposDominantes as $tipo) {
+                $recomendacion = $mapeoAreas[$tipo] ?? ['area' => 'Áreas generales de estudio', 'descripcion' => 'Consulta con un orientador para recomendaciones personalizadas.'];
+                $recomendacionesAreas[] = [
+                    'tipo' => $tipo,
+                    'porcentaje' => $maxPorcentaje,
+                    'area' => $recomendacion['area'],
+                    'descripcion' => $recomendacion['descripcion']
+                ];
+            }
+        }
 
+        $titulo = 'Resultados de Test Vocacional';
+        return \PDF::loadView('test.resultados_pdf', compact(
+            'test',
+            'resultados',
+            'tiposPersonalidad',
+            'titulo',
+            'recomendacionesAreas'
+        ))
+        ->download('resultados_test_'.$test->id.'.pdf');
+    } 
     public function informes()
     {
         $porTipoPersonalidad = DB::table('test')
@@ -426,7 +574,7 @@ class TestController extends Controller
                 ->where('es_primaria', true)
                 ->groupBy('carreras.id', 'carreras.nombre')
                 ->orderByDesc('total')
-                ->limit(10)
+                ->limit(7)
                 ->get();
         }
         

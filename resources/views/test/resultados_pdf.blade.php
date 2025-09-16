@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -155,6 +156,10 @@
             border-radius: 6px;
             border: 1px solid #e2e8f0;
         }
+        /* Ajuste de ancho de columnas para las tablas sin compatibilidad */
+        th:nth-child(1), td:nth-child(1) { width: 40%; } /* Carrera */
+        th:nth-child(2), td:nth-child(2) { width: 20%; } /* Área */
+        th:nth-child(3), td:nth-child(3) { width: 40%; } /* Universidades */
     </style>
 </head>
 <body>
@@ -195,7 +200,6 @@
                 <tr>
                     <th>Carrera</th>
                     <th>Área</th>
-                    <th>Compatibilidad</th>
                     <th>Universidades</th>
                 </tr>
             </thead>
@@ -208,7 +212,6 @@
                             <div class="desc">{{ $carrera['descripcion'] ?? 'Descripción no disponible' }}</div>
                         </td>
                         <td>{{ $carrera['area'] ?? 'Área no disponible' }}</td>
-                        <td><span class="match">{{ $carrera['score'] ?? 0 }}%</span></td>
                         <td>
                             @if(!empty($carrera['universidades']))
                                 <ul class="universidad-list">
@@ -243,7 +246,6 @@
                 <tr>
                     <th>Carrera</th>
                     <th>Área</th>
-                    <th>Compatibilidad</th>
                     <th>Universidades</th>
                 </tr>
             </thead>
@@ -255,7 +257,6 @@
                             <div class="desc">{{ $carrera['descripcion'] ?? 'Descripción no disponible' }}</div>
                         </td>
                         <td>{{ $carrera['area'] ?? 'Área no disponible' }}</td>
-                        <td><span class="match">{{ $carrera['score'] ?? 0 }}%</span></td>
                         <td>
                             @if(!empty($carrera['universidades']))
                                 <ul class="universidad-list">
@@ -282,6 +283,64 @@
 
     {{-- Depuración temporal: Quita esto después --}}
     {{-- {{ dd($resultados['recomendaciones']['afines'][0]['score'] ?? 'No score') }} --}}
+
+    <h2>Recomendación de Área de Estudio</h2>
+    @php
+        $porcentajes = $resultados['porcentajes'] ?? [];
+        arsort($porcentajes); // Ordenar de mayor a menor
+        
+        // Encontrar el porcentaje máximo
+        $maxPorcentaje = reset($porcentajes);
+        
+        // Identificar todos los tipos que tienen el porcentaje máximo (manejar empates)
+        $tiposDominantes = [];
+        foreach ($porcentajes as $tipo => $porcentaje) {
+            if ($porcentaje === $maxPorcentaje) {
+                $tiposDominantes[] = $tipo;
+            } else {
+                break; // Como está ordenado, podemos parar cuando encontremos un porcentaje menor
+            }
+        }
+        
+        // Mapeo de tipos RIASEC a áreas de estudio
+        $mapeoAreas = [
+            'R' => ['area' => 'Ingeniería, Tecnología o Ciencias Naturales', 'descripcion' => 'Áreas prácticas y técnicas que involucran trabajo con objetos, máquinas y resolución de problemas concretos, alineadas con tu enfoque realista y orientado a la acción.'],
+            'I' => ['area' => 'Ciencias, Matemáticas o Investigación', 'descripcion' => 'Áreas analíticas y científicas que requieren pensamiento lógico, observación y resolución de problemas complejos, ideales para tu curiosidad intelectual.'],
+            'A' => ['area' => 'Artes, Humanidades o Diseño', 'descripcion' => 'Áreas creativas y expresivas que permiten la innovación, auto-expresión y trabajo sin estructuras rígidas, perfectas para tu sensibilidad artística.'],
+            'S' => ['area' => 'Ciencias Sociales, Educación o Salud', 'descripcion' => 'Áreas relacionadas con personas, servicio y empatía, donde puedes ayudar, enseñar y trabajar en entornos colaborativos, aprovechando tu amabilidad social.'],
+            'E' => ['area' => 'Administración, Economía o Negocios', 'descripcion' => 'Áreas de liderazgo, gestión y toma de riesgos, donde puedes convencer a otros y lograr objetivos ambiciosos, reflejando tu personalidad emprendedora.'],
+            'C' => ['area' => 'Contabilidad, Finanzas o Administración', 'descripcion' => 'Áreas organizadas y detalladas que involucran procedimientos establecidos, datos y precisión, ideales para tu enfoque convencional y meticuloso.']
+        ];
+    @endphp
+    
+    @if(count($tiposDominantes) > 0)
+        @if(count($tiposDominantes) === 1)
+            <!-- Caso: Solo un tipo dominante -->
+            @php
+                $tipoDominante = $tiposDominantes[0];
+                $recomendacion = $mapeoAreas[$tipoDominante] ?? ['area' => 'Áreas generales de estudio', 'descripcion' => 'Consulta con un orientador para recomendaciones personalizadas.'];
+            @endphp
+            <p>Según tu perfil RIASEC dominante (<strong>{{ $tipoDominante }}</strong>), te recomendamos explorar áreas de estudio como: <strong>{{ $recomendacion['area'] }}</strong></p>
+            <p class="sec">{{ $recomendacion['descripcion'] }}</p>
+        @else
+            <!-- Caso: Múltiples tipos dominantes (empate) -->
+            <p><strong>¡Tienes múltiples perfiles dominantes!</strong> Se encontraron {{ count($tiposDominantes) }} tipos con el mismo porcentaje máximo ({{ $maxPorcentaje }}%). Aquí tienes recomendaciones para cada uno:</p>
+            @foreach($tiposDominantes as $tipo)
+                @php
+                    $recomendacion = $mapeoAreas[$tipo] ?? ['area' => 'Áreas generales de estudio', 'descripcion' => 'Consulta con un orientador para recomendaciones personalizadas.'];
+                @endphp
+                <div style="margin-bottom: 15px; padding: 10px; background: #f0f0f0; border-radius: 6px;">
+                    <p><strong>Perfil {{ $tipo }} ({{ $maxPorcentaje }}%):</strong> {{ $recomendacion['area'] }}</p>
+                    <p class="sec">{{ $recomendacion['descripcion'] }}</p>
+                </div>
+            @endforeach
+        @endif
+        
+        <!-- Resumen de resultados -->
+        <p class="sec"><strong>Resumen:</strong> Basado en tu perfil RIASEC, estas recomendaciones te ayudan a identificar áreas de estudio que se alinean con tus intereses y fortalezas. Si tienes múltiples perfiles dominantes, significa que tienes una personalidad versátil con intereses diversos. Te recomendamos explorar todas las áreas sugeridas y considerar cuál se alinea mejor con tus metas personales y oportunidades disponibles. Consulta con un orientador profesional para una interpretación más detallada y personalizada.</p>
+    @else
+        <div class="no-data">No se pudo generar una recomendación de área de estudio debido a falta de datos de perfil.</div>
+    @endif
 
     <div class="footer">
         <strong>Nota Importante:</strong> Este informe fue generado automáticamente por el sistema de orientación vocacional de la Universidad Nacional de Oriente.<br>

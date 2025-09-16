@@ -60,7 +60,7 @@ class User extends Authenticatable
 
     // AGREGAR AQUÍ: Constantes para roles
     public const ROLE_SUPERADMIN = 'superadmin';
-    public const ROLE_COORDINADOR = 'coordinador'; // En lugar de 'admin'
+    public const ROLE_COORDINADOR = 'coordinador'; 
     public const ROLE_USER = 'estudiante';
 
     // AGREGAR AQUÍ: Métodos helper para verificar roles

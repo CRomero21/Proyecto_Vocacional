@@ -27,6 +27,17 @@ class Test extends Model
         'fecha_completado' => 'datetime'
     ];
 
+    // Reglas de validación para evitar guardar datos null o inválidos
+    public static $rules = [
+        'user_id' => 'required|exists:users,id',
+        'tipo_primario' => 'required|string|in:R,I,A,S,E,C',  // No null y debe ser un tipo RIASEC válido
+        'tipo_secundario' => 'nullable|string|in:R,I,A,S,E,C',  // Opcional, pero si se asigna, debe ser válido
+        'resultados' => 'required|array',  // No null y debe ser array
+        'completado' => 'required|boolean',  // No null
+        'fecha_completado' => 'required|date',  // No null cuando se completa
+        'fecha' => 'required|date',  // No null
+    ];
+
     /**
      * Obtiene el usuario que realizó el test
      */

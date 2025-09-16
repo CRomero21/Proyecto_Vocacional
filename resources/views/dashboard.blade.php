@@ -97,21 +97,22 @@
                 @endif
             </div>
 
-            <!-- Carreras recomendadas con match -->
+            <!-- Áreas sugeridas con match -->
             <div class="bg-white rounded-xl shadow-md p-6 border border-[#c8c8c8]/50 flex flex-col justify-between">
                 <h2 class="text-xl font-bold text-[#131e58] mb-4 flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-[#0b3be9]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
                     </svg>
-                    Carreras Sugeridas
+                    Áreas Sugeridas
                 </h2>
-                @if(isset($carreras_sugeridas) && count($carreras_sugeridas))
+                @if(isset($areas_sugeridas) && count($areas_sugeridas))
                     <ul class="space-y-4">
-                        @foreach($carreras_sugeridas as $i => $carrera)
+                        @foreach($areas_sugeridas as $i => $area)
                             @php
-                                $nombre = is_array($carrera) ? $carrera['nombre'] : $carrera->nombre;
-                                $match = is_array($carrera) && isset($carrera['match']) ? $carrera['match'] : ($carrera->match ?? null);
+                                $nombre = is_array($area) ? $area['area'] : $area->area;
+                                $match = is_array($area) && isset($area['porcentaje']) ? $area['porcentaje'] : ($area->porcentaje ?? null);
+                                $descripcion = is_array($area) ? $area['descripcion'] : $area->descripcion;
                             @endphp
                             <li class="bg-[#f2f2f2] rounded-lg p-4 flex flex-col">
                                 <div class="flex justify-between items-center mb-1">
@@ -120,8 +121,11 @@
                                         <span class="text-sm font-bold text-[#0079f4]">{{ $match }}% match</span>
                                     @endif
                                 </div>
+                                @if($descripcion)
+                                    <p class="text-sm text-gray-600">{{ $descripcion }}</p>
+                                @endif
                                 @if($match)
-                                    <div class="w-full bg-[#c8c8c8]/30 rounded-full h-2">
+                                    <div class="w-full bg-[#c8c8c8]/30 rounded-full h-2 mt-2">
                                         <div class="h-2 rounded-full transition-all duration-500"
                                              style="width: {{ $match }}%; background: linear-gradient(90deg, #00aeff, #0079f4);"></div>
                                     </div>
@@ -134,7 +138,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-[#c8c8c8] mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <p class="text-sm text-gray-500 text-center">Tus carreras sugeridas aparecerán después de tu primer test.</p>
+                        <p class="text-sm text-gray-500 text-center">Tus áreas sugeridas aparecerán después de tu primer test.</p>
                         <a href="{{ route('test.iniciar') }}" class="mt-3 px-4 py-2 bg-[#0b3be9] text-white rounded-lg hover:bg-[#051a9a] transition">Realizar Test</a>
                     </div>
                 @endif

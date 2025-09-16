@@ -14,41 +14,50 @@ class CuestionarioController extends Controller
     // Mostrar el dashboard con historial de tests
     public function mostrar(Request $request)
     {
-        // Historial de tests del usuario autenticado
         $tests = Auth::user()->tests()->withCount('respuestas')->orderByDesc('fecha')->get();
 
         $perfil_riasec = [];
-        $carreras_sugeridas = [];
+        $areas_sugeridas = [];
 
         if ($tests->count()) {
-            // Tomar el test más reciente
             $ultimoTest = $tests->first();
             $resultados = is_string($ultimoTest->resultados) ? json_decode($ultimoTest->resultados, true) : $ultimoTest->resultados;
 
-            // Extraer perfil RIASEC (porcentajes)
+            // Extraer perfil RIASEC
             if (!empty($resultados['porcentajes'])) {
                 $perfil_riasec = $resultados['porcentajes'];
                 arsort($perfil_riasec); // Ordenar de mayor a menor
-            }
 
-            // Extraer carreras sugeridas (ordenar por match)
-            if (!empty($resultados['recomendaciones'])) {
-                $carreras_sugeridas = collect($resultados['recomendaciones'])
-                    ->sortByDesc('match')
-                    ->take(5)
-                    ->map(function($carrera) {
-                        return [
-                            'nombre' => $carrera['nombre'] ?? '',
-                            'match' => $carrera['match'] ?? 0
-                        ];
-                    })->values()->toArray();
+                // Tomar los top 3 tipos (primario, secundario, terciario)
+                $topTipos = array_slice(array_keys($perfil_riasec), 0, 3);
+
+                // Mapeo de tipos RIASEC a áreas
+                $mapeoAreas = [
+                    'R' => ['area' => 'Ingeniería, Tecnología o Ciencias Naturales', 'descripcion' => 'Áreas prácticas y técnicas que involucran trabajo con objetos, máquinas y resolución de problemas concretos.'],
+                    'I' => ['area' => 'Ciencias, Matemáticas o Investigación', 'descripcion' => 'Áreas analíticas y científicas que requieren pensamiento lógico y resolución de problemas complejos.'],
+                    'A' => ['area' => 'Artes, Humanidades o Diseño', 'descripcion' => 'Áreas creativas y expresivas que permiten la innovación y auto-expresión.'],
+                    'S' => ['area' => 'Ciencias Sociales, Educación o Salud', 'descripcion' => 'Áreas relacionadas con personas, servicio y empatía.'],
+                    'E' => ['area' => 'Administración, Economía o Negocios', 'descripcion' => 'Áreas de liderazgo, gestión y toma de riesgos.'],
+                    'C' => ['area' => 'Contabilidad, Finanzas o Administración', 'descripcion' => 'Áreas organizadas y detalladas que involucran procedimientos y datos.']
+                ];
+
+                // Generar áreas sugeridas para los top 3 tipos
+                foreach ($topTipos as $tipo) {
+                    $area = $mapeoAreas[$tipo] ?? ['area' => 'Áreas generales', 'descripcion' => 'Consulta con un orientador.'];
+                    $areas_sugeridas[] = [
+                        'tipo' => $tipo,
+                        'area' => $area['area'],
+                        'descripcion' => $area['descripcion'],
+                        'porcentaje' => $perfil_riasec[$tipo]
+                    ];
+                }
             }
         }
 
         return view('dashboard', [
             'tests' => $tests,
             'perfil_riasec' => $perfil_riasec,
-            'carreras_sugeridas' => $carreras_sugeridas
+            'areas_sugeridas' => $areas_sugeridas
         ]);
     }
 
