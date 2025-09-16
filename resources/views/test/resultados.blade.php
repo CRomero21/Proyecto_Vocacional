@@ -302,6 +302,166 @@
                 </div>
             @endif
         </div>
+
+        {{-- Sección de Retroalimentación Más Amigable --}}
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4 text-orange-700 flex items-center">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                ¡Tu Opinión Nos Ayuda! 😊
+            </h2>
+
+            {{-- Mostrar retroalimentación existente --}}
+            @if(isset($resultados['retroalimentacion']) && !empty($resultados['retroalimentacion']))
+                <div class="bg-gradient-to-r from-orange-50 to-yellow-50 p-6 rounded-lg shadow-md mb-6 border border-orange-200">
+                    <h3 class="text-lg font-semibold text-orange-800 mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Tu Retroalimentación Anterior
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div class="bg-white p-3 rounded-lg border border-orange-100">
+                            <span class="font-medium text-gray-700 flex items-center">
+                                <svg class="w-4 h-4 mr-1 text-orange-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Utilidad:
+                            </span>
+                            <span class="ml-2 font-bold text-orange-700">{{ $resultados['retroalimentacion']['utilidad'] }}/5</span>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-orange-100">
+                            <span class="font-medium text-gray-700 flex items-center">
+                                <svg class="w-4 h-4 mr-1 text-orange-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Precisión:
+                            </span>
+                            <span class="ml-2 font-bold text-orange-700">{{ $resultados['retroalimentacion']['precision'] }}/5</span>
+                        </div>
+                    </div>
+                    @if(isset($resultados['retroalimentacion']['comentario']) && !empty($resultados['retroalimentacion']['comentario']))
+                        <div class="mb-4 bg-white p-3 rounded-lg border border-orange-100">
+                            <span class="font-medium text-gray-700 flex items-center">
+                                <svg class="w-4 h-4 mr-1 text-orange-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                                Comentario:
+                            </span>
+                            <p class="mt-1 text-gray-600">{{ $resultados['retroalimentacion']['comentario'] }}</p>
+                        </div>
+                    @endif
+                    @if(isset($resultados['retroalimentacion']['carrera_seleccionada']) && !empty($resultados['retroalimentacion']['carrera_seleccionada']))
+                        <div class="bg-white p-3 rounded-lg border border-orange-100">
+                            <span class="font-medium text-gray-700 flex items-center">
+                                <svg class="w-4 h-4 mr-1 text-orange-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                </svg>
+                                Carrera Seleccionada:
+                            </span>
+                            <span class="ml-2 font-bold text-orange-700">{{ $resultados['retroalimentacion']['carrera_seleccionada'] }}</span>
+                        </div>
+                    @endif
+                    <p class="text-xs text-gray-500 mt-4 flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Enviado el {{ date('d/m/Y H:i', strtotime($resultados['retroalimentacion']['fecha'])) }}
+                    </p>
+                </div>
+            @endif
+
+            {{-- Formulario para nueva retroalimentación --}}
+            <div class="bg-gradient-to-r from-orange-50 to-yellow-50 p-6 rounded-lg shadow-md border border-orange-200">
+                <h3 class="text-lg font-semibold text-orange-800 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    ¿Qué te pareció este test? ¡Tu opinión es valiosa!
+                </h3>
+                <p class="text-gray-600 mb-4 flex items-center">
+                    <svg class="w-4 h-4 mr-1 text-orange-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                    Gracias por ayudarnos a mejorar. ¡Solo toma 1 minuto!
+                </p>
+                
+                <form action="{{ route('test.retroalimentacion', $test->id) }}" method="POST">
+                    @csrf
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                        <div>
+                            <label for="utilidad" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                <svg class="w-4 h-4 mr-1 text-orange-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Utilidad del test (1-5)
+                            </label>
+                            <select name="utilidad" id="utilidad" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" required>
+                                <option value="">Selecciona 😊</option>
+                                <option value="1">1 - Muy poco útil 😔</option>
+                                <option value="2">2 - Poco útil 🙁</option>
+                                <option value="3">3 - Neutral 😐</option>
+                                <option value="4">4 - Útil 🙂</option>
+                                <option value="5">5 - Muy útil 😍</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="precision" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                <svg class="w-4 h-4 mr-1 text-orange-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Precisión de los resultados (1-5)
+                            </label>
+                            <select name="precision" id="precision" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" required>
+                                <option value="">Selecciona 😊</option>
+                                <option value="1">1 - Muy impreciso 😔</option>
+                                <option value="2">2 - Poco preciso 🙁</option>
+                                <option value="3">3 - Neutral 😐</option>
+                                <option value="4">4 - Preciso 🙂</option>
+                                <option value="5">5 - Muy preciso 😍</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="comentario" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                            <svg class="w-4 h-4 mr-1 text-orange-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            </svg>
+                            Comentario (opcional)
+                        </label>
+                        <textarea name="comentario" id="comentario" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="¡Comparte tus pensamientos! ¿Qué te gustó? ¿Qué podríamos mejorar? 😊"></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label for="carrera_seleccionada" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                            <svg class="w-4 h-4 mr-1 text-orange-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                            </svg>
+                            Carrera que más te interesó (opcional)
+                        </label>
+                        <select name="carrera_seleccionada" id="carrera_seleccionada" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <option value="">Selecciona una carrera 😊</option>
+                            @if(isset($carrerasPrincipales) && count($carrerasPrincipales) > 0)
+                                @foreach($carrerasPrincipales as $carrera)
+                                    <option value="{{ $carrera['nombre'] }}">{{ $carrera['nombre'] }}</option>
+                                @endforeach
+                            @endif
+                            @if(isset($carrerasSecundarias) && count($carrerasSecundarias) > 0)
+                                @foreach($carrerasSecundarias as $carrera)
+                                    <option value="{{ $carrera['nombre'] }}">{{ $carrera['nombre'] }}</option>
+                                @endforeach
+                            @endif
+                        </select>
+                    </div>
+                    <button type="submit" class="inline-flex items-center px-6 py-3 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition-all duration-300 font-semibold shadow-lg transform hover:scale-105">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                        Enviar Retroalimentación 🚀
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -313,4 +473,5 @@ function toggleUniversidades(id) {
     }
 }
 </script>
+
 @endsection
