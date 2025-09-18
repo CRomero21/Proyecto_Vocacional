@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class TestController extends Controller
 {
@@ -19,7 +20,7 @@ class TestController extends Controller
 
     public function iniciar()
     {
-        $testPendiente = Test::where('user_id', auth()->id())
+    $testPendiente = Test::where('user_id', Auth::id())
             ->where('completado', false)
             ->first();
 
@@ -29,7 +30,7 @@ class TestController extends Controller
         }
 
         $test = Test::create([
-            'user_id' => auth()->id(),
+            'user_id' => Auth::id(),
             'fecha' => now(),
         ]);
 
@@ -43,7 +44,7 @@ class TestController extends Controller
 
     public function continuar(Test $test)
     {
-        if ($test->user_id !== auth()->id()) {
+    if ($test->user_id !== Auth::id()) {
             abort(403, 'No autorizado');
         }
 
@@ -100,7 +101,7 @@ class TestController extends Controller
 
     public function resultados(Test $test)
     {
-        $user = auth()->user();
+    $user = Auth::user();
         if ($test->user_id !== $user->id && 
             !in_array($user->role ?? '', ['superadmin', 'coordinador'])) {
             abort(403, 'No autorizado');
@@ -136,7 +137,7 @@ class TestController extends Controller
 
         $test = Test::findOrFail($request->test_id);
 
-        if ($test->user_id !== auth()->id()) {
+    if ($test->user_id !== Auth::id()) {
             abort(403, 'No autorizado');
         }
 
@@ -283,7 +284,7 @@ class TestController extends Controller
 
     public function historial()
     {
-        $tests = Test::where('user_id', auth()->id())
+    $tests = Test::where('user_id', Auth::id())
             ->where('completado', true)
             ->orderBy('fecha_completado', 'desc')
             ->paginate(10);
@@ -293,7 +294,7 @@ class TestController extends Controller
 
     public function eliminar(Test $test)
     {
-        if ($test->user_id !== auth()->id() && auth()->user()->role !== 'superadmin') {
+    if ($test->user_id !== Auth::id() && Auth::user()->role !== 'superadmin') {
             abort(403, 'No autorizado');
         }
 
@@ -359,13 +360,13 @@ class TestController extends Controller
             $score += rand(0, 9);  // Variación aleatoria
 
             // Depuración: Ver score raw
-            \Log::info("Carrera: " . $carrera->nombre . " - Score raw: " . $score);
+            Log::info("Carrera: " . $carrera->nombre . " - Score raw: " . $score);
 
             // Normalizar a porcentaje (0-100%)
             $scorePorcentaje = min(100, round(($score / 129) * 100));
 
             // Depuración: Ver score porcentaje
-            \Log::info("Carrera: " . $carrera->nombre . " - Score porcentaje: " . $scorePorcentaje);
+            Log::info("Carrera: " . $carrera->nombre . " - Score porcentaje: " . $scorePorcentaje);
 
             if ($scorePorcentaje > 0) {
                 // Universidades asociadas (siempre incluir, con mensaje si no hay)
@@ -548,7 +549,7 @@ class TestController extends Controller
         }
 
         $titulo = 'Resultados de Test Vocacional';
-        return \PDF::loadView('test.resultados_pdf', compact(
+    return Pdf::loadView('test.resultados_pdf', compact(
             'test',
             'resultados',
             'tiposPersonalidad',
