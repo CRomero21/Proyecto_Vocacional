@@ -14,6 +14,7 @@ class CuestionarioController extends Controller
     // Mostrar el dashboard con historial de tests
     public function mostrar(Request $request)
     {
+        // Obtener todos los tests del usuario con el conteo de respuestas
         $tests = Auth::user()->tests()->withCount('respuestas')->orderByDesc('fecha')->get();
 
         $perfil_riasec = [];
@@ -23,7 +24,7 @@ class CuestionarioController extends Controller
             $ultimoTest = $tests->first();
             $resultados = is_string($ultimoTest->resultados) ? json_decode($ultimoTest->resultados, true) : $ultimoTest->resultados;
 
-            // Extraer perfil RIASEC
+            // Extraer perfil RIASEC del último test
             if (!empty($resultados['porcentajes'])) {
                 $perfil_riasec = $resultados['porcentajes'];
                 arsort($perfil_riasec); // Ordenar de mayor a menor
@@ -31,7 +32,7 @@ class CuestionarioController extends Controller
                 // Tomar los top 3 tipos (primario, secundario, terciario)
                 $topTipos = array_slice(array_keys($perfil_riasec), 0, 3);
 
-                // Mapeo de tipos RIASEC a áreas
+                // Mapeo de tipos RIASEC a áreas sugeridas
                 $mapeoAreas = [
                     'R' => ['area' => 'Ingeniería, Tecnología o Ciencias Naturales', 'descripcion' => 'Áreas prácticas y técnicas que involucran trabajo con objetos, máquinas y resolución de problemas concretos.'],
                     'I' => ['area' => 'Ciencias, Matemáticas o Investigación', 'descripcion' => 'Áreas analíticas y científicas que requieren pensamiento lógico y resolución de problemas complejos.'],
@@ -54,6 +55,18 @@ class CuestionarioController extends Controller
             }
         }
 
+        // Para cada test, calcular el perfil dominante (tipo con mayor porcentaje)
+        foreach ($tests as $test) {
+            $resultados = is_string($test->resultados) ? json_decode($test->resultados, true) : $test->resultados;
+            if (!empty($resultados['porcentajes'])) {
+                $perfil_riasec_test = $resultados['porcentajes'];
+                arsort($perfil_riasec_test);
+                $test->perfil_dominante = array_key_first($perfil_riasec_test);
+            } else {
+                $test->perfil_dominante = null;
+            }
+        }
+
         return view('dashboard', [
             'tests' => $tests,
             'perfil_riasec' => $perfil_riasec,
@@ -61,7 +74,7 @@ class CuestionarioController extends Controller
         ]);
     }
 
-    // Guardar las respuestas del usuario (no se usa si usas TestController para guardar tests)
+    // Guardar las respuestas del usuario
     public function guardar(Request $request)
     {
         $data = $request->validate([
