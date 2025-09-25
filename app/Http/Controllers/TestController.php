@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Retroalimentacion;
 
 class TestController extends Controller
 {
@@ -264,21 +265,21 @@ class TestController extends Controller
             'comentario' => 'nullable|string|max:500',
             'carrera_seleccionada' => 'nullable|exists:carreras,id'
         ]);
-        
-        $resultados = $this->getResultadosArray($test->resultados);
-        
-        $resultados['retroalimentacion'] = [
-            'utilidad' => $request->utilidad,
-            'precision' => $request->precision,
-            'comentario' => $request->comentario,
-            'carrera_seleccionada' => $request->carrera_seleccionada,
-            'fecha' => now()->toDateTimeString()
-        ];
-        
-        $test->update([
-            'resultados' => $resultados
-        ]);
-        
+
+        // Guarda en la nueva tabla
+        Retroalimentacion::updateOrCreate(
+            [
+                'user_id' => $test->user_id,
+                'test_id' => $test->id,
+            ],
+            [
+                'utilidad' => $request->utilidad,
+                'precision' => $request->precision,
+                'comentario' => $request->comentario,
+                'carrera_id' => $request->carrera_seleccionada,
+            ]
+        );
+
         return back()->with('success', '¡Gracias por tu retroalimentación! Nos ayudará a mejorar.');
     }
 

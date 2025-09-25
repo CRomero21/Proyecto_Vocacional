@@ -18,6 +18,18 @@ class EstadisticasController extends Controller
 {
     public function index(Request $request)
     {
+        // 13. Promedios de utilidad y precisión desde retroalimentaciones
+        $utilidadPromedio = null;
+        $precisionPromedio = null;
+        $departamentoFiltro = $request->input('departamento'); // asegurar que esté definido antes
+        $retroalimentacionesQuery = \App\Models\Retroalimentacion::query();
+        if ($departamentoFiltro) {
+            $retroalimentacionesQuery = $retroalimentacionesQuery->whereHas('user', function($q) use ($departamentoFiltro) {
+                $q->where('departamento', $departamentoFiltro);
+            });
+        }
+        $utilidadPromedio = round($retroalimentacionesQuery->whereNotNull('utilidad')->avg('utilidad'), 2);
+        $precisionPromedio = round($retroalimentacionesQuery->whereNotNull('precision')->avg('precision'), 2);
         try {
             // Logging para diagnóstico
             $tables = DB::select('SHOW TABLES');
@@ -415,12 +427,35 @@ class EstadisticasController extends Controller
                     round(($top5Total / $totalRecomendaciones) * 100, 1) : 0;
             }
             
+
+            // 12. Carreras más seleccionadas por los usuarios en la retroalimentación (solo nueva consulta)
+            $carrerasSeleccionadasTop = \App\Models\Retroalimentacion::select('carrera_id', DB::raw('COUNT(*) as total'))
+                ->whereNotNull('carrera_id')
+                ->when($departamentoFiltro, function($q) use ($departamentoFiltro) {
+                    return $q->whereHas('user', function($query) use ($departamentoFiltro) {
+                        $query->where('departamento', $departamentoFiltro);
+                    });
+                })
+                ->groupBy('carrera_id')
+                ->orderByDesc('total')
+                ->with('carrera:id,nombre')
+                ->limit(10)
+                ->get()
+                ->map(function($item) {
+                    return [
+                        'nombre' => $item->carrera->nombre ?? 'Sin nombre',
+                        'total' => $item->total,
+                    ];
+                })
+                ->toArray();
+
             return view('admin.estadisticas.index', compact(
                 'totalUsuarios', 'testsIniciados', 'testsCompletados', 'departamentos', 'departamentoFiltro',
                 'distribucionPorGenero', 'distribucionPorEdad', 'estudiantesPorDepartamento',
                 'topInstituciones', 'porTipoPersonalidad', 'carrerasMasRecomendadas',
                 'valoracionPromedio', 'distribucionValoraciones', 'totalValoraciones', 'comentariosRecientes',
-                'tipoPersonalidadDominante', 'porcentajeDominante', 'carreraTop', 'porcentajeTopCarreras'
+                'tipoPersonalidadDominante', 'porcentajeDominante', 'carreraTop', 'porcentajeTopCarreras',
+                'carrerasSeleccionadasTop', 'utilidadPromedio', 'precisionPromedio'
             ));
             
         } catch (\Exception $e) {

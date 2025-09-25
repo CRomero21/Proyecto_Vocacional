@@ -106,8 +106,8 @@
                     
                     <x-slot name="content">
                         <div class="border-b border-gray-200 pb-2 pt-1 px-4">
-                            <p class="text-xs text-gray-500">Conectado como</p>
-                            <p class="text-sm font-medium text-gray-800 truncate">{{ Auth::user()->email }}</p>
+                            <p class="text-xs text-white">Conectado como</p>
+                            <p class="text-sm font-medium text-white truncate">{{ Auth::user()->email }}</p>
                         </div>
                         
                         <x-dropdown-link :href="route('profile.edit')" class="flex items-center">

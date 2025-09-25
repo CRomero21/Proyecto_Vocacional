@@ -166,6 +166,23 @@
                         <div class="ml-2 text-sm text-gray-600">({{ $totalValoraciones ?? 0 }} valoraciones)</div>
                     </div>
                 </div>
+
+                <!-- Promedios de utilidad y precisión de retroalimentaciones -->
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                    <h3 class="text-md font-medium text-blue-800 mb-2">Promedios de Retroalimentación</h3>
+                    <div class="flex flex-col gap-2">
+                        <div class="flex items-center">
+                            <span class="text-blue-700 font-semibold mr-2">Utilidad:</span>
+                            <span class="text-2xl font-bold text-blue-900">{{ number_format($utilidadPromedio ?? 0, 2) }}</span>
+                            <span class="ml-2 text-gray-500 text-sm">/ 5</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-blue-700 font-semibold mr-2">Precisión:</span>
+                            <span class="text-2xl font-bold text-blue-900">{{ number_format($precisionPromedio ?? 0, 2) }}</span>
+                            <span class="ml-2 text-gray-500 text-sm">/ 5</span>
+                        </div>
+                    </div>
+                </div>
                 
                 <!-- Distribución de valoraciones -->
                 <div class="space-y-2">
@@ -343,40 +360,67 @@
                 </div>
             </div>
             
-            <!-- Carreras Recomendadas -->
-            <div class="bg-white rounded-xl shadow-xl overflow-hidden">
-                <div class="border-b border-gray-200 bg-white p-4">
-                    <h2 class="text-xl font-semibold text-gray-800">Carreras Más Recomendadas</h2>
-                    <p class="text-sm text-gray-500">Tendencias en orientación vocacional</p>
-                </div>
-                
-                <div class="p-6">
-                    <div class="chart-container" style="position: relative; height:300px; width:100%">
-                        <canvas id="chartCarreras"></canvas>
+            <!-- Carreras más seleccionadas por los usuarios -->
+            <div class="bg-white rounded-lg shadow p-4 mt-8">
+                <h2 class="text-lg font-bold mb-4">Carreras más seleccionadas por los usuarios</h2>
+                @if(count($carrerasSeleccionadasTop))
+                    <div class="w-full h-64 mb-4">
+                        <canvas id="chartCarrerasSeleccionadas"></canvas>
                     </div>
-                    
-                    <div class="mt-4 border-t border-gray-100 pt-4">
-                        <h3 class="text-md font-medium text-gray-700 mb-2">Oportunidades de Negocio</h3>
-                        <ul class="space-y-2">
-                            @if(isset($carreraTop))
-                            <li class="flex items-start">
-                                <svg class="w-5 h-5 text-indigo-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                                </svg>
-                                <span class="text-sm text-gray-600">Potencial para alianzas con instituciones que ofrecen <span class="font-medium">{{ $carreraTop }}</span>.</span>
+                    <ul>
+                        @foreach($carrerasSeleccionadasTop as $carrera)
+                            <li class="py-1 border-b last:border-b-0 flex justify-between">
+                                <span>{{ $carrera['nombre'] }}</span>
+                                <span class="font-semibold text-blue-700">{{ $carrera['total'] }}</span>
                             </li>
-                            @endif
-                            
-                            <li class="flex items-start">
-                                <svg class="w-5 h-5 text-indigo-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                                </svg>
-                                <span class="text-sm text-gray-600">Crear contenido específico sobre las 3 carreras más recomendadas para mejorar engagement.</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+                        @endforeach
+                    </ul>
+                @else
+                    <div class="text-gray-500 text-center py-4">No hay datos suficientes.</div>
+                @endif
             </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (document.getElementById('chartCarrerasSeleccionadas')) {
+        const ctx = document.getElementById('chartCarrerasSeleccionadas').getContext('2d');
+    const labels = @json(array_map(fn($c) => $c['nombre'], $carrerasSeleccionadasTop));
+    const data = @json(array_map(fn($c) => $c['total'], $carrerasSeleccionadasTop));
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Veces elegida',
+                    data: data,
+                    backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                    borderColor: 'rgba(37, 99, 235, 1)',
+                    borderWidth: 1,
+                    barPercentage: 0.7,
+                    categoryPercentage: 0.8
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: true }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: { precision: 0 },
+                        grid: { display: true, color: 'rgba(0,0,0,0.05)' }
+                    },
+                    y: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
         </div>
         
         <!-- Botones de acción -->
@@ -440,8 +484,10 @@
             estudiantesPorDepartamento = @json($estudiantesPorDepartamento ?? []);
             if (estudiantesPorDepartamento && Array.isArray(estudiantesPorDepartamento)) {
                 estudiantesPorDepartamento.forEach(item => {
-                    departamentosLabels.push(item.departamento);
-                    departamentosData.push(item.total);
+                    if (item && item.departamento !== undefined && item.total !== undefined) {
+                        departamentosLabels.push(item.departamento);
+                        departamentosData.push(item.total);
+                    }
                 });
             }
         } catch(e) {

@@ -60,7 +60,6 @@ class Test extends Model
      */
     public function respuestas()
     {
-        // Devuelve una colección vacía para mantener compatibilidad
-        return $this->hasMany(Respuesta::class)->whereRaw('1 = 0');
+        return $this->hasMany(Respuesta::class);
     }
 }

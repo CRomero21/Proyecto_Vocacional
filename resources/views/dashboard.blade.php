@@ -281,7 +281,7 @@
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-[#f2f2f2] rounded-tl-lg">Fecha</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-[#f2f2f2]">Hora</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-[#f2f2f2]">Preguntas</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-[#f2f2f2]">Estado</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-[#f2f2f2]">Perfil dominante</th>
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider bg-[#f2f2f2] rounded-tr-lg">Acciones</th>
                                 </tr>
@@ -296,8 +296,8 @@
                                         {{ date('H:i', strtotime($test->fecha ?? $test->created_at)) }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-[#00aeff]/20 text-[#051a9a]">
-                                            {{ $test->respuestas_count ?? 'N/A' }} completadas
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $test->completado ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
+                                            {{ $test->completado ? 'Completado' : 'Incompleto' }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

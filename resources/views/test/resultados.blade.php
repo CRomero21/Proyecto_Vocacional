@@ -398,12 +398,12 @@
                                 Utilidad del test (1-5)
                             </label>
                             <select name="utilidad" id="utilidad" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" required>
-                                <option value="">Selecciona 😊</option>
-                                <option value="1">1 - Muy poco útil 😔</option>
-                                <option value="2">2 - Poco útil 🙁</option>
-                                <option value="3">3 - Neutral 😐</option>
-                                <option value="4">4 - Útil 🙂</option>
-                                <option value="5">5 - Muy útil 😍</option>
+                                <option value="">Selecciona </option>
+                                <option value="1">1 - Muy poco útil </option>
+                                <option value="2">2 - Poco útil </option>
+                                <option value="3">3 - Neutral </option>
+                                <option value="4">4 - Útil </option>
+                                <option value="5">5 - Muy útil </option>
                             </select>
                         </div>
                         <div>
@@ -414,12 +414,12 @@
                                 Precisión de los resultados (1-5)
                             </label>
                             <select name="precision" id="precision" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" required>
-                                <option value="">Selecciona 😊</option>
-                                <option value="1">1 - Muy impreciso 😔</option>
-                                <option value="2">2 - Poco preciso 🙁</option>
-                                <option value="3">3 - Neutral 😐</option>
-                                <option value="4">4 - Preciso 🙂</option>
-                                <option value="5">5 - Muy preciso 😍</option>
+                                <option value="">Selecciona </option>
+                                <option value="1">1 - Muy impreciso </option>
+                                <option value="2">2 - Poco preciso </option>
+                                <option value="3">3 - Neutral </option>
+                                <option value="4">4 - Preciso </option>
+                                <option value="5">5 - Muy preciso </option>
                             </select>
                         </div>
                     </div>
@@ -440,15 +440,15 @@
                             Carrera que más te interesó (opcional)
                         </label>
                         <select name="carrera_seleccionada" id="carrera_seleccionada" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
-                            <option value="">Selecciona una carrera 😊</option>
+                            <option value="">Selecciona una carrera </option>
                             @if(isset($carrerasPrincipales) && count($carrerasPrincipales) > 0)
                                 @foreach($carrerasPrincipales as $carrera)
-                                    <option value="{{ $carrera['nombre'] }}">{{ $carrera['nombre'] }}</option>
+                                    <option value="{{ $carrera['carrera_id'] ?? $carrera['id'] }}">{{ $carrera['nombre'] }}</option>
                                 @endforeach
                             @endif
                             @if(isset($carrerasSecundarias) && count($carrerasSecundarias) > 0)
                                 @foreach($carrerasSecundarias as $carrera)
-                                    <option value="{{ $carrera['nombre'] }}">{{ $carrera['nombre'] }}</option>
+                                    <option value="{{ $carrera['carrera_id'] ?? $carrera['id'] }}">{{ $carrera['nombre'] }}</option>
                                 @endforeach
                             @endif
                         </select>
@@ -457,7 +457,7 @@
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                         </svg>
-                        Enviar Retroalimentación 🚀
+                        Enviar Retroalimentación 
                     </button>
                 </form>
             </div>
