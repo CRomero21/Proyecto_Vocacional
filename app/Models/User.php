@@ -20,15 +20,15 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
-        'unidad_educativa',
         'fecha_nacimiento',
         'sexo',
         'email',
         'password',
         'phone',
-        'departamento',
-        'ciudad',
         'role',
+        'departamento_id',
+        'ciudad_id',
+        'unidad_educativa_id',
     ];
 
     /**
@@ -82,5 +82,19 @@ class User extends Authenticatable
     public function tests()
     {
         return $this->hasMany(\App\Models\Test::class);
+    }
+    public function departamento()
+    {
+        return $this->belongsTo(\App\Models\Departamento::class);
+    }
+
+    public function ciudad()
+    {
+        return $this->belongsTo(\App\Models\Ciudad::class);
+    }
+
+    public function unidadEducativa()
+    {
+        return $this->belongsTo(\App\Models\UnidadEducativa::class);
     }
 }

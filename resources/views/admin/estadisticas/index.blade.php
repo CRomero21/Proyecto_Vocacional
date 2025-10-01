@@ -363,7 +363,7 @@
             <!-- Carreras más seleccionadas por los usuarios -->
             <div class="bg-white rounded-lg shadow p-4 mt-8">
                 <h2 class="text-lg font-bold mb-4">Carreras más seleccionadas por los usuarios</h2>
-                @if(count($carrerasSeleccionadasTop))
+                @if(!empty($carrerasSeleccionadasTop) && count($carrerasSeleccionadasTop))
                     <div class="w-full h-64 mb-4">
                         <canvas id="chartCarrerasSeleccionadas"></canvas>
                     </div>

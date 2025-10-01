@@ -103,82 +103,157 @@
                     
                     return isValid;
                 },
+                    validarPaso3() {
+                        let isValid = true;
+
+                        // Validar correo
+                        const email = document.getElementById('email');
+                        const emailValue = email.value.trim();
+                        const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail\.com|hotmail\.com|yahoo\.com)$/i;
+                        if (!emailValue || !emailRegex.test(emailValue)) {
+                            email.classList.add('border-red-500');
+                            isValid = false;
+                            let errorContainer = email.parentNode.parentNode.querySelector('.text-red-600');
+                            if (!errorContainer) {
+                                errorContainer = document.createElement('p');
+                                errorContainer.classList.add('mt-2', 'text-sm', 'text-red-600');
+                                email.parentNode.parentNode.appendChild(errorContainer);
+                            }
+                            errorContainer.textContent = 'Ingrese un correo válido (Gmail, Hotmail o Yahoo)';
+                        } else {
+                            email.classList.remove('border-red-500');
+                            const errorContainer = email.parentNode.parentNode.querySelector('.text-red-600');
+                            if (errorContainer) errorContainer.textContent = '';
+                        }
+
+                        // Validar contraseña
+                        const password = document.getElementById('password');
+                        if (!password.value || password.value.length < 8) {
+                            password.classList.add('border-red-500');
+                            isValid = false;
+                            let errorContainer = password.parentNode.parentNode.querySelector('.text-red-600');
+                            if (!errorContainer) {
+                                errorContainer = document.createElement('p');
+                                errorContainer.classList.add('mt-2', 'text-sm', 'text-red-600');
+                                password.parentNode.parentNode.appendChild(errorContainer);
+                            }
+                            errorContainer.textContent = 'La contraseña debe tener al menos 8 caracteres';
+                        } else {
+                            password.classList.remove('border-red-500');
+                            const errorContainer = password.parentNode.parentNode.querySelector('.text-red-600');
+                            if (errorContainer) errorContainer.textContent = '';
+                        }
+
+                        // Validar confirmación de contraseña
+                        const passwordConfirm = document.getElementById('password_confirmation');
+                        if (passwordConfirm.value !== password.value) {
+                            passwordConfirm.classList.add('border-red-500');
+                            isValid = false;
+                            let errorContainer = passwordConfirm.parentNode.parentNode.querySelector('.text-red-600');
+                            if (!errorContainer) {
+                                errorContainer = document.createElement('p');
+                                errorContainer.classList.add('mt-2', 'text-sm', 'text-red-600');
+                                passwordConfirm.parentNode.parentNode.appendChild(errorContainer);
+                            }
+                            errorContainer.textContent = 'Las contraseñas no coinciden';
+                        } else {
+                            passwordConfirm.classList.remove('border-red-500');
+                            const errorContainer = passwordConfirm.parentNode.parentNode.querySelector('.text-red-600');
+                            if (errorContainer) errorContainer.textContent = '';
+                        }
+
+                        // Validar términos y condiciones
+                        const terms = document.getElementById('terms');
+                        if (!terms.checked) {
+                            isValid = false;
+                            let errorContainer = terms.parentNode.parentNode.parentNode.querySelector('.text-red-600');
+                            if (!errorContainer) {
+                                errorContainer = document.createElement('p');
+                                errorContainer.classList.add('mt-2', 'text-sm', 'text-red-600');
+                                terms.parentNode.parentNode.parentNode.appendChild(errorContainer);
+                            }
+                            errorContainer.textContent = 'Debe aceptar los términos y condiciones';
+                        } else {
+                            const errorContainer = terms.parentNode.parentNode.parentNode.querySelector('.text-red-600');
+                            if (errorContainer) errorContainer.textContent = '';
+                        }
+
+                        return isValid;
+                    },
                 validarPaso2() {
                     let isValid = true;
-                    
-                    // Validar departamento (debe estar seleccionado)
-                    if(!document.getElementById('departamento').value) {
-                        document.getElementById('departamento').classList.add('border-red-500');
+                    // Validar departamento (debe estar seleccionado y no vacío)
+                    const departamento = document.getElementById('departamento_id');
+                    if(!departamento.value) {
+                        departamento.classList.add('border-red-500');
                         isValid = false;
-                        let errorContainer = document.getElementById('departamento').parentNode.parentNode.querySelector('.text-red-600');
+                        let errorContainer = departamento.parentNode.parentNode.querySelector('.text-red-600');
                         if (!errorContainer) {
                             errorContainer = document.createElement('p');
                             errorContainer.classList.add('mt-2', 'text-sm', 'text-red-600');
-                            document.getElementById('departamento').parentNode.parentNode.appendChild(errorContainer);
+                            departamento.parentNode.parentNode.appendChild(errorContainer);
                         }
-                        errorContainer.textContent = 'Por favor seleccione un departamento';
+                        errorContainer.textContent = 'Por favor seleccione un departamento válido';
                     } else {
-                        document.getElementById('departamento').classList.remove('border-red-500');
-                        const errorContainer = document.getElementById('departamento').parentNode.parentNode.querySelector('.text-red-600');
+                        departamento.classList.remove('border-red-500');
+                        const errorContainer = departamento.parentNode.parentNode.querySelector('.text-red-600');
                         if (errorContainer) errorContainer.textContent = '';
                     }
 
-                    // Validar ciudad
-                    if(!document.getElementById('ciudad').value.trim() || 
-                        !/^[A-Za-zÁÉÍÓÚáéíóúÑñÜü0-9 .\-]+$/.test(document.getElementById('ciudad').value)) {
-                        document.getElementById('ciudad').classList.add('border-red-500');
+                    // Validar ciudad (debe estar seleccionada y no vacía)
+                    const ciudad = document.getElementById('ciudad_id');
+                    if(!ciudad.value) {
+                        ciudad.classList.add('border-red-500');
                         isValid = false;
-                        let errorContainer = document.getElementById('ciudad').parentNode.parentNode.querySelector('.text-red-600');
+                        let errorContainer = ciudad.parentNode.parentNode.querySelector('.text-red-600');
                         if (!errorContainer) {
                             errorContainer = document.createElement('p');
                             errorContainer.classList.add('mt-2', 'text-sm', 'text-red-600');
-                            document.getElementById('ciudad').parentNode.parentNode.appendChild(errorContainer);
+                            ciudad.parentNode.parentNode.appendChild(errorContainer);
                         }
-                        errorContainer.textContent = 'Por favor ingrese su ciudad (letras, números, puntos y guiones permitidos)';
+                        errorContainer.textContent = 'Por favor seleccione una ciudad válida';
                     } else {
-                        document.getElementById('ciudad').classList.remove('border-red-500');
-                        const errorContainer = document.getElementById('ciudad').parentNode.parentNode.querySelector('.text-red-600');
+                        ciudad.classList.remove('border-red-500');
+                        const errorContainer = ciudad.parentNode.parentNode.querySelector('.text-red-600');
                         if (errorContainer) errorContainer.textContent = '';
                     }
-                    
-                    // Validar teléfono (solo números y longitud)
-                    if(!document.getElementById('phone').value || 
-                       !/^[0-9]+$/.test(document.getElementById('phone').value) ||
-                       document.getElementById('phone').value.length < 7 || 
-                       document.getElementById('phone').value.length > 8) {
-                        document.getElementById('phone').classList.add('border-red-500');
+
+                    // Validar unidad educativa (debe estar seleccionada y no vacía)
+                    const unidad = document.getElementById('unidad_educativa_id');
+                    if(!unidad.value) {
+                        unidad.classList.add('border-red-500');
                         isValid = false;
-                        let errorContainer = document.getElementById('phone').parentNode.parentNode.querySelector('.text-red-600');
+                        let errorContainer = unidad.parentNode.parentNode.querySelector('.text-red-600');
                         if (!errorContainer) {
                             errorContainer = document.createElement('p');
                             errorContainer.classList.add('mt-2', 'text-sm', 'text-red-600');
-                            document.getElementById('phone').parentNode.parentNode.appendChild(errorContainer);
+                            unidad.parentNode.parentNode.appendChild(errorContainer);
+                        }
+                        errorContainer.textContent = 'Por favor seleccione una unidad educativa válida';
+                    } else {
+                        unidad.classList.remove('border-red-500');
+                        const errorContainer = unidad.parentNode.parentNode.querySelector('.text-red-600');
+                        if (errorContainer) errorContainer.textContent = '';
+                    }
+
+                    // Validar teléfono (solo números y longitud)
+                    const phone = document.getElementById('phone');
+                    if(!phone.value || !/^[0-9]+$/.test(phone.value) || phone.value.length < 7 || phone.value.length > 8) {
+                        phone.classList.add('border-red-500');
+                        isValid = false;
+                        let errorContainer = phone.parentNode.parentNode.querySelector('.text-red-600');
+                        if (!errorContainer) {
+                            errorContainer = document.createElement('p');
+                            errorContainer.classList.add('mt-2', 'text-sm', 'text-red-600');
+                            phone.parentNode.parentNode.appendChild(errorContainer);
                         }
                         errorContainer.textContent = 'El teléfono debe tener entre 7 y 8 dígitos numéricos';
                     } else {
-                        document.getElementById('phone').classList.remove('border-red-500');
-                        const errorContainer = document.getElementById('phone').parentNode.parentNode.querySelector('.text-red-600');
+                        phone.classList.remove('border-red-500');
+                        const errorContainer = phone.parentNode.parentNode.querySelector('.text-red-600');
                         if (errorContainer) errorContainer.textContent = '';
                     }
-                    
-                    // Validar unidad educativa (letras, números, puntos y guiones)
-                    if(!document.getElementById('unidad_educativa').value || 
-                        !/^[A-Za-zÁÉÍÓÚáéíóúÑñÜü0-9 .\-]+$/.test(document.getElementById('unidad_educativa').value)) {
-                        document.getElementById('unidad_educativa').classList.add('border-red-500');
-                        isValid = false;
-                        let errorContainer = document.getElementById('unidad_educativa').parentNode.parentNode.querySelector('.text-red-600');
-                        if (!errorContainer) {
-                            errorContainer = document.createElement('p');
-                            errorContainer.classList.add('mt-2', 'text-sm', 'text-red-600');
-                            document.getElementById('unidad_educativa').parentNode.parentNode.appendChild(errorContainer);
-                        }
-                        errorContainer.textContent = 'Por favor ingrese el nombre de su unidad educativa (letras, números, puntos y guiones permitidos)';
-                    } else {
-                        document.getElementById('unidad_educativa').classList.remove('border-red-500');
-                        const errorContainer = document.getElementById('unidad_educativa').parentNode.parentNode.querySelector('.text-red-600');
-                        if (errorContainer) errorContainer.textContent = '';
-                    }
-                    
+
                     return isValid;
                 }
             }">
@@ -281,9 +356,9 @@
                         Paso 2: Ubicación y contacto
                     </div>
 
-                    <!-- Departamento -->
+                    <!-- Departamento (select dependiente) -->
                     <div>
-                        <x-input-label for="departamento" :value="__('Departamento')" />
+                        <x-input-label for="departamento_id" :value="__('Departamento')" />
                         <div class="mt-1 relative rounded-md shadow-sm">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -291,34 +366,30 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
                             </div>
-                            <select id="departamento" name="departamento" class="pl-10 block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white" required>
+                            <select id="departamento_id" name="departamento_id" class="pl-10 block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white" required>
                                 <option value="">Seleccione un departamento</option>
-                                <option value="Chuquisaca" {{ old('departamento') == 'Chuquisaca' ? 'selected' : '' }}>Chuquisaca</option>
-                                <option value="La Paz" {{ old('departamento') == 'La Paz' ? 'selected' : '' }}>La Paz</option>
-                                <option value="Cochabamba" {{ old('departamento') == 'Cochabamba' ? 'selected' : '' }}>Cochabamba</option>
-                                <option value="Oruro" {{ old('departamento') == 'Oruro' ? 'selected' : '' }}>Oruro</option>
-                                <option value="Potosí" {{ old('departamento') == 'Potosí' ? 'selected' : '' }}>Potosí</option>
-                                <option value="Tarija" {{ old('departamento') == 'Tarija' ? 'selected' : '' }}>Tarija</option>
-                                <option value="Santa Cruz" {{ old('departamento') == 'Santa Cruz' ? 'selected' : '' }}>Santa Cruz</option>
-                                <option value="Beni" {{ old('departamento') == 'Beni' ? 'selected' : '' }}>Beni</option>
-                                <option value="Pando" {{ old('departamento') == 'Pando' ? 'selected' : '' }}>Pando</option>
+                                @foreach($departamentos as $departamento)
+                                    <option value="{{ $departamento->id }}" {{ old('departamento_id') == $departamento->id ? 'selected' : '' }}>{{ $departamento->nombre }}</option>
+                                @endforeach
                             </select>
                         </div>
-                        <x-input-error :messages="$errors->get('departamento')" class="mt-2" />
+                        <x-input-error :messages="$errors->get('departamento_id')" class="mt-2" />
                     </div>
 
-                    <!-- Ciudad -->
+                    <!-- Ciudad (select dependiente) -->
                     <div>
-                        <x-input-label for="ciudad" :value="__('Ciudad')" />
+                        <x-input-label for="ciudad_id" :value="__('Ciudad')" />
                         <div class="mt-1 relative rounded-md shadow-sm">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                 </svg>
                             </div>
-                            <x-text-input id="ciudad" class="pl-10 block mt-1 w-full bg-white" type="text" name="ciudad" :value="old('ciudad')" required placeholder="Ej: El Alto" />
+                            <select id="ciudad_id" name="ciudad_id" class="pl-10 block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white" required>
+                                <option value="">Seleccione una ciudad</option>
+                            </select>
                         </div>
-                        <x-input-error :messages="$errors->get('ciudad')" class="mt-2" />
+                        <x-input-error :messages="$errors->get('ciudad_id')" class="mt-2" />
                     </div>
 
                     <!-- Teléfono -->
@@ -336,17 +407,20 @@
                     </div>
 
                     <!-- Unidad educativa -->
+                    <!-- Unidad educativa (select dependiente) -->
                     <div>
-                        <x-input-label for="unidad_educativa" :value="__('Unidad Educativa')" />
+                        <x-input-label for="unidad_educativa_id" :value="__('Unidad Educativa')" />
                         <div class="mt-1 relative rounded-md shadow-sm">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                 </svg>
                             </div>
-                            <x-text-input id="unidad_educativa" class="pl-10 block mt-1 w-full bg-white" type="text" name="unidad_educativa" :value="old('unidad_educativa')" required placeholder="Nombre de tu colegio o institución" />
+                            <select id="unidad_educativa_id" name="unidad_educativa_id" class="pl-10 block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white" required>
+                                <option value="">Seleccione una unidad educativa</option>
+                            </select>
                         </div>
-                        <x-input-error :messages="$errors->get('unidad_educativa')" class="mt-2" />
+                        <x-input-error :messages="$errors->get('unidad_educativa_id')" class="mt-2" />
                     </div>
 
                     <div class="pt-4 flex justify-between">
@@ -508,7 +582,8 @@
                         </button>
                         <x-primary-button 
                             class="ml-4"
-                            @click="loading = true"
+                            type="submit"
+                            @click.prevent="if(validarPaso3()) { loading = true; $el.form.submit(); }"
                             x-bind:class="{ 'opacity-90 cursor-not-allowed': loading }">
                             <span x-show="!loading">{{ __('Registrar') }}</span>
                             <span x-show="loading" class="flex items-center" style="display: none;">
@@ -522,6 +597,64 @@
                     </div>
                 </div>
             </form>
+            <!-- Script para selects dependientes -->
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Datos desde backend (Blade)
+                    const ciudades = @json($ciudades);
+                    const unidades = @json($unidadesEducativas);
+
+                    const oldCiudadId = "{{ old('ciudad_id') }}";
+                    const oldUnidadId = "{{ old('unidad_educativa_id') }}";
+
+                    const departamentoSelect = document.getElementById('departamento_id');
+                    const ciudadSelect = document.getElementById('ciudad_id');
+                    const unidadSelect = document.getElementById('unidad_educativa_id');
+
+                    // Actualiza ciudades según departamento
+                    departamentoSelect.addEventListener('change', function() {
+                        const deptId = this.value;
+                        ciudadSelect.innerHTML = '<option value="">Seleccione una ciudad</option>';
+                        unidadSelect.innerHTML = '<option value="">Seleccione una unidad educativa</option>';
+                        if (!deptId) return;
+                        const filteredCiudades = ciudades.filter(c => c.departamento_id == deptId);
+                        filteredCiudades.forEach(c => {
+                            const opt = document.createElement('option');
+                            opt.value = c.id;
+                            opt.textContent = c.nombre;
+                            if (oldCiudadId && c.id == oldCiudadId) opt.selected = true;
+                            ciudadSelect.appendChild(opt);
+                        });
+                    });
+
+                    // Actualiza unidades según ciudad
+                    ciudadSelect.addEventListener('change', function() {
+                        const ciudadId = this.value;
+                        unidadSelect.innerHTML = '<option value="">Seleccione una unidad educativa</option>';
+                        if (!ciudadId) return;
+                        const filteredUnidades = unidades.filter(u => u.ciudad_id == ciudadId);
+                        filteredUnidades.forEach(u => {
+                            const opt = document.createElement('option');
+                            opt.value = u.id;
+                            opt.textContent = u.nombre;
+                            if (oldUnidadId && u.id == oldUnidadId) opt.selected = true;
+                            unidadSelect.appendChild(opt);
+                        });
+                    });
+
+                    // Inicialización si hay old values
+                    if (departamentoSelect.value) {
+                        departamentoSelect.dispatchEvent(new Event('change'));
+                        if (oldCiudadId) {
+                            ciudadSelect.value = oldCiudadId;
+                            ciudadSelect.dispatchEvent(new Event('change'));
+                        }
+                        if (oldUnidadId) {
+                            unidadSelect.value = oldUnidadId;
+                        }
+                    }
+                });
+            </script>
 
             <div class="mt-6 text-center">
                 <p class="text-sm text-gray-600">

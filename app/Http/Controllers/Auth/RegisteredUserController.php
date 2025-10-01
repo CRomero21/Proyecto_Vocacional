@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Departamento;
+use App\Models\Ciudad;
+use App\Models\UnidadEducativa;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,7 +22,11 @@ class RegisteredUserController extends Controller
      */
     public function create(): View
     {
-        return view('auth.register');
+        $departamentos = Departamento::all();
+        $ciudades = Ciudad::all();
+        $unidadesEducativas = UnidadEducativa::all(); // <-- nombre igual que en la vista
+
+        return view('auth.register', compact('departamentos', 'ciudades', 'unidadesEducativas'));
     }
 
     /**
@@ -39,17 +46,10 @@ class RegisteredUserController extends Controller
             ],
             'fecha_nacimiento' => ['required', 'date'],
             'sexo' => ['required', 'string', 'in:Masculino,Femenino,Otro'],
-            'departamento' => ['required', 'string', 'in:Chuquisaca,La Paz,Cochabamba,Oruro,Potosí,Tarija,Santa Cruz,Beni,Pando'],
-            'ciudad' => ['required', 'string', 'max:255'],
+            'departamento_id' => ['required', 'exists:departamentos,id'],
+            'ciudad_id' => ['required', 'exists:ciudades,id'],
             'phone' => ['required', 'regex:/^[0-9]{7,8}$/', 'min:7', 'max:8'],
-            // Permite letras, números, espacios, puntos y guiones en unidad educativa
-            'unidad_educativa' => [
-                'required',
-                'string',
-                'regex:/^[\pL\pN .\-]+$/u',
-                'max:255'
-            ],
-            // Permite puntos, guiones y mayúsculas en el correo, y dominios gmail, hotmail, yahoo, outlook
+            'unidad_educativa_id' => ['required', 'exists:unidades_educativas,id'],
             'email' => [
                 'required',
                 'string',
@@ -63,30 +63,31 @@ class RegisteredUserController extends Controller
         ], [
             'name.regex' => 'El nombre solo debe contener letras y espacios',
             'phone.regex' => 'El teléfono debe tener entre 7 y 8 dígitos numéricos',
-            'unidad_educativa.required' => 'El nombre de la unidad educativa es requerido',
-            'unidad_educativa.regex' => 'La unidad educativa solo debe contener letras, números, puntos y guiones',
             'fecha_nacimiento.required' => 'La fecha de nacimiento es requerida',
-            'ciudad.required' => 'La ciudad es requerida',
+            'departamento_id.required' => 'El departamento es requerido',
+            'departamento_id.exists' => 'El departamento seleccionado no es válido',
+            'ciudad_id.required' => 'La ciudad es requerida',
+            'ciudad_id.exists' => 'La ciudad seleccionada no es válida',
+            'unidad_educativa_id.required' => 'La unidad educativa es requerida',
+            'unidad_educativa_id.exists' => 'La unidad educativa seleccionada no es válida',
             'email.regex' => 'Solo se aceptan correos de Gmail, Hotmail, Yahoo u Outlook',
             'terms.accepted' => 'Debes aceptar los términos y condiciones',
         ]);
-         $edad = \Carbon\Carbon::parse($request->fecha_nacimiento)->age;
 
         $user = User::create([
             'name' => $request->name,
             'email' => strtolower($request->email),
             'password' => Hash::make($request->password),
             'phone' => $request->phone,
-            'unidad_educativa'=> $request->unidad_educativa,
             'fecha_nacimiento' => $request->fecha_nacimiento,
-            'ciudad' => $request->ciudad,
-            'sexo'=> $request->sexo,
-            'departamento' => $request->departamento,
+            'sexo' => $request->sexo,
+            'departamento_id' => $request->departamento_id,
+            'ciudad_id' => $request->ciudad_id,
+            'unidad_educativa_id' => $request->unidad_educativa_id,
             'role' => 'estudiante',
         ]);
 
         event(new Registered($user));
-
         Auth::login($user);
 
         return redirect(route('dashboard', absolute: false));

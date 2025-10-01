@@ -1,5 +1,6 @@
 <?php
 
+
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
@@ -18,18 +19,6 @@ class EstadisticasController extends Controller
 {
     public function index(Request $request)
     {
-        // 13. Promedios de utilidad y precisión desde retroalimentaciones
-        $utilidadPromedio = null;
-        $precisionPromedio = null;
-        $departamentoFiltro = $request->input('departamento'); // asegurar que esté definido antes
-        $retroalimentacionesQuery = \App\Models\Retroalimentacion::query();
-        if ($departamentoFiltro) {
-            $retroalimentacionesQuery = $retroalimentacionesQuery->whereHas('user', function($q) use ($departamentoFiltro) {
-                $q->where('departamento', $departamentoFiltro);
-            });
-        }
-        $utilidadPromedio = round($retroalimentacionesQuery->whereNotNull('utilidad')->avg('utilidad'), 2);
-        $precisionPromedio = round($retroalimentacionesQuery->whereNotNull('precision')->avg('precision'), 2);
         try {
             // Logging para diagnóstico
             $tables = DB::select('SHOW TABLES');
@@ -39,31 +28,31 @@ class EstadisticasController extends Controller
             
             // Filtros
             $periodo = $request->input('periodo', 30); // Por defecto últimos 30 días
-            $departamentoFiltro = $request->input('departamento');
-            
             $fechaDesde = Carbon::now()->subDays($periodo);
             
-            // Consulta base para usuarios con el filtro de departamento si existe
+            // Consulta base para usuarios y tests (sin filtro de departamento)
             $queryUsuarios = User::where('created_at', '>=', $fechaDesde);
             $queryTests = Test::where('created_at', '>=', $fechaDesde);
-            
-            if ($departamentoFiltro) {
-                $queryUsuarios = $queryUsuarios->where('departamento', $departamentoFiltro);
-                $queryTests = $queryTests->whereHas('user', function($q) use ($departamentoFiltro) {
-                    $q->where('departamento', $departamentoFiltro);
-                });
-            }
             
             // 1. Resumen General
             $totalUsuarios = $queryUsuarios->count();
             $testsIniciados = $queryTests->count();
             $testsCompletados = $queryTests->where('completado', 1)->count();
             
-            // 2. Lista de departamentos para el filtro
-            $departamentos = User::whereNotNull('departamento')
-                ->where('departamento', '!=', '')
-                ->distinct()
-                ->pluck('departamento')
+            // 2. Lista de departamentos, ciudades y unidades educativas a través de los IDs en users
+            // Departamentos
+            $departamentos = \App\Models\Departamento::whereIn('id', User::pluck('departamento_id')->filter()->unique())
+                ->pluck('nombre')
+                ->toArray();
+
+            // Ciudades
+            $ciudades = \App\Models\Ciudad::whereIn('id', User::pluck('ciudad_id')->filter()->unique())
+                ->pluck('nombre')
+                ->toArray();
+
+            // Unidades Educativas
+            $unidadesEducativas = \App\Models\UnidadEducativa::whereIn('id', User::pluck('unidad_educativa_id')->filter()->unique())
+                ->pluck('nombre')
                 ->toArray();
             
             // 3. Distribución por género - CORREGIDO para asegurar orden consistente
@@ -80,9 +69,6 @@ class EstadisticasController extends Controller
 
             // Obtener los conteos reales de la base de datos
             $generosDB = User::where('created_at', '>=', $fechaDesde)
-                ->when($departamentoFiltro, function($q) use ($departamentoFiltro) {
-                    return $q->where('departamento', $departamentoFiltro);
-                })
                 ->select('sexo', DB::raw('count(*) as total'))
                 ->groupBy('sexo')
                 ->get();
@@ -122,9 +108,6 @@ class EstadisticasController extends Controller
 
             // Usar una consulta más directa - verificar que la fecha es válida
             $usuarios = User::where('created_at', '>=', $fechaDesde)
-                ->when($departamentoFiltro, function($q) use ($departamentoFiltro) {
-                    return $q->where('departamento', $departamentoFiltro);
-                })
                 ->whereNotNull('fecha_nacimiento')
                 ->where('fecha_nacimiento', '!=', '') // Asegurar que no está vacía
                 ->where('fecha_nacimiento', '>=', '1930-01-01') // Fecha razonable
@@ -156,36 +139,26 @@ class EstadisticasController extends Controller
                 }
             }
             
-            // 5. Distribución geográfica
-            $estudiantesPorDepartamento = User::where('created_at', '>=', $fechaDesde)
-                ->whereNotNull('departamento')
-                ->where('departamento', '!=', '')
-                ->groupBy('departamento')
-                ->select('departamento', DB::raw('count(*) as total'))
+            // 5. Distribución geográfica por departamento
+            $estudiantesPorDepartamento = \App\Models\Departamento::select('departamentos.nombre as departamento', DB::raw('COUNT(users.id) as total'))
+                ->join('users', 'departamentos.id', '=', 'users.departamento_id')
+                ->groupBy('departamentos.id', 'departamentos.nombre')
                 ->orderByDesc('total')
                 ->get();
-            
-            // 6. Instituciones con mayor participación - usando unidad_educativa
-            $topInstituciones = DB::table('users')
-                ->where('users.created_at', '>=', $fechaDesde)
-                ->when($departamentoFiltro, function($q) use ($departamentoFiltro) {
-                    return $q->where('users.departamento', $departamentoFiltro);
-                })
-                ->whereNotNull('unidad_educativa')
-                ->where('unidad_educativa', '!=', '')
-                ->groupBy('unidad_educativa')
-                ->select(
-                    'unidad_educativa as nombre',
-                    DB::raw('COUNT(*) as usuarios')
-                )
+
+            // 6. Top 5 instituciones con mayor participación
+            $topInstituciones = \App\Models\UnidadEducativa::select('unidades_educativas.nombre as nombre', DB::raw('COUNT(users.id) as usuarios'))
+                ->join('users', 'unidades_educativas.id', '=', 'users.unidad_educativa_id')
+                ->groupBy('unidades_educativas.id', 'unidades_educativas.nombre')
                 ->orderByDesc('usuarios')
                 ->limit(5)
                 ->get();
-            
-            // Calcular porcentaje de usuarios para cada institución
-            if ($topInstituciones->count() > 0 && $totalUsuarios > 0) {
+
+            // Calcular porcentaje de usuarios para cada institución (respecto al total de usuarios en el top 5)
+            $topTotalUsuarios = $topInstituciones->sum('usuarios');
+            if ($topInstituciones->count() > 0 && $topTotalUsuarios > 0) {
                 foreach ($topInstituciones as $institucion) {
-                    $institucion->porcentaje = round(($institucion->usuarios / $totalUsuarios) * 100, 1);
+                    $institucion->porcentaje = round(($institucion->usuarios / $topTotalUsuarios) * 100, 1);
                 }
             }
             
@@ -193,11 +166,6 @@ class EstadisticasController extends Controller
             $porTipoPersonalidad = Test::where('tests.created_at', '>=', $fechaDesde)
                 ->where('completado', 1)
                 ->whereNotNull('tipo_primario')
-                ->when($departamentoFiltro, function($q) use ($departamentoFiltro) {
-                    return $q->whereHas('user', function($query) use ($departamentoFiltro) {
-                        $query->where('departamento', $departamentoFiltro);
-                    });
-                })
                 ->groupBy('tipo_primario')
                 ->select('tipo_primario', DB::raw('count(*) as total'))
                 ->orderByDesc('total')
@@ -221,11 +189,6 @@ class EstadisticasController extends Controller
                 $testsConResultados = Test::where('created_at', '>=', $fechaDesde)
                     ->where('completado', 1)
                     ->whereNotNull('resultados')
-                    ->when($departamentoFiltro, function($q) use ($departamentoFiltro) {
-                        return $q->whereHas('user', function($query) use ($departamentoFiltro) {
-                            $query->where('departamento', $departamentoFiltro);
-                        });
-                    })
                     ->get();
                 
                 // Estructura para contar recomendaciones
@@ -302,53 +265,33 @@ class EstadisticasController extends Controller
                     ['nombre' => 'Ejemplo: Medicina', 'total' => 4, 'match_promedio' => 75]
                 ];
             }
-            // 9. Valoración y satisfacción - CORREGIDO: Leer desde JSON en resultados
+            // 9. Valoración y satisfacción - AHORA desde la tabla retroalimentaciones
             $valoracionPromedio = 0;
             $distribucionValoraciones = [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0];
             $totalValoraciones = 0;
 
             try {
-                // Obtener los tests completados
-                $testsConValoracion = Test::where('created_at', '>=', $fechaDesde)
-                    ->where('completado', 1)
-                    ->whereNotNull('resultados')
-                    ->when($departamentoFiltro, function($q) use ($departamentoFiltro) {
-                        return $q->whereHas('user', function($query) use ($departamentoFiltro) {
-                            $query->where('departamento', $departamentoFiltro);
-                        });
-                    })
+                $queryRetro = \App\Models\Retroalimentacion::whereNotNull('utilidad');
+                // Si quieres filtrar por fecha, descomenta la siguiente línea:
+                // $queryRetro = $queryRetro->where('created_at', '>=', $fechaDesde);
+
+                $totalValoraciones = $queryRetro->count();
+                $valoracionPromedio = $totalValoraciones > 0
+                    ? round($queryRetro->avg('utilidad'), 2)
+                    : 0;
+
+                // Distribución de valoraciones (utilidad)
+                $valores = $queryRetro->select('utilidad', DB::raw('count(*) as total'))
+                    ->groupBy('utilidad')
                     ->get();
-                
-                // Variables para calcular promedios
-                $sumaUtilidad = 0;
-                $numUtilidad = 0;
-                
-                // Procesar cada test para extraer valoraciones del JSON
-                foreach ($testsConValoracion as $test) {
-                    $resultados = is_string($test->resultados) ? json_decode($test->resultados, true) : $test->resultados;
-                    
-                    // Si hay retroalimentación en los resultados JSON
-                    if (!empty($resultados['retroalimentacion']['utilidad'])) {
-                        $valorUtilidad = (int)$resultados['retroalimentacion']['utilidad'];
-                        if ($valorUtilidad >= 1 && $valorUtilidad <= 5) {
-                            $sumaUtilidad += $valorUtilidad;
-                            $numUtilidad++;
-                            
-                            // Incrementar contador en la distribución
-                            if (isset($distribucionValoraciones[$valorUtilidad])) {
-                                $distribucionValoraciones[$valorUtilidad]++;
-                            }
-                        }
+                foreach ($valores as $item) {
+                    $valor = (int)$item->utilidad;
+                    if ($valor >= 1 && $valor <= 5) {
+                        $distribucionValoraciones[$valor] = $item->total;
                     }
                 }
-                
-                // Calcular promedio si hay datos
-                if ($numUtilidad > 0) {
-                    $valoracionPromedio = $sumaUtilidad / $numUtilidad;
-                    $totalValoraciones = $numUtilidad;
-                }
             } catch (\Exception $e) {
-                Log::error('Error al procesar valoraciones JSON: ' . $e->getMessage());
+                Log::error('Error al procesar valoraciones desde retroalimentaciones: ' . $e->getMessage());
             }
             
             // 10. Comentarios recientes - CORREGIDO: Leer desde JSON en resultados
@@ -358,11 +301,6 @@ class EstadisticasController extends Controller
                 $testsConComentarios = Test::where('created_at', '>=', $fechaDesde)
                     ->where('completado', 1)
                     ->whereNotNull('resultados')
-                    ->when($departamentoFiltro, function($q) use ($departamentoFiltro) {
-                        return $q->whereHas('user', function($query) use ($departamentoFiltro) {
-                            $query->where('departamento', $departamentoFiltro);
-                        });
-                    })
                     ->with('user:id,name')
                     ->select('id', 'user_id', 'resultados', 'created_at')
                     ->orderByDesc('created_at')
@@ -431,11 +369,6 @@ class EstadisticasController extends Controller
             // 12. Carreras más seleccionadas por los usuarios en la retroalimentación (solo nueva consulta)
             $carrerasSeleccionadasTop = \App\Models\Retroalimentacion::select('carrera_id', DB::raw('COUNT(*) as total'))
                 ->whereNotNull('carrera_id')
-                ->when($departamentoFiltro, function($q) use ($departamentoFiltro) {
-                    return $q->whereHas('user', function($query) use ($departamentoFiltro) {
-                        $query->where('departamento', $departamentoFiltro);
-                    });
-                })
                 ->groupBy('carrera_id')
                 ->orderByDesc('total')
                 ->with('carrera:id,nombre')
@@ -448,14 +381,17 @@ class EstadisticasController extends Controller
                     ];
                 })
                 ->toArray();
+            if (empty($carrerasSeleccionadasTop) || !is_array($carrerasSeleccionadasTop)) {
+                $carrerasSeleccionadasTop = [];
+            }
 
             return view('admin.estadisticas.index', compact(
-                'totalUsuarios', 'testsIniciados', 'testsCompletados', 'departamentos', 'departamentoFiltro',
+                'totalUsuarios', 'testsIniciados', 'testsCompletados', 'departamentos',
                 'distribucionPorGenero', 'distribucionPorEdad', 'estudiantesPorDepartamento',
                 'topInstituciones', 'porTipoPersonalidad', 'carrerasMasRecomendadas',
                 'valoracionPromedio', 'distribucionValoraciones', 'totalValoraciones', 'comentariosRecientes',
                 'tipoPersonalidadDominante', 'porcentajeDominante', 'carreraTop', 'porcentajeTopCarreras',
-                'carrerasSeleccionadasTop', 'utilidadPromedio', 'precisionPromedio'
+                'carrerasSeleccionadasTop',
             ));
             
         } catch (\Exception $e) {
@@ -483,12 +419,13 @@ class EstadisticasController extends Controller
                 'tipoPersonalidadDominante' => null,
                 'porcentajeDominante' => 0,
                 'carreraTop' => null,
-                'porcentajeTopCarreras' => 0
+                'porcentajeTopCarreras' => 0,
+                'carrerasSeleccionadasTop' => []
             ]);
         }
     }
     
-    public function exportarExcel()
+     public function exportarExcel()
     {
         try {
             // Preparar datos
