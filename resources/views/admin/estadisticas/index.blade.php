@@ -6,6 +6,7 @@
 @section('content')
 <div class="bg-gradient-to-br from-blue-900 to-indigo-900 min-h-screen p-4 md:p-8">
     <div class="mx-auto max-w-7xl">
+    <!-- ...contenido HTML... -->
         @if(isset($error))
             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
                 <strong class="font-bold">Error:</strong>
@@ -155,10 +156,10 @@
                 <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
                     <h3 class="text-md font-medium text-indigo-800 mb-2">Valoración Promedio</h3>
                     <div class="flex items-center">
-                        <div class="text-3xl font-bold text-indigo-900">{{ number_format($valoracionPromedio ?? 0, 1) }}</div>
+                        <div class="text-3xl font-bold text-indigo-900">{{ number_format($utilidadPromedio ?? 0, 2) }}</div>
                         <div class="ml-2 flex">
                             @for($i = 1; $i <= 5; $i++)
-                                <svg class="w-6 h-6 {{ ($valoracionPromedio ?? 0) >= $i ? 'text-yellow-400' : 'text-gray-300' }}" fill="currentColor" viewBox="0 0 20 20">
+                                <svg class="w-6 h-6 {{ ($utilidadPromedio ?? 0) >= $i ? 'text-yellow-400' : 'text-gray-300' }}" fill="currentColor" viewBox="0 0 20 20">
                                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                                 </svg>
                             @endfor
@@ -208,7 +209,7 @@
             <!-- Comentarios recientes -->
             <div class="px-6 pb-6">
                 <h3 class="text-md font-medium text-gray-700 mb-3 border-t pt-4">Comentarios recientes</h3>
-                <div class="space-y-3">
+                <div class="shadow-lg border border-gray-300 rounded-xl bg-white max-h-64 overflow-y-auto p-4 space-y-3" style="scrollbar-width: thin;">
                     @forelse($comentariosRecientes ?? [] as $comentario)
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
                             <div class="flex justify-between items-start">
@@ -265,8 +266,11 @@
                                 </svg>
                                 Distribución por Género
                             </h3>
-                            <div class="chart-container" style="position: relative; height:200px; width:100%">
-                                <canvas id="chartGenero"></canvas>
+                            <div class="flex flex-row items-center gap-6">
+                                <div class="chart-container" style="position: relative; height:200px; width:200px; min-width:200px;">
+                                    <canvas id="chartGenero"></canvas>
+                                </div>
+                                <div id="leyendaGenero" class="flex flex-col gap-2 text-sm"></div>
                             </div>
                         </div>
                     </div>
@@ -333,8 +337,11 @@
                 </div>
                 
                 <div class="p-6">
-                    <div class="chart-container" style="position: relative; height:300px; width:100%">
-                        <canvas id="chartTiposPersonalidad"></canvas>
+                    <div class="flex flex-row items-center gap-6">
+                        <div class="chart-container" style="position: relative; height:300px; width:300px; min-width:200px;">
+                            <canvas id="chartTiposPersonalidad"></canvas>
+                        </div>
+                        <div id="leyendaPersonalidad" class="flex flex-col gap-2 text-sm"></div>
                     </div>
                     
                     <div class="mt-4 border-t border-gray-100 pt-4">
@@ -360,66 +367,30 @@
                 </div>
             </div>
             
-            <!-- Carreras más seleccionadas por los usuarios -->
-            <div class="bg-white rounded-lg shadow p-4 mt-8">
-                <h2 class="text-lg font-bold mb-4">Carreras más seleccionadas por los usuarios</h2>
-                @if(!empty($carrerasSeleccionadasTop) && count($carrerasSeleccionadasTop))
-                    <div class="w-full h-64 mb-4">
-                        <canvas id="chartCarrerasSeleccionadas"></canvas>
+            <!-- Carreras más Recomendadas -->
+            <div class="bg-white rounded-xl shadow-xl overflow-hidden">
+                <div class="border-b border-gray-200 bg-white p-4">
+                    <h2 class="text-xl font-semibold text-gray-800">Carreras más Recomendadas</h2>
+                    <p class="text-sm text-gray-500">Análisis de recomendaciones del sistema</p>
+                </div>
+                
+                <div class="p-6">
+                    <div class="flex flex-row items-center gap-6">
+                        <div class="chart-container" style="position: relative; height:300px; width:300px; min-width:200px;">
+                            <canvas id="chartCarreras"></canvas>
+                        </div>
+                        <div id="leyendaCarreras" class="flex flex-col gap-2 text-sm"></div>
                     </div>
-                    <ul>
-                        @foreach($carrerasSeleccionadasTop as $carrera)
-                            <li class="py-1 border-b last:border-b-0 flex justify-between">
-                                <span>{{ $carrera['nombre'] }}</span>
-                                <span class="font-semibold text-blue-700">{{ $carrera['total'] }}</span>
-                            </li>
-                        @endforeach
-                    </ul>
-                @else
-                    <div class="text-gray-500 text-center py-4">No hay datos suficientes.</div>
-                @endif
+                    
+                    <div class="mt-6 border-t border-gray-100 pt-4">
+                        <h3 class="text-md font-medium text-gray-700 mb-3">Top 5 Carreras Recomendadas</h3>
+                        <div id="listaCarreras" class="space-y-3">
+                            <!-- Se llenarán dinámicamente -->
+                        </div>
+                    </div>
+                </div>
             </div>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    if (document.getElementById('chartCarrerasSeleccionadas')) {
-        const ctx = document.getElementById('chartCarrerasSeleccionadas').getContext('2d');
-    const labels = @json(array_map(fn($c) => $c['nombre'], $carrerasSeleccionadasTop));
-    const data = @json(array_map(fn($c) => $c['total'], $carrerasSeleccionadasTop));
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Veces elegida',
-                    data: data,
-                    backgroundColor: 'rgba(59, 130, 246, 0.7)',
-                    borderColor: 'rgba(37, 99, 235, 1)',
-                    borderWidth: 1,
-                    barPercentage: 0.7,
-                    categoryPercentage: 0.8
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { enabled: true }
-                },
-                scales: {
-                    x: {
-                        beginAtZero: true,
-                        ticks: { precision: 0 },
-                        grid: { display: true, color: 'rgba(0,0,0,0.05)' }
-                    },
-                    y: {
-                        grid: { display: false }
-                    }
-                }
-            }
-        });
-    }
-});
+</script>
 </script>
         </div>
         
@@ -442,6 +413,15 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <!-- Scripts para las gráficas -->
+<script>
+// Variables generadas por Blade para los gráficos
+const carrerasSeleccionadasTop = @json($carrerasSeleccionadasTop ?? []);
+const estudiantesPorDepartamento = @json($estudiantesPorDepartamento ?? []);
+const porTipoPersonalidad = @json($porTipoPersonalidad ?? []);
+const carrerasMasRecomendadas = @json($carrerasMasRecomendadas ?? []);
+const distribucionPorEdad = @json($distribucionPorEdad ?? []);
+const distribucionPorGenero = @json($distribucionPorGenero ?? []);
+</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -475,13 +455,37 @@ document.addEventListener('DOMContentLoaded', function() {
             ]
         };
         
+        // Función para crear leyendas personalizadas
+        function createCustomLegend(legendId, chart) {
+            const legendElement = document.getElementById(legendId);
+            if (!legendElement || !chart) return;
+
+            const data = chart.data.datasets[0].data;
+            const total = data.reduce((a, b) => a + b, 0);
+            const colors = chart.data.datasets[0].backgroundColor;
+            
+            legendElement.innerHTML = chart.data.labels.map((label, idx) => {
+                const value = data[idx];
+                const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                const color = Array.isArray(colors) ? colors[idx] : colors;
+                
+                return `
+                    <div class="flex items-center gap-2 mb-2">
+                        <span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:${color};border:1px solid #ccc;"></span>
+                        <span class="font-medium text-gray-700">${label}</span>
+                        <span class="text-blue-600 font-semibold ml-auto">${value} (${percentage}%)</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
         // Datos geográficos
-        let estudiantesPorDepartamento = [];
+        let estudiantesPorDepartamento = {!! json_encode($distribucionPorDepartamento ?? []) !!};
         let departamentosLabels = [];
         let departamentosData = [];
         
         try {
-            estudiantesPorDepartamento = @json($estudiantesPorDepartamento ?? []);
+            console.log('Datos de departamentos crudos:', estudiantesPorDepartamento);
             if (estudiantesPorDepartamento && Array.isArray(estudiantesPorDepartamento)) {
                 estudiantesPorDepartamento.forEach(item => {
                     if (item && item.departamento !== undefined && item.total !== undefined) {
@@ -490,6 +494,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
             }
+            console.log('Datos de departamentos procesados:', {labels: departamentosLabels, data: departamentosData});
         } catch(e) {
             console.error('Error al procesar datos geográficos:', e);
         }
@@ -510,7 +515,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let personalidadData = [];
         
         try {
-            porTipoPersonalidad = @json($porTipoPersonalidad ?? []);
+            // ...existing code...
             if (porTipoPersonalidad && Array.isArray(porTipoPersonalidad)) {
                 porTipoPersonalidad.forEach(item => {
                     personalidadLabels.push(item.tipo_primario);
@@ -531,8 +536,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }]
         };
 
+
         // Datos carreras - CORREGIDO
-        let carrerasMasRecomendadas = [];
+        let carrerasMasRecomendadas = {!! json_encode($carrerasMasRecomendadas ?? []) !!};
         let carrerasLabels = [];
         let carrerasData = [];
         let carrerasMatch = [];
@@ -540,18 +546,15 @@ document.addEventListener('DOMContentLoaded', function() {
         // Reemplazar la sección donde procesa los datos de carreras
         try {
             // Obtener datos y mostrar para depuración
-            const carrerasRaw = @json($carrerasMasRecomendadas ?? []);
-            console.log('Datos de carreras crudos:', carrerasRaw);
-            
+            console.log('Datos de carreras crudos:', carrerasMasRecomendadas);
+
             // Siempre asumimos que es un array simple (no un objeto complejo)
-            if (carrerasRaw && Array.isArray(carrerasRaw) && carrerasRaw.length > 0) {
-                carrerasMasRecomendadas = carrerasRaw;
-                
+            if (carrerasMasRecomendadas && Array.isArray(carrerasMasRecomendadas) && carrerasMasRecomendadas.length > 0) {
                 // Extraer propiedades de forma segura
                 carrerasLabels = carrerasMasRecomendadas.map(item => item.nombre || 'Sin nombre');
                 carrerasData = carrerasMasRecomendadas.map(item => parseInt(item.total || 0));
                 carrerasMatch = carrerasMasRecomendadas.map(item => parseFloat(item.match_promedio || 0));
-                
+
                 console.log('Datos de carreras procesados correctamente');
             } else {
                 console.warn('No hay datos de carreras disponibles');
@@ -583,7 +586,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let distribucionEdadData = [0, 0, 0, 0, 0];
         
         try {
-            const distribucionPorEdad = @json($distribucionPorEdad ?? []);
+            // ...existing code...
             console.log('Datos de edad crudos:', distribucionPorEdad);
             
             if (distribucionPorEdad && Array.isArray(distribucionPorEdad)) {
@@ -628,7 +631,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let distribucionGeneroData = [0, 0, 0];
         
         try {
-            const distribucionPorGenero = @json($distribucionPorGenero ?? []);
+            // ...existing code...
             console.log('Datos de género crudos:', distribucionPorGenero);
             
             // Si es un array de objetos con genero y total (formato nuevo)
@@ -693,52 +696,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                display: false
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return `Total: ${context.raw} usuarios`;
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    precision: 0
-                                },
-                                grid: {
-                                    display: true,
-                                    color: 'rgba(0, 0, 0, 0.05)'
-                                }
-                            },
-                            x: {
-                                grid: {
-                                    display: false
-                                }
-                            }
-                        },
-                        animation: {
-                            duration: 1500,
-                            easing: 'easeOutQuart'
-                        }
-                    }
-                });
-            }
-            
-            // Gráfico de Género
-            if(document.getElementById('chartGenero')) {
-                new Chart(document.getElementById('chartGenero'), {
-                    type: 'doughnut',
-                    data: distribucionGenero,
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '60%',
-                        plugins: {
-                            legend: {
                                 position: 'right',
                                 labels: {
                                     usePointStyle: true,
@@ -763,10 +720,59 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
             }
+
+            // Gráfico de Género
+            let generoChart = null;
+            if(document.getElementById('chartGenero')) {
+                generoChart = new Chart(document.getElementById('chartGenero'), {
+                    type: 'doughnut',
+                    data: distribucionGenero,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '60%',
+                        plugins: {
+                            legend: {
+                                display: false // Oculta la leyenda automática
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = Math.round((context.raw / total) * 100);
+                                        return `${context.label}: ${context.raw} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        },
+                        animation: {
+                            animateRotate: true,
+                            animateScale: true,
+                            duration: 1500
+                        }
+                    }
+                });
+                // Mostrar leyenda personalizada alineada a la derecha
+                setTimeout(function() {
+                    const leyendaGenero = document.getElementById('leyendaGenero');
+                    if (leyendaGenero && generoChart) {
+                        const data = generoChart.data.datasets[0].data;
+                        const total = data.reduce((a, b) => a + b, 0);
+                        const colores = generoChart.data.datasets[0].backgroundColor;
+                        leyendaGenero.innerHTML = generoChart.data.labels.map((label, idx) => {
+                            const val = data[idx];
+                            const porcentaje = total > 0 ? Math.round((val / total) * 100) : 0;
+                            const color = colores[idx];
+                            return `<span class=\"flex items-center gap-2 mb-1\"><span style=\"display:inline-block;width:16px;height:16px;border-radius:50%;background:${color};border:1px solid #ccc;\"></span><span class='font-semibold'>${label}:</span> <span class='text-blue-700 font-bold'>${porcentaje}%</span></span>`;
+                        }).join('');
+                    }
+                }, 300);
+            }
             
             // Gráfico de Departamentos
-            if(document.getElementById('chartDepartamentos')) {
-                new Chart(document.getElementById('chartDepartamentos'), {
+            if(document.getElementById('chartDepartamentos') && departamentosData.length > 0 && departamentosData.some(val => val > 0)) {
+                console.log('Creando gráfico de departamentos...');
+                const departamentosChart = new Chart(document.getElementById('chartDepartamentos'), {
                     type: 'bar',
                     data: datosGeograficos,
                     options: {
@@ -800,23 +806,27 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                 });
+                
+                // Crear leyenda personalizada
+                setTimeout(() => createCustomLegend('leyendaDepartamentos', departamentosChart), 100);
+            } else {
+                console.log('No hay datos de departamentos o elemento no encontrado');
+                const leyenda = document.getElementById('leyendaDepartamentos');
+                if (leyenda) leyenda.innerHTML = '<p class="text-gray-500">No hay datos de departamentos disponibles</p>';
             }
             
             // Gráfico de Tipos de Personalidad
-            if(document.getElementById('chartTiposPersonalidad')) {
-                new Chart(document.getElementById('chartTiposPersonalidad'), {
-                    type: 'pie',
+            if(document.getElementById('chartTiposPersonalidad') && personalidadData.length > 0 && personalidadData.some(val => val > 0)) {
+                console.log('Creando gráfico de personalidad...');
+                const personalidadChart = new Chart(document.getElementById('chartTiposPersonalidad'), {
+                    type: 'polarArea',
                     data: datosPersonalidad,
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                position: 'right',
-                                labels: {
-                                    usePointStyle: true,
-                                    padding: 15
-                                }
+                                display: false
                             },
                             tooltip: {
                                 callbacks: {
@@ -828,23 +838,39 @@ document.addEventListener('DOMContentLoaded', function() {
                                 }
                             }
                         },
+                        scales: {
+                            r: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0
+                                }
+                            }
+                        },
                         animation: {
                             animateRotate: true,
                             duration: 1500
                         }
                     }
                 });
+                
+                // Crear leyenda personalizada
+                setTimeout(() => createCustomLegend('leyendaPersonalidad', personalidadChart), 100);
+            } else {
+                console.log('No hay datos de personalidad o elemento no encontrado');
+                const leyenda = document.getElementById('leyendaPersonalidad');
+                if (leyenda) leyenda.innerHTML = '<p class="text-gray-500">No hay datos de personalidad disponibles</p>';
             }
             
-            // Gráfico de Carreras - CORREGIDO
-            if(document.getElementById('chartCarreras')) {
-                new Chart(document.getElementById('chartCarreras'), {
+            // Gráfico de Carreras
+            if(document.getElementById('chartCarreras') && carrerasData.length > 0 && carrerasData.some(val => val > 0)) {
+                console.log('Creando gráfico de carreras...');
+                const carrerasChart = new Chart(document.getElementById('chartCarreras'), {
                     type: 'bar',
                     data: datosCarreras,
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        indexAxis: 'y', // Gráfico horizontal para mejor visualización de nombres largos
+                        indexAxis: 'y',
                         plugins: {
                             legend: {
                                 display: false
@@ -875,8 +901,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 ticks: {
                                     callback: function(value) {
                                         const label = this.getLabelForValue(value);
-                                        // Truncar etiquetas largas
-                                        if (label.length > 25) {
+                                        if (label && label.length > 25) {
                                             return label.substring(0, 22) + '...';
                                         }
                                         return label;
@@ -889,6 +914,30 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                 });
+                
+                // Crear leyenda personalizada
+                setTimeout(() => createCustomLegend('leyendaCarreras', carrerasChart), 100);
+                
+                // Crear lista de carreras
+                const listaCarreras = document.getElementById('listaCarreras');
+                if (listaCarreras && carrerasLabels.length > 0) {
+                    listaCarreras.innerHTML = carrerasLabels.map((carrera, index) => {
+                        const valor = carrerasData[index];
+                        return `
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                <span class="font-medium text-gray-700">${carrera}</span>
+                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-semibold">${valor} recomendaciones</span>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            } else {
+                console.log('No hay datos de carreras o elemento no encontrado');
+                const leyenda = document.getElementById('leyendaCarreras');
+                if (leyenda) leyenda.innerHTML = '<p class="text-gray-500">No hay datos de carreras disponibles</p>';
+                
+                const lista = document.getElementById('listaCarreras');
+                if (lista) lista.innerHTML = '<p class="text-gray-500 text-center py-4">No hay carreras recomendadas para mostrar</p>';
             }
         } catch (error) {
             console.error('Error al crear gráficos:', error);
@@ -994,4 +1043,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 </script>
+@endsection
+@section('scripts')
+<!-- Eliminado: ahora el bloque de variables está antes de los scripts principales -->
 @endsection

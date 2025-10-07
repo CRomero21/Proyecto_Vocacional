@@ -266,7 +266,8 @@ class EstadisticasController extends Controller
                 ];
             }
             // 9. Valoración y satisfacción - AHORA desde la tabla retroalimentaciones
-            $valoracionPromedio = 0;
+            $utilidadPromedio = 0;
+            $precisionPromedio = 0;
             $distribucionValoraciones = [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0];
             $totalValoraciones = 0;
 
@@ -276,8 +277,11 @@ class EstadisticasController extends Controller
                 // $queryRetro = $queryRetro->where('created_at', '>=', $fechaDesde);
 
                 $totalValoraciones = $queryRetro->count();
-                $valoracionPromedio = $totalValoraciones > 0
+                $utilidadPromedio = $totalValoraciones > 0
                     ? round($queryRetro->avg('utilidad'), 2)
+                    : 0;
+                $precisionPromedio = $totalValoraciones > 0
+                    ? round($queryRetro->avg('precision'), 2)
                     : 0;
 
                 // Distribución de valoraciones (utilidad)
@@ -294,37 +298,21 @@ class EstadisticasController extends Controller
                 Log::error('Error al procesar valoraciones desde retroalimentaciones: ' . $e->getMessage());
             }
             
-            // 10. Comentarios recientes - CORREGIDO: Leer desde JSON en resultados
-            $comentariosRecientes = collect();
-
-            try {
-                $testsConComentarios = Test::where('created_at', '>=', $fechaDesde)
-                    ->where('completado', 1)
-                    ->whereNotNull('resultados')
-                    ->with('user:id,name')
-                    ->select('id', 'user_id', 'resultados', 'created_at')
-                    ->orderByDesc('created_at')
-                    ->limit(15)
-                    ->get();
-                
-                foreach ($testsConComentarios as $test) {
-                    $resultados = is_string($test->resultados) ? json_decode($test->resultados, true) : $test->resultados;
-                    
-                    if (!empty($resultados['retroalimentacion']['comentario'])) {
-                        $comentariosRecientes->push((object)[
-                            'usuario' => $test->user->name ?? 'Usuario',
-                            'valoracion' => $resultados['retroalimentacion']['utilidad'] ?? 0,
-                            'texto' => $resultados['retroalimentacion']['comentario'],
-                            'fecha' => $test->created_at->format('d/m/Y')
-                        ]);
-                    }
-                }
-                
-                // Limitar a 5 comentarios
-                $comentariosRecientes = $comentariosRecientes->take(5);
-            } catch (\Exception $e) {
-                Log::error('Error al procesar comentarios JSON: ' . $e->getMessage());
-            }
+            // 10. Comentarios recientes - AHORA desde la tabla retroalimentaciones
+            // Obtener más comentarios para scroll (por ejemplo, 30)
+            $comentariosRecientes = \App\Models\Retroalimentacion::whereNotNull('comentario')
+                ->orderByDesc('created_at')
+                ->with('user:id,name')
+                ->limit(30)
+                ->get()
+                ->map(function($item) {
+                    return (object)[
+                        'usuario' => $item->user->name ?? 'Usuario',
+                        'valoracion' => $item->utilidad ?? 0,
+                        'texto' => $item->comentario,
+                        'fecha' => \Carbon\Carbon::parse($item->created_at)->format('d/m/Y'),
+                    ];
+                });
             
             // 11. Insights adicionales - CORREGIDO para manejar arrays y colecciones
             // Obtener el tipo de personalidad dominante
@@ -389,7 +377,7 @@ class EstadisticasController extends Controller
                 'totalUsuarios', 'testsIniciados', 'testsCompletados', 'departamentos',
                 'distribucionPorGenero', 'distribucionPorEdad', 'estudiantesPorDepartamento',
                 'topInstituciones', 'porTipoPersonalidad', 'carrerasMasRecomendadas',
-                'valoracionPromedio', 'distribucionValoraciones', 'totalValoraciones', 'comentariosRecientes',
+                'utilidadPromedio', 'precisionPromedio', 'distribucionValoraciones', 'totalValoraciones', 'comentariosRecientes',
                 'tipoPersonalidadDominante', 'porcentajeDominante', 'carreraTop', 'porcentajeTopCarreras',
                 'carrerasSeleccionadasTop',
             ));
