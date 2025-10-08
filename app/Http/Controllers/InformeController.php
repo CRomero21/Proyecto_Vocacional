@@ -22,7 +22,8 @@ class InformeController extends Controller
         
         // Datos básicos para las estadísticas
         $totalTests = Test::where('completado', true)->count();
-        $totalUsuarios = User::where('role', 'user')->count();
+        $totalUsuarios = User::count(); // Contar todos los usuarios en lugar de solo 'user'
+        $totalCarreras = Carrera::count();
         $testsUltimaSemana = Test::where('completado', true)
             ->where('updated_at', '>=', now()->subDays(7))
             ->count();
@@ -72,6 +73,7 @@ class InformeController extends Controller
         return view('informes.index', compact(
             'totalTests',
             'totalUsuarios',
+            'totalCarreras',
             'testsIniciados',
             'testsCompletados',
             'tasaConversion',

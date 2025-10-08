@@ -54,7 +54,7 @@
                                 echo $isArray ? ($item['ciudad'] ?? '') : ($isObject ? ($item->ciudad ?? '') : '');
                                 break;
                             case 'Institución':
-                                echo $isArray ? ($item['unidad_educativa'] ?? '') : ($isObject ? ($item->unidad_educativa ?? '') : '');
+                                echo $isArray ? ($item['nombre'] ?? '') : ($isObject ? ($item->nombre ?? '') : '');
                                 break;
                             case 'Total Estudiantes':
                                 echo $isObject ? ($item->total_estudiantes ?? 0) : ($isArray ? ($item['total_estudiantes'] ?? 0) : 0);

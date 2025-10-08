@@ -74,9 +74,9 @@
                             <option value="usuarios_datos">Datos de Contacto de Usuarios</option>
                             <option value="instituciones_educativas">Usuarios por Institución Educativa</option>
                             <option value="distribucion_demografica">Distribución Geográfica</option>
-                            <option value="tests_completados">Tests Completados vs Incompletos</option>
                             <option value="personalidades">Distribución de Tipos de Personalidad</option>
                             <option value="carreras">Carreras Recomendadas</option>
+                            <option value="carreras_mas_solicitadas">Carreras Más Solicitadas</option>
                         </select>
                     </div>
                     
@@ -108,8 +108,8 @@
                                 </select>
                             </div>
                             <div>
-                                <select name="ciudad" id="ciudad" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                                    <option value="">Todas las ciudades</option>
+                                <select name="ciudad" id="ciudad" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" disabled>
+                                    <option value="">Seleccione un departamento primero</option>
                                 </select>
                             </div>
                         </div>
@@ -118,11 +118,8 @@
                     <!-- Segunda fila de filtros -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Institución Educativa</label>
-                        <select name="institucion" id="institucion" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                            <option value="">Todas las instituciones</option>
-                            @foreach($instituciones as $institucion)
-                                <option value="{{ $institucion }}">{{ $institucion }}</option>
-                            @endforeach
+                        <select name="institucion" id="institucion" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" disabled>
+                            <option value="">Seleccione una ciudad primero</option>
                         </select>
                     </div>
                     
@@ -233,8 +230,11 @@
                         <button type="reset" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">
                             Limpiar Filtros
                         </button>
-                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                            Generar Informe
+                        <button type="submit" id="generarBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 flex items-center">
+                            <svg class="w-4 h-4 mr-2 hidden" id="loadingSpinner" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            <span id="generarText">Generar Informe</span>
                         </button>
                     </div>
                 </form>
@@ -266,7 +266,6 @@
                                     @if($informe->tipo == 'usuarios_datos') bg-blue-100 text-blue-800
                                     @elseif($informe->tipo == 'instituciones_educativas') bg-green-100 text-green-800
                                     @elseif($informe->tipo == 'distribucion_demografica') bg-purple-100 text-purple-800
-                                    @elseif($informe->tipo == 'tests_completados') bg-yellow-100 text-yellow-800
                                     @elseif($informe->tipo == 'personalidades') bg-pink-100 text-pink-800
                                     @elseif($informe->tipo == 'carreras') bg-indigo-100 text-indigo-800
                                     @endif
@@ -408,11 +407,17 @@
                                             <div class="text-sm text-gray-900">
                                                 @php
                                                     $sexo = is_array($usuario) ? ($usuario['sexo'] ?? '') : ($usuario->sexo ?? '');
+                                                    // Manejar diferentes formatos de valores de sexo
+                                                    if (strtolower($sexo) == 'm' || strtolower($sexo) == 'masculino') {
+                                                        echo 'Masculino';
+                                                    } elseif (strtolower($sexo) == 'f' || strtolower($sexo) == 'femenino') {
+                                                        echo 'Femenino';
+                                                    } elseif (strtolower($sexo) == 'otro' || strtolower($sexo) == 'o') {
+                                                        echo 'Otro';
+                                                    } else {
+                                                        echo $sexo ?: 'No especificado';
+                                                    }
                                                 @endphp
-                                                @if(strtolower($sexo) == 'm') Masculino
-                                                @elseif(strtolower($sexo) == 'f') Femenino
-                                                @else No especificado
-                                                @endif
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
@@ -440,35 +445,65 @@
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Institución</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Departamento</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ciudad</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Estudiantes</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tests Completados</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tests Incompletos</th>
+                                        @if(isset($datos[0]['ciudad']) && !isset($datos[0]['nombre']))
+                                            <!-- Headers para datos de ciudades -->
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ciudad</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Departamento</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Usuarios</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tests Completados</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tests Incompletos</th>
+                                        @else
+                                            <!-- Headers para datos de instituciones -->
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Institución</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Departamento</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ciudad</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Estudiantes</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tests Completados</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tests Incompletos</th>
+                                        @endif
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    @foreach($datos as $institucion)
+                                    @foreach($datos as $item)
                                     <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900">{{ $institucion->nombre ?? 'N/A' }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ $institucion->departamento ?? 'N/A' }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ $institucion->ciudad ?? 'N/A' }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ $institucion->total_estudiantes ?? 0 }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ $institucion->tests_completados ?? 0 }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ $institucion->tests_incompletos ?? 0 }}</div>
-                                        </td>
+                                        @if(isset($item['ciudad']) && !isset($item['nombre']))
+                                            <!-- Filas para datos de ciudades -->
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm font-medium text-gray-900">{{ $item['ciudad'] ?? 'N/A' }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">{{ $item['departamento'] ?? 'N/A' }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">{{ $item['total_usuarios'] ?? 0 }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">{{ $item['tests_completados'] ?? 0 }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">{{ $item['tests_incompletos'] ?? 0 }}</div>
+                                            </td>
+                                        @else
+                                            <!-- Filas para datos de instituciones -->
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm font-medium text-gray-900">{{ $item['nombre'] ?? 'N/A' }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">{{ $item['departamento'] ?? $item['departamento_nombre'] ?? 'N/A' }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">{{ $item['ciudad'] ?? $item['ciudad_nombre'] ?? 'N/A' }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">{{ $item['total_estudiantes'] ?? 0 }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">{{ $item['tests_completados'] ?? 0 }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">{{ $item['tests_incompletos'] ?? 0 }}</div>
+                                            </td>
+                                        @endif
                                     </tr>
                                     @endforeach
                                 </tbody>
@@ -479,73 +514,51 @@
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Departamento</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ciudad</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Usuarios</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Porcentaje</th>
+                                        @if(isset($datos[0]['departamento']) && !isset($datos[0]['ciudad']))
+                                            <!-- Vista de Departamentos -->
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Departamento</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Usuarios</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Porcentaje</th>
+                                        @else
+                                            <!-- Vista de Ciudades -->
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Departamento</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ciudad</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Usuarios</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Porcentaje</th>
+                                        @endif
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     @foreach($datos as $region)
                                     <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900">{{ $region->departamento ?? 'N/A' }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ $region->ciudad ?? 'N/A' }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ $region->total ?? 0 }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ ($region->porcentaje ?? 0) }}%</div>
-                                        </td>
+                                        @if(isset($region['departamento']) && !isset($region['ciudad']))
+                                            <!-- Vista de Departamentos -->
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm font-medium text-gray-900">{{ $region['departamento'] ?? 'N/A' }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">{{ $region['total'] ?? 0 }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">{{ ($region['porcentaje'] ?? 0) }}%</div>
+                                            </td>
+                                        @else
+                                            <!-- Vista de Ciudades -->
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm font-medium text-gray-900">{{ $region['departamento'] ?? 'N/A' }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">{{ $region['ciudad'] ?? 'N/A' }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">{{ $region['total'] ?? 0 }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">{{ ($region['porcentaje'] ?? 0) }}%</div>
+                                            </td>
+                                        @endif
                                     </tr>
                                     @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    @elseif($tipoInforme === 'tests_completados')
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Porcentaje</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    @if(is_array($datos) && isset($datos['completados']))
-                                    <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-green-700">Completados</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ $datos['completados'] }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ $datos['porcentaje_completados'] }}%</div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-red-700">Incompletos</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ $datos['incompletos'] }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ $datos['porcentaje_incompletos'] }}%</div>
-                                        </td>
-                                    </tr>
-                                    @else
-                                    <tr>
-                                        <td colspan="3" class="px-6 py-4 text-center text-gray-500">
-                                            No hay datos disponibles para mostrar
-                                        </td>
-                                    </tr>
-                                    @endif
                                 </tbody>
                             </table>
                         </div>
@@ -609,6 +622,45 @@
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="text-sm text-gray-900">{{ ($carrera->match_promedio ?? 0) }}%</div>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @elseif($tipoInforme === 'carreras_mas_solicitadas')
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Carrera</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Área</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Solicitudes</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Porcentaje</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utilidad Promedio</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precisión Promedio</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @foreach($datos as $carrera)
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">{{ $carrera->nombre ?? 'N/A' }}</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">{{ $carrera->area_conocimiento ?? 'N/A' }}</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">{{ $carrera->total_solicitudes ?? 0 }}</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">{{ ($carrera->porcentaje ?? 0) }}%</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">{{ ($carrera->utilidad_promedio ?? 0) }}/5</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">{{ ($carrera->precision_promedio ?? 0) }}/5</div>
                                         </td>
                                     </tr>
                                     @endforeach
@@ -741,7 +793,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if(tipoInformeSelect) {
         tipoInformeSelect.addEventListener('change', function() {
-            if(this.value === 'personalidades' || this.value === 'carreras') {
+            if(this.value === 'personalidades' || this.value === 'carreras' || this.value === 'carreras_mas_solicitadas') {
                 filtrosPersonalidad.style.display = 'grid';
             } else {
                 filtrosPersonalidad.style.display = 'none';
@@ -750,6 +802,109 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Trigger change event on load
         tipoInformeSelect.dispatchEvent(new Event('change'));
+    }
+    
+    // Filtros dinámicos para ubicación
+    const departamentoSelect = document.getElementById('departamento');
+    const ciudadSelect = document.getElementById('ciudad');
+    const institucionSelect = document.getElementById('institucion');
+    
+    // Función para cargar ciudades por departamento
+    function cargarCiudades(departamentoNombre) {
+        if (!departamentoNombre) {
+            ciudadSelect.innerHTML = '<option value="">Seleccione un departamento primero</option>';
+            ciudadSelect.disabled = true;
+            cargarInstituciones('');
+            return;
+        }
+        
+        fetch(`/api/informes-avanzados/ciudades/${encodeURIComponent(departamentoNombre)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.length === 0) {
+                    ciudadSelect.innerHTML = '<option value="">No hay ciudades con registros</option>';
+                    ciudadSelect.disabled = true;
+                    cargarInstituciones('');
+                } else {
+                    ciudadSelect.innerHTML = '<option value="">Todas las ciudades</option>';
+                    data.forEach(ciudad => {
+                        const option = document.createElement('option');
+                        option.value = ciudad.nombre;
+                        option.textContent = ciudad.nombre;
+                        ciudadSelect.appendChild(option);
+                    });
+                    ciudadSelect.disabled = false;
+                    cargarInstituciones(''); // Reset instituciones
+                }
+            })
+            .catch(error => {
+                console.error('Error cargando ciudades:', error);
+                ciudadSelect.innerHTML = '<option value="">Error al cargar ciudades</option>';
+                ciudadSelect.disabled = true;
+            });
+    }
+    
+    // Función para cargar instituciones por ciudad
+    function cargarInstituciones(ciudadNombre) {
+        if (!ciudadNombre) {
+            institucionSelect.innerHTML = '<option value="">Seleccione una ciudad primero</option>';
+            institucionSelect.disabled = true;
+            return;
+        }
+        
+        fetch(`/api/informes-avanzados/unidades-educativas/${encodeURIComponent(ciudadNombre)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.length === 0) {
+                    institucionSelect.innerHTML = '<option value="">No hay instituciones con registros</option>';
+                    institucionSelect.disabled = true;
+                } else {
+                    institucionSelect.innerHTML = '<option value="">Todas las instituciones</option>';
+                    data.forEach(institucion => {
+                        const option = document.createElement('option');
+                        option.value = institucion.nombre;
+                        option.textContent = institucion.nombre;
+                        institucionSelect.appendChild(option);
+                    });
+                    institucionSelect.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error cargando instituciones:', error);
+                institucionSelect.innerHTML = '<option value="">Error al cargar instituciones</option>';
+                institucionSelect.disabled = true;
+            });
+    }
+    
+    // Event listeners para filtros dinámicos
+    if (departamentoSelect) {
+        departamentoSelect.addEventListener('change', function() {
+            cargarCiudades(this.value);
+        });
+    }
+    
+    if (ciudadSelect) {
+        ciudadSelect.addEventListener('change', function() {
+            cargarInstituciones(this.value);
+        });
+    }
+    
+    // Indicador de carga para generación de informes
+    const form = document.querySelector('form[action*="informes-avanzados"]');
+    const generarBtn = document.getElementById('generarBtn');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const generarText = document.getElementById('generarText');
+    
+    if (form && generarBtn) {
+        form.addEventListener('submit', function(e) {
+            // Mostrar indicador de carga
+            loadingSpinner.classList.remove('hidden');
+            generarText.textContent = 'Generando...';
+            generarBtn.disabled = true;
+            generarBtn.classList.add('opacity-75', 'cursor-not-allowed');
+            
+            // El formulario se enviará normalmente
+        });
     }
     
     // Creación de gráficos
@@ -825,7 +980,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Personalización según tipo de informe
             if(tipoInforme === 'distribucion_demografica' || tipoInforme === 'instituciones_educativas') {
                 config.type = 'bar';
-            } else if(tipoInforme === 'personalidades' || tipoInforme === 'tests_completados') {
+            } else if(tipoInforme === 'personalidades') {
                 config.type = 'pie';
                 config.options.scales = {}; // Quitar escalas para gráfico de pie
             } else if(tipoInforme === 'carreras') {

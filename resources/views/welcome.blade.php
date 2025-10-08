@@ -396,7 +396,7 @@
                             <span class="text-sm text-gray-400">informaciones@yba.uno.edu.bo</span>
                         </li>
                         <li class="flex items-start">
-                            <i class="fas fa-phone-alt mt-1 mr-2 text-gray-400"></i>
+                            <i class="fas fa-phone-alt fa-flip-horizontal mt-1 mr-2 text-gray-400"></i>
                             <span class="text-sm text-gray-400">+591 76050098</span>
                         </li>
                     </ul>

@@ -192,7 +192,11 @@
                         </div>
                         <div class="px-6 pt-4 pb-6">
                             <div class="flex items-center justify-between">
+                                @if(isset($totalUsuarios))
                                 <span class="text-2xl font-bold text-blue-600">{{ $totalUsuarios }}</span>
+                                @else
+                                <span class="text-2xl font-bold text-blue-600">--</span>
+                                @endif
                                 <a href="{{ route('admin.usuarios.index') }}" class="text-blue-500 group-hover:text-blue-700 hover:underline font-medium flex items-center">
                                     <span>Administrar</span>
                                     <svg class="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

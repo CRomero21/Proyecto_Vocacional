@@ -4,6 +4,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Models\User;
+use App\Http\Controllers\InformeAvanzadoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,6 +21,10 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+// API routes para informes avanzados - filtros dinámicos (sin autenticación requerida)
+Route::get('/informes-avanzados/ciudades/{departamento}', [InformeAvanzadoController::class, 'getCiudadesByDepartamento']);
+Route::get('/informes-avanzados/unidades-educativas/{ciudad}', [InformeAvanzadoController::class, 'getUnidadesEducativasByCiudad']);
+
 Route::get('/ciudades/{departamento}', function (string $departamento) {
     $ciudades = User::where('departamento', $departamento)
         ->whereNotNull('ciudad')
@@ -28,7 +33,7 @@ Route::get('/ciudades/{departamento}', function (string $departamento) {
         ->pluck('ciudad')
         ->sort()
         ->values();
-        
+
     return response()->json($ciudades);
 });
 
@@ -41,7 +46,7 @@ Route::get('/instituciones/{ciudad}', function (string $ciudad) {
         ->pluck('unidad_educativa')
         ->sort()
         ->values();
-        
+
     return response()->json($instituciones);
 });
 
@@ -54,6 +59,6 @@ Route::get('/instituciones-departamento/{departamento}', function (string $depar
         ->pluck('unidad_educativa')
         ->sort()
         ->values();
-        
+
     return response()->json($instituciones);
 });

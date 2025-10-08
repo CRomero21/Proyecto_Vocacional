@@ -14,4 +14,9 @@ class UnidadEducativa extends Model
     {
         return $this->belongsTo(Ciudad::class);
     }
+
+    public function users()
+    {
+        return $this->hasMany(User::class, 'unidad_educativa_id');
+    }
 }
