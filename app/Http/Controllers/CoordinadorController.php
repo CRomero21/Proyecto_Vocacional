@@ -48,7 +48,24 @@ class CoordinadorController extends Controller
                 ->take(5)
                 ->get();
             
-            // Tendencias recientes
+            // Tendencias recientes - datos para gráfico de línea
+            $fechaHaceUnMes = Carbon::now()->subDays(30);
+            $tendenciasTests = DB::table('tests')
+                ->select(DB::raw('DATE(created_at) as fecha, COUNT(*) as total'))
+                ->where('created_at', '>=', $fechaHaceUnMes)
+                ->groupBy('fecha')
+                ->orderBy('fecha')
+                ->get()
+                ->map(function($item) {
+                    return [
+                        Carbon::parse($item->fecha)->format('d/m'),
+                        (int)$item->total
+                    ];
+                })
+                ->values()
+                ->toArray();
+            
+            // Actividad de la última semana
             $fechaUltimaSemana = Carbon::now()->subDays(7);
             $testsUltimaSemana = Test::where('created_at', '>=', $fechaUltimaSemana)->count();
             
@@ -68,21 +85,60 @@ class CoordinadorController extends Controller
                 'tasaConversion',
                 'ultimosTests',
                 'testsUltimaSemana',
-                'estudiantesPorDepartamento'
+                'estudiantesPorDepartamento',
+                'tendenciasTests'
             ));
             
         } catch (\Exception $e) {
             // Si hay un error, registrar el error y cargar la vista con datos mínimos
             \Log::error('Error en dashboard del coordinador: ' . $e->getMessage());
             
-            return view('coordinador.dashboard', [
-                'totalEstudiantes' => 0,
-                'totalTests' => 0,
-                'testsIniciados' => 0,
-                'tasaConversion' => '0%',
-                'ultimosTests' => collect(),
-                'error' => 'Ocurrió un error al cargar los datos. Por favor, inténtelo de nuevo.'
-            ]);
+            // Intentar obtener al menos algunos datos básicos si es posible
+            $totalEstudiantes = 0;
+            $totalTests = 0;
+            $testsIniciados = 0;
+            $tasaConversion = '0%';
+            $ultimosTests = collect();
+            $testsUltimaSemana = 0;
+            $estudiantesPorDepartamento = collect();
+            $tendenciasTests = [];
+            
+            // Intentar obtener datos básicos uno por uno
+            try {
+                $totalEstudiantes = User::where('role', 'estudiante')->count();
+            } catch (\Exception $e2) {
+                \Log::error('Error obteniendo total estudiantes: ' . $e2->getMessage());
+            }
+            
+            try {
+                $totalTests = Test::where('completado', true)->count();
+            } catch (\Exception $e2) {
+                \Log::error('Error obteniendo total tests: ' . $e2->getMessage());
+            }
+            
+            try {
+                $testsIniciados = Test::count();
+            } catch (\Exception $e2) {
+                \Log::error('Error obteniendo tests iniciados: ' . $e2->getMessage());
+            }
+            
+            try {
+                $ultimosTests = Test::with('user')->latest()->take(5)->get();
+            } catch (\Exception $e2) {
+                \Log::error('Error obteniendo últimos tests: ' . $e2->getMessage());
+                $ultimosTests = collect();
+            }
+            
+            return view('coordinador.dashboard', compact(
+                'totalEstudiantes',
+                'totalTests',
+                'testsIniciados',
+                'tasaConversion',
+                'ultimosTests',
+                'testsUltimaSemana',
+                'estudiantesPorDepartamento',
+                'tendenciasTests'
+            ));
         }
     }
     
