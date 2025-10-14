@@ -2,16 +2,16 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto px-4 py-8 min-h-screen bg-gradient-to-br from-[#f2f2f2] via-[#c8c8c8] to-[#0079f4]">
+<div class="container mx-auto px-4 py-8 min-h-screen bg-gray-100">
     <div class="max-w-5xl mx-auto">
         <!-- Header mejorado -->
         <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-[#0b3be9] to-[#0079f4] rounded-full mb-4 shadow-lg">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-600 rounded-full mb-4 shadow-lg">
                 <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
                 </svg>
             </div>
-            <h1 class="text-4xl font-extrabold bg-gradient-to-r from-[#0b3be9] to-[#0079f4] bg-clip-text text-transparent mb-2">
+            <h1 class="text-4xl font-extrabold text-blue-600 mb-2">
                 Test Vocacional
             </h1>
             <p class="text-gray-600 text-lg max-w-2xl mx-auto leading-relaxed">
@@ -21,7 +21,7 @@
 
         <div class="bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-100">
             <!-- Barra de Progreso Mejorada -->
-            <div class="bg-gradient-to-r from-[#0b3be9] to-[#0079f4] p-6">
+            <div class="bg-blue-600 p-6">
                 <div class="flex justify-between items-center mb-3">
                     <div class="flex items-center space-x-2">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -67,37 +67,7 @@
                     @endif
 
                     <!-- Guía visual de colores -->
-                    <div class="bg-gradient-to-r from-[#f2f2f2] to-[#c8c8c8] rounded-2xl p-6 mb-8 border border-gray-100">
-                        <h3 class="text-lg font-bold text-[#0b3be9] mb-4 flex items-center">
-                            <svg class="w-5 h-5 mr-2 text-[#0b3be9]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            Guía de Respuestas
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="flex items-center p-3 bg-red-50 rounded-xl border-2 border-red-200">
-                                <div class="w-4 h-4 bg-red-500 rounded-full mr-3"></div>
-                                <div>
-                                    <div class="font-semibold text-red-800">No me identifica</div>
-                                    <div class="text-sm text-red-600">0 puntos</div>
-                                </div>
-                            </div>
-                            <div class="flex items-center p-3 bg-yellow-50 rounded-xl border-2 border-yellow-200">
-                                <div class="w-4 h-4 bg-yellow-500 rounded-full mr-3"></div>
-                                <div>
-                                    <div class="font-semibold text-yellow-800">Me identifica un poco</div>
-                                    <div class="text-sm text-yellow-600">1 punto</div>
-                                </div>
-                            </div>
-                            <div class="flex items-center p-3 bg-green-50 rounded-xl border-2 border-green-200">
-                                <div class="w-4 h-4 bg-green-500 rounded-full mr-3"></div>
-                                <div>
-                                    <div class="font-semibold text-green-800">Me identifica mucho</div>
-                                    <div class="text-sm text-green-600">2 puntos</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    
 
                     <!-- Contenedor de Preguntas Mejorado -->
                     <div id="questions-container" class="space-y-6 mb-8">
@@ -105,26 +75,26 @@
                     </div>
 
                     <!-- Controles de Navegación Mejorados -->
-                    <div class="bg-gradient-to-r from-[#f2f2f2] to-[#c8c8c8] rounded-2xl p-6 border border-gray-100">
-                        <div class="flex justify-between items-center">
+                    <div class="bg-gray-100 rounded-2xl p-6 border border-gray-100">
+                        <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
                             <button type="button" id="prev-btn"
-                                    class="flex items-center px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-xl shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 disabled:transform-none">
+                                    class="flex items-center px-4 md:px-6 py-2 md:py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-xl shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 disabled:transform-none text-sm md:text-base">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                                 </svg>
                                 Anterior
                             </button>
 
-                            <div class="flex items-center space-x-3">
-                                <span class="text-sm text-gray-600 font-medium">Página</span>
-                                <div class="flex space-x-2" id="page-indicators">
+                            <div class="flex items-center space-x-2 md:space-x-3">
+                                <span class="text-xs md:text-sm text-gray-600 font-medium">Página</span>
+                                <div class="flex space-x-1 md:space-x-2" id="page-indicators">
                                     <!-- Los indicadores de página se generarán aquí -->
                                 </div>
-                                <span class="text-sm text-gray-600 font-medium">de <span id="total-pages">{{ ceil(count($preguntas) / 10) }}</span></span>
+                                <span class="text-xs md:text-sm text-gray-600 font-medium">de <span id="total-pages">{{ ceil(count($preguntas) / 10) }}</span></span>
                             </div>
 
                             <button type="button" id="next-btn"
-                                    class="flex items-center px-6 py-3 bg-gradient-to-r from-[#0b3be9] to-[#0079f4] hover:from-[#051a9a] hover:to-[#0b3be9] text-white font-semibold rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105">
+                                    class="flex items-center px-4 md:px-6 py-2 md:py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 text-sm md:text-base">
                                 <span id="next-btn-text">Siguiente</span>
                                 <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -135,7 +105,7 @@
 
                     <!-- Botón Final Mejorado -->
                     <div class="mt-8 text-center hidden" id="submit-container">
-                        <div class="bg-gradient-to-r from-[#0b3be9] to-[#0079f4] rounded-2xl p-8 shadow-xl border border-[#0b3be9]">
+                        <div class="bg-blue-600 rounded-2xl p-8 shadow-xl border border-blue-600">
                             <div class="mb-6">
                                 <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full mb-4 shadow-lg">
                                     <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -186,18 +156,14 @@ document.addEventListener('DOMContentLoaded', function() {
     function generatePageIndicators() {
         pageIndicators.innerHTML = '';
         for (let i = 0; i < totalPages; i++) {
-            const indicator = document.createElement('button');
-            indicator.className = `relative w-8 h-8 rounded-full transition-all duration-300 transform hover:scale-110 ${
+            const indicator = document.createElement('span');
+            indicator.className = `relative w-6 h-6 md:w-8 md:h-8 rounded-full transition-all duration-300 transform ${
                 i === currentPage
-                    ? 'bg-white text-[#0b3be9] shadow-lg ring-2 ring-white'
-                    : 'bg-[#c8c8c8] text-[#051a9a] hover:bg-[#0079f4]'
-            } flex items-center justify-center font-semibold text-sm`;
+                    ? 'bg-white text-blue-600 shadow-lg ring-2 ring-white'
+                    : 'bg-gray-300 text-blue-900'
+            } flex items-center justify-center font-semibold text-xs md:text-sm select-none`;
             indicator.textContent = i + 1;
-            indicator.onclick = () => goToPage(i);
-
-            // Agregar tooltip
-            indicator.title = `Ir a la página ${i + 1}`;
-
+            indicator.title = `Página ${i + 1}`;
             pageIndicators.appendChild(indicator);
         }
     }
@@ -213,57 +179,57 @@ document.addEventListener('DOMContentLoaded', function() {
         pageQuestions.forEach((pregunta, index) => {
             const globalIndex = start + index;
             const questionDiv = document.createElement('div');
-            questionDiv.className = 'bg-gradient-to-r from-white to-gray-50 p-6 rounded-2xl shadow-md border border-gray-100 animate-slide-in-up hover:shadow-lg transition-all duration-300';
+            questionDiv.className = 'bg-white p-6 md:p-6 rounded-2xl shadow-md border border-gray-100 animate-slide-in-up hover:shadow-lg transition-all duration-300';
             questionDiv.style.animationDelay = `${index * 0.1}s`;
 
             questionDiv.innerHTML = `
                 <div class="flex items-start mb-6">
-                    <div class="flex-shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-r from-[#0b3be9] to-[#0079f4] text-white flex items-center justify-center font-bold mr-5 text-lg shadow-lg">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold numero-pregunta-movil md:mr-5 text-lg shadow-lg">
                         ${globalIndex + 1}
                     </div>
                     <div class="flex-1">
-                        <p class="font-semibold text-gray-800 text-lg leading-relaxed mb-2">${pregunta.texto}</p>
+                        <p class="font-semibold text-gray-800 text-lg leading-relaxed mb-4 md:mb-6">${pregunta.texto}</p>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 ml-17">
-                    <label class="group relative flex items-center p-5 bg-gradient-to-r from-red-50 to-red-100 rounded-xl border-2 border-red-200 hover:border-red-400 hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-105">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 ml-17">
+                    <label class="group respuesta-movil relative flex items-center w-full px-4 py-4 md:px-8 md:py-5 bg-gray-300 rounded-xl border-2 border-gray-300 hover:border-gray-400 hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-105 active:scale-95">
                         <input type="radio" name="respuestas[${pregunta.id}]" value="0"
-                               class="text-red-600 focus:ring-red-500 mr-4"
+                               class="text-gray-700 focus:ring-gray-500 mr-4"
                                ${answers[pregunta.id] == '0' ? 'checked' : ''}>
                         <div class="flex-1">
                             <div class="flex items-center mb-1">
-                                <div class="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-                                <div class="font-semibold text-red-800 group-hover:text-red-900">No me identifica</div>
+                                <div class="w-3 h-3 bg-gray-300 rounded-full mr-2"></div>
+                                <div class="font-semibold text-gray-800 group-hover:text-gray-900">No me identifica</div>
                             </div>
-                            <div class="text-sm text-red-600 font-medium"></div>
+                            <div class="text-sm text-gray-600 font-medium"></div>
                         </div>
-                        ${answers[pregunta.id] == '0' ? '<div class="absolute top-2 right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center"><svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>' : ''}
+                        ${answers[pregunta.id] == '1' ? '<div class="absolute top-2 right-2 w-6 h-6 bg-black rounded-full flex items-center justify-center"><svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>' : ''}
                     </label>
-                    <label class="group relative flex items-center p-5 bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-xl border-2 border-yellow-200 hover:border-yellow-400 hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-105">
+                    <label class="group respuesta-movil relative flex items-center w-full px-4 py-4 md:px-8 md:py-5 bg-blue-400 rounded-xl border-2 border-blue-400 hover:border-blue-500 hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-105 active:scale-95">
                         <input type="radio" name="respuestas[${pregunta.id}]" value="1"
-                               class="text-yellow-600 focus:ring-yellow-500 mr-4"
+                               class="text-gray-700 focus:ring-gray-500 mr-4"
                                ${answers[pregunta.id] == '1' ? 'checked' : ''}>
                         <div class="flex-1">
                             <div class="flex items-center mb-1">
-                                <div class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-                                <div class="font-semibold text-yellow-800 group-hover:text-yellow-900">Me identifica un poco</div>
+                                <div class="w-3 h-3 bg-blue-400 rounded-full mr-2"></div>
+                                <div class="font-semibold text-white group-hover:text-gray-100">Me identifica un poco</div>
                             </div>
-                            <div class="text-sm text-yellow-600 font-medium"></div>
+                            <div class="text-sm text-white/80 font-medium"></div>
                         </div>
-                        ${answers[pregunta.id] == '1' ? '<div class="absolute top-2 right-2 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center"><svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>' : ''}
+                        ${answers[pregunta.id] == '1' ? '<div class="absolute top-2 right-2 w-6 h-6 bg-blue-400 rounded-full flex items-center justify-center"><svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>' : ''}
                     </label>
-                    <label class="group relative flex items-center p-5 bg-gradient-to-r from-green-50 to-green-100 rounded-xl border-2 border-green-200 hover:border-green-400 hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-105">
+                    <label class="group respuesta-movil relative flex items-center w-full px-4 py-4 md:px-8 md:py-5 rounded-xl border-2 hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-105 active:scale-95" style="background-color: #131e58; border-color: #131e58;">
                         <input type="radio" name="respuestas[${pregunta.id}]" value="2"
-                               class="text-green-600 focus:ring-green-500 mr-4"
+                               class="text-gray-700 focus:ring-gray-500 mr-4"
                                ${answers[pregunta.id] == '2' ? 'checked' : ''}>
                         <div class="flex-1">
                             <div class="flex items-center mb-1">
-                                <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                                <div class="font-semibold text-green-800 group-hover:text-green-900">Me identifica mucho</div>
+                                <div class="w-3 h-3 rounded-full mr-2" style="background-color: #131e58;"></div>
+                                <div class="font-semibold text-white group-hover:text-gray-100">Me identifica mucho</div>
                             </div>
-                            <div class="text-sm text-green-600 font-medium"></div>
+                            <div class="text-sm text-white/80 font-medium"></div>
                         </div>
-                        ${answers[pregunta.id] == '2' ? '<div class="absolute top-2 right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center"><svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>' : ''}
+                        ${answers[pregunta.id] == '2' ? '<div class="absolute top-2 right-2 w-6 h-6 bg-black rounded-full flex items-center justify-center"><svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>' : ''}
                     </label>
                 </div>
             `;
@@ -312,9 +278,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Buscar la primera pregunta sin responder
         for (let i = 0; i < pageQuestions.length; i++) {
             const pregunta = pageQuestions[i];
-            const radios = document.querySelectorAll(`input[name="respuestas[${pregunta.id}]"]`);
+            const radios = document.querySelectorAll(`input[name=\"respuestas[${pregunta.id}]\"]`);
             const checked = Array.from(radios).some(radio => radio.checked);
-
             if (!checked) {
                 unansweredCount++;
                 if (firstUnansweredQuestion === null) {
@@ -330,30 +295,29 @@ document.addEventListener('DOMContentLoaded', function() {
             // Navegar automáticamente a la primera pregunta sin responder
             if (firstUnansweredQuestion) {
                 setTimeout(() => {
-                    const questionElement = document.querySelector(`input[name="respuestas[${firstUnansweredQuestion.id}]"]`);
+                    const questionElement = document.querySelector(`input[name=\"respuestas[${firstUnansweredQuestion.id}]\"]`);
                     if (questionElement) {
-                        // Encontrar el contenedor de la pregunta
-                        const questionContainer = questionElement.closest('.bg-gradient-to-r');
+                        // Encontrar el contenedor de la pregunta (el div padre con .bg-white.p-6)
+                        let questionContainer = questionElement.closest('.bg-white.p-6');
+                        if (!questionContainer) {
+                            // fallback: buscar el div padre con .rounded-2xl.shadow-md
+                            questionContainer = questionElement.closest('.rounded-2xl.shadow-md');
+                        }
                         if (questionContainer) {
-                            // Resaltar la pregunta faltante
                             questionContainer.classList.add('ring-4', 'ring-red-400', 'ring-opacity-50');
                             questionContainer.scrollIntoView({
                                 behavior: 'smooth',
                                 block: 'center'
                             });
-
-                            // Quitar el resaltado después de 3 segundos
                             setTimeout(() => {
                                 questionContainer.classList.remove('ring-4', 'ring-red-400', 'ring-opacity-50');
                             }, 3000);
                         }
                     }
-                }, 500); // Pequeño delay para que la notificación se muestre primero
+                }, 500);
             }
-
             return false;
         }
-
         return true;
     }
 
@@ -386,9 +350,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const start = page * questionsPerPage;
                 const end = Math.min(start + questionsPerPage, preguntas.length);
                 const pageQuestions = preguntas.slice(start, end);
-
                 for (const pregunta of pageQuestions) {
-                    const radios = document.querySelectorAll(`input[name="respuestas[${pregunta.id}]"]`);
+                    const radios = document.querySelectorAll(`input[name=\"respuestas[${pregunta.id}]\"]`);
                     const checked = Array.from(radios).some(radio => radio.checked);
                     if (!checked) {
                         unansweredCount++;
@@ -409,43 +372,44 @@ document.addEventListener('DOMContentLoaded', function() {
             if (firstUnansweredPage === currentPage) {
                 setTimeout(() => {
                     if (firstUnansweredQuestion) {
-                        const questionElement = document.querySelector(`input[name="respuestas[${firstUnansweredQuestion.id}]"]`);
+                        const questionElement = document.querySelector(`input[name=\"respuestas[${firstUnansweredQuestion.id}]\"]`);
                         if (questionElement) {
-                            const questionContainer = questionElement.closest('.bg-gradient-to-r');
+                            let questionContainer = questionElement.closest('.bg-white.p-6');
+                            if (!questionContainer) {
+                                questionContainer = questionElement.closest('.rounded-2xl.shadow-md');
+                            }
                             if (questionContainer) {
-                                // Resaltar la pregunta faltante con animación
                                 questionContainer.classList.add('ring-4', 'ring-red-400', 'ring-opacity-75', 'animate-pulse');
                                 questionContainer.scrollIntoView({
                                     behavior: 'smooth',
                                     block: 'center'
                                 });
-
-                                // Quitar el resaltado después de 4 segundos
                                 setTimeout(() => {
                                     questionContainer.classList.remove('ring-4', 'ring-red-400', 'ring-opacity-75', 'animate-pulse');
                                 }, 4000);
                             }
                         }
                     }
-                }, 500); // Delay para que la notificación se muestre
+                }, 500);
             } else {
                 // Si está en otra página, cambiar de página y luego resaltar
                 setTimeout(() => {
                     currentPage = firstUnansweredPage;
                     showQuestions(currentPage);
-
                     setTimeout(() => {
                         if (firstUnansweredQuestion) {
-                            const questionElement = document.querySelector(`input[name="respuestas[${firstUnansweredQuestion.id}]"]`);
+                            const questionElement = document.querySelector(`input[name=\"respuestas[${firstUnansweredQuestion.id}]\"]`);
                             if (questionElement) {
-                                const questionContainer = questionElement.closest('.bg-gradient-to-r');
+                                let questionContainer = questionElement.closest('.bg-white.p-6');
+                                if (!questionContainer) {
+                                    questionContainer = questionElement.closest('.rounded-2xl.shadow-md');
+                                }
                                 if (questionContainer) {
                                     questionContainer.classList.add('ring-4', 'ring-red-400', 'ring-opacity-75', 'animate-pulse');
                                     questionContainer.scrollIntoView({
                                         behavior: 'smooth',
                                         block: 'center'
                                     });
-
                                     setTimeout(() => {
                                         questionContainer.classList.remove('ring-4', 'ring-red-400', 'ring-opacity-75', 'animate-pulse');
                                     }, 4000);
@@ -455,10 +419,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     }, 300);
                 }, 1000);
             }
-
             return false;
         }
-
         return true;
     }
 
@@ -500,67 +462,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (totalUnanswered === 0) {
             // Todas las preguntas están respondidas - habilitar botón
             submitBtn.disabled = false;
-            submitBtn.className = 'inline-flex items-center px-8 py-4 bg-white hover:bg-[#f2f2f2] text-[#0b3be9] font-bold text-lg rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 cursor-pointer';
-            submitBtn.innerHTML = `
-                <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                </svg>
-                Ver Mis Resultados
-            `;
-        } else {
-            // Faltan preguntas - deshabilitar botón
-            submitBtn.disabled = true;
-            submitBtn.className = 'inline-flex items-center px-8 py-4 bg-gray-400 text-gray-600 font-bold text-lg rounded-xl shadow-lg cursor-not-allowed opacity-60';
-            submitBtn.innerHTML = `
-                <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                </svg>
-                Completa todas las preguntas para continuar (${totalUnanswered} faltante${totalUnanswered > 1 ? 's' : ''})
-            `;
-        }
-
-        return totalUnanswered === 0;
-    }
-
-    // Verificar si todas las preguntas del test están completadas y actualizar el botón
-    function checkTestCompletion() {
-        // Usar las respuestas guardadas en localStorage en lugar del DOM actual
-        const savedAnswers = JSON.parse(localStorage.getItem('test_answers_' + {{ $test_id }}) || '{}');
-
-        let totalUnanswered = 0;
-        let currentPageUnanswered = 0;
-
-        // Obtener preguntas de la página actual
-        const start = currentPage * questionsPerPage;
-        const end = Math.min(start + questionsPerPage, preguntas.length);
-        const currentPageQuestions = preguntas.slice(start, end);
-
-        // Contar preguntas sin respuesta en la página actual
-        for (const pregunta of currentPageQuestions) {
-            if (!savedAnswers[pregunta.id]) {
-                currentPageUnanswered++;
-            }
-        }
-
-        // Si estamos en la última página, solo verificar la página actual
-        // Si no estamos en la última página, verificar todas las preguntas
-        if (currentPage === totalPages - 1) {
-            totalUnanswered = currentPageUnanswered;
-        } else {
-            // Contar todas las preguntas sin respuesta guardada
-            for (const pregunta of preguntas) {
-                if (!savedAnswers[pregunta.id]) {
-                    totalUnanswered++;
-                }
-            }
-        }
-
-        const submitBtn = document.getElementById('submit-btn');
-
-        if (totalUnanswered === 0) {
-            // Todas las preguntas están respondidas - habilitar botón
-            submitBtn.disabled = false;
-            submitBtn.className = 'inline-flex items-center px-8 py-4 bg-white hover:bg-[#f2f2f2] text-[#0b3be9] font-bold text-lg rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 cursor-pointer';
+            submitBtn.className = 'inline-flex items-center px-8 py-4 bg-white hover:bg-gray-50 text-blue-600 font-bold text-lg rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 cursor-pointer';
             submitBtn.innerHTML = `
                 <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
@@ -651,14 +553,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Navegar a una página específica con validación mejorada
     function goToPage(page) {
-        if (page < currentPage && !validateCurrentPage()) {
-            return; // Ya muestra la notificación en validateCurrentPage
+        // Solo permitir retroceder si la página actual está validada
+        if (page > currentPage) {
+            // Si intenta avanzar, validar primero
+            if (!validateCurrentPage()) {
+                // El scroll ya se maneja en validateCurrentPage
+                return;
+            }
         }
-
         saveAnswers();
         currentPage = page;
         showQuestions(currentPage);
-
         // Scroll suave hacia arriba
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -666,7 +571,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Event listeners mejorados
     prevBtn.addEventListener('click', () => goToPage(currentPage - 1));
     nextBtn.addEventListener('click', () => {
+        // Siempre validar antes de avanzar, en móvil y desktop
         if (!validateCurrentPage()) {
+            // El scroll ya se maneja en validateCurrentPage
             return;
         }
         goToPage(currentPage + 1);
@@ -741,8 +648,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* Mejores estilos para los radio buttons */
 input[type="radio"] {
-    transform: scale(1.2);
+    transform: scale(1.15);
     accent-color: currentColor;
+    margin-right: 0.85rem;
 }
 
 input[type="radio"]:checked {
@@ -754,15 +662,62 @@ input[type="radio"]:checked {
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
+/* Mejores efectos táctiles para móvil */
+@media (hover: none) and (pointer: coarse) {
+    .group:active {
+        transform: scale(0.98);
+        transition: transform 0.1s ease-out;
+    }
+
+    .group {
+        transition: all 0.2s ease-out;
+    }
+}
+
 /* Responsive improvements */
 @media (max-width: 768px) {
     .ml-17 {
-        margin-left: 1rem;
+        margin-left: 0;
     }
 
-    .grid-cols-1.md\\:grid-cols-3 {
-        grid-template-columns: 1fr;
+    /* Más separación entre número y pregunta */
+    .numero-pregunta-movil {
+        margin-right: 2.2rem !important;
+    }
+
+    /* Hacer los cuadros de respuesta más anchos */
+    .respuesta-movil {
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        min-height: 3.1rem;
+        font-size: 1.07rem;
+    }
+
+    /* Mejorar espaciado en móvil */
+    .grid.grid-cols-1.md\\:grid-cols-3 {
         gap: 0.75rem;
+    }
+
+    /* Mejorar apariencia de las opciones en móvil */
+    .group {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .group:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Mejorar texto en móvil */
+    .group .font-semibold {
+        font-size: 0.95rem;
+        line-height: 1.3;
+    }
+
+    /* Mejorar radio buttons en móvil */
+    input[type="radio"] {
+        transform: scale(1.3);
+        margin-right: 0.75rem;
     }
 }
 </style>
