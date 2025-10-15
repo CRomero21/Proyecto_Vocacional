@@ -32,12 +32,22 @@
             @php
                 $porcentajes = $resultados['porcentajes'] ?? [];
                 arsort($porcentajes);
+                
+                // Mapeo de tipos RIASEC para mostrar letra y nombre completo
+                $tipoNombres = [
+                    'R' => 'R (Realista)',
+                    'I' => 'I (Investigador)',
+                    'A' => 'A (Artista)',
+                    'S' => 'S (Social)',
+                    'E' => 'E (Emprendedor)',
+                    'C' => 'C (Convencional)'
+                ];
             @endphp
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 @foreach($porcentajes as $tipo => $porcentaje)
                     <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border-l-4 border-blue-500">
                         <div class="flex items-center justify-between">
-                            <div class="text-2xl font-bold text-blue-700">{{ $tipo }}</div>
+                            <div class="text-2xl font-bold text-blue-700">{{ $tipoNombres[$tipo] ?? $tipo }}</div>
                             <div class="text-3xl font-extrabold text-blue-900">{{ $porcentaje }}%</div>
                         </div>
                         <div class="text-sm text-gray-600 mt-3">{{ $tiposPersonalidad[$tipo] ?? 'Descripción no disponible' }}</div>
@@ -107,8 +117,6 @@
                                         @endforeach
                                     </div>
                                 </div>
-                            @else
-                                <div class="mt-4 text-xs text-gray-400 bg-gray-50 p-3 rounded">No hay universidades registradas para esta carrera.</div>
                             @endif
                         </div>
                     @endforeach
@@ -181,8 +189,6 @@
                                         @endforeach
                                     </div>
                                 </div>
-                            @else
-                                <div class="mt-4 text-xs text-gray-400 bg-gray-50 p-3 rounded">No hay universidades registradas para esta carrera.</div>
                             @endif
                         </div>
                     @endforeach
@@ -309,7 +315,7 @@
                 <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
-                ¡Tu Opinión Nos Ayuda! 😊
+                ¡Tu Opinión Nos Ayuda! 
             </h2>
 
             {{-- Mostrar retroalimentación existente --}}
@@ -430,7 +436,7 @@
                             </svg>
                             Comentario (opcional)
                         </label>
-                        <textarea name="comentario" id="comentario" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="¡Comparte tus pensamientos! ¿Qué te gustó? ¿Qué podríamos mejorar? 😊"></textarea>
+                        <textarea name="comentario" id="comentario" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="¡Comparte tus pensamientos! ¿Qué te gustó? ¿Qué podríamos mejorar? "></textarea>
                     </div>
                     <div class="mb-4">
                         <label for="carrera_seleccionada" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
@@ -465,6 +471,21 @@
     </div>
 </div>
 
+{{-- Footer with Download Button --}}
+<div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-6">
+    <div class="container mx-auto px-4 text-center">
+        <a href="{{ route('test.exportarPDF', $test->id) }}" 
+           class="inline-flex items-center px-6 py-3 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition-all duration-300 font-semibold shadow-lg transform hover:scale-105">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M12 4v16m8-8H4" />
+            </svg>
+            Descargar PDF
+        </a>
+    </div>
+</div>
+
+@endsection
+
 <script>
 function toggleUniversidades(id) {
     var el = document.getElementById(id);
@@ -473,5 +494,3 @@ function toggleUniversidades(id) {
     }
 }
 </script>
-
-@endsection

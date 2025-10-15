@@ -119,6 +119,25 @@ class TestController extends Controller
         $carrerasPrincipales = $resultados['recomendaciones']['afines'] ?? [];
         $carrerasSecundarias = $resultados['recomendaciones']['relacionadas'] ?? [];
 
+        // Normalizar universidades: eliminar placeholders (id null) para que el botón solo aparezca si hay vínculos reales
+        $normalizar = function ($recs) {
+            foreach ($recs as &$rec) {
+                if (!empty($rec['universidades'])) {
+                    $rec['universidades'] = array_values(array_filter($rec['universidades'], function ($u) {
+                        if (is_array($u)) {
+                            return !empty($u['id']);
+                        }
+                        // stdClass u objeto
+                        return !empty($u->id ?? null);
+                    }));
+                }
+            }
+            return $recs;
+        };
+
+        $carrerasPrincipales = $normalizar($carrerasPrincipales);
+        $carrerasSecundarias = $normalizar($carrerasSecundarias);
+
         return view('test.resultados', compact(
             'test',
             'tiposPersonalidad',
@@ -385,19 +404,7 @@ class TestController extends Controller
                     ->get()
                     ->toArray();
 
-                // Si no hay universidades, mostrar mensaje claro
-                if (empty($universidades)) {
-                    $universidades = [
-                        [
-                            'id' => null,
-                            'nombre' => 'No hay universidades registradas para esta carrera.',
-                            'departamento' => 'Consulta con instituciones locales para más opciones.',
-                            'tipo' => null,
-                            'acreditada' => false,
-                            'sitio_web' => null
-                        ]
-                    ];
-                }
+                // Si no hay universidades, dejar vacío (no mostrar botón)
 
                 $recomendaciones[] = [
                     'carrera_id' => $carrera->id,
@@ -506,6 +513,30 @@ class TestController extends Controller
     {
         $test = \App\Models\Test::findOrFail($id);
         $resultados = $this->getResultadosArray($test->resultados);
+        
+        // Normalizar universidades en recomendaciones para evitar placeholders en PDFs antiguos
+        if (isset($resultados['recomendaciones'])) {
+            $normalizar = function ($recs) {
+                if (!is_array($recs)) return $recs;
+                foreach ($recs as &$rec) {
+                    if (!empty($rec['universidades']) && is_array($rec['universidades'])) {
+                        $rec['universidades'] = array_values(array_filter($rec['universidades'], function ($u) {
+                            if (is_array($u)) {
+                                return !empty($u['id']);
+                            }
+                            return !empty($u->id ?? null);
+                        }));
+                    }
+                }
+                return $recs;
+            };
+            if (isset($resultados['recomendaciones']['afines'])) {
+                $resultados['recomendaciones']['afines'] = $normalizar($resultados['recomendaciones']['afines']);
+            }
+            if (isset($resultados['recomendaciones']['relacionadas'])) {
+                $resultados['recomendaciones']['relacionadas'] = $normalizar($resultados['recomendaciones']['relacionadas']);
+            }
+        }
         $tiposPersonalidad = $this->tiposPersonalidad();
 
         // Calcular tipos dominantes y recomendaciones (manejar empates)

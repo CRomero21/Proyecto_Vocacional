@@ -173,14 +173,24 @@
 
     <h2>Tu perfil RIASEC</h2>
     @if(!empty($resultados['porcentajes']))
+        @php
+            $porcentajes = $resultados['porcentajes'];
+            arsort($porcentajes); // Ordenar por dominancia
+            
+            // Mapeo de tipos RIASEC para mostrar letra y nombre completo
+            $tipoNombres = [
+                'R' => 'R (Realista)',
+                'I' => 'I (Investigador)',
+                'A' => 'A (Artista)',
+                'S' => 'S (Social)',
+                'E' => 'E (Emprendedor)',
+                'C' => 'C (Convencional)'
+            ];
+        @endphp
         <ul class="perfil-list">
-            @php
-                $porcentajes = $resultados['porcentajes'];
-                arsort($porcentajes); // Ordenar por dominancia
-            @endphp
             @foreach($porcentajes as $tipo => $valor)
                 <li>
-                    <span class="badge">{{ $tipo }}</span>
+                    <span class="badge">{{ $tipoNombres[$tipo] ?? $tipo }}</span>
                     <strong>{{ $valor }}%</strong>
                     <span class="sec">{{ $tiposPersonalidad[$tipo] ?? 'Descripción no disponible' }}</span>
                 </li>
@@ -193,6 +203,10 @@
     <h2>Carreras principales recomendadas</h2>
     @php
         $carrerasPrincipales = $resultados['recomendaciones']['afines'] ?? [];
+        $hayUniversidadesPrincipales = false;
+        foreach ($carrerasPrincipales as $c) {
+            if (!empty($c['universidades'])) { $hayUniversidadesPrincipales = true; break; }
+        }
     @endphp
     @if(count($carrerasPrincipales) > 0)
         <table>
@@ -200,7 +214,9 @@
                 <tr>
                     <th>Carrera</th>
                     <th>Área</th>
-                    <th>Universidades</th>
+                    @if($hayUniversidadesPrincipales)
+                        <th>Universidades</th>
+                    @endif
                 </tr>
             </thead>
             <tbody>
@@ -212,22 +228,22 @@
                             <div class="desc">{{ $carrera['descripcion'] ?? 'Descripción no disponible' }}</div>
                         </td>
                         <td>{{ $carrera['area'] ?? 'Área no disponible' }}</td>
-                        <td>
-                            @if(!empty($carrera['universidades']))
-                                <ul class="universidad-list">
-                                    @foreach($carrera['universidades'] as $uni)
-                                        <li>
-                                            {{ is_array($uni) ? ($uni['nombre'] ?? 'Nombre no disponible') : ($uni->nombre ?? 'Nombre no disponible') }}
-                                            @if((is_array($uni) ? ($uni['acreditada'] ?? false) : ($uni->acreditada ?? false)))
-                                                <span class="badge badge-acreditada">Acreditada</span>
-                                            @endif
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            @else
-                                <span class="sec">Sin universidades registradas</span>
-                            @endif
-                        </td>
+                        @if($hayUniversidadesPrincipales)
+                            <td>
+                                @if(!empty($carrera['universidades']))
+                                    <ul class="universidad-list">
+                                        @foreach($carrera['universidades'] as $uni)
+                                            <li>
+                                                {{ is_array($uni) ? ($uni['nombre'] ?? 'Nombre no disponible') : ($uni->nombre ?? 'Nombre no disponible') }}
+                                                @if((is_array($uni) ? ($uni['acreditada'] ?? false) : ($uni->acreditada ?? false)))
+                                                    <span class="badge badge-acreditada">Acreditada</span>
+                                                @endif
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                @endif
+                            </td>
+                        @endif
                     </tr>
                 @endforeach
             </tbody>
@@ -239,6 +255,10 @@
     <h2>Otras carreras relacionadas</h2>
     @php
         $carrerasRelacionadas = $resultados['recomendaciones']['relacionadas'] ?? [];
+        $hayUniversidadesRelacionadas = false;
+        foreach ($carrerasRelacionadas as $c) {
+            if (!empty($c['universidades'])) { $hayUniversidadesRelacionadas = true; break; }
+        }
     @endphp
     @if(count($carrerasRelacionadas) > 0)
         <table>
@@ -246,7 +266,9 @@
                 <tr>
                     <th>Carrera</th>
                     <th>Área</th>
-                    <th>Universidades</th>
+                    @if($hayUniversidadesRelacionadas)
+                        <th>Universidades</th>
+                    @endif
                 </tr>
             </thead>
             <tbody>
@@ -257,22 +279,22 @@
                             <div class="desc">{{ $carrera['descripcion'] ?? 'Descripción no disponible' }}</div>
                         </td>
                         <td>{{ $carrera['area'] ?? 'Área no disponible' }}</td>
-                        <td>
-                            @if(!empty($carrera['universidades']))
-                                <ul class="universidad-list">
-                                    @foreach($carrera['universidades'] as $uni)
-                                        <li>
-                                            {{ is_array($uni) ? ($uni['nombre'] ?? 'Nombre no disponible') : ($uni->nombre ?? 'Nombre no disponible') }}
-                                            @if((is_array($uni) ? ($uni['acreditada'] ?? false) : ($uni->acreditada ?? false)))
-                                                <span class="badge badge-acreditada">Acreditada</span>
-                                            @endif
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            @else
-                                <span class="sec">Sin universidades registradas</span>
-                            @endif
-                        </td>
+                        @if($hayUniversidadesRelacionadas)
+                            <td>
+                                @if(!empty($carrera['universidades']))
+                                    <ul class="universidad-list">
+                                        @foreach($carrera['universidades'] as $uni)
+                                            <li>
+                                                {{ is_array($uni) ? ($uni['nombre'] ?? 'Nombre no disponible') : ($uni->nombre ?? 'Nombre no disponible') }}
+                                                @if((is_array($uni) ? ($uni['acreditada'] ?? false) : ($uni->acreditada ?? false)))
+                                                    <span class="badge badge-acreditada">Acreditada</span>
+                                                @endif
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                @endif
+                            </td>
+                        @endif
                     </tr>
                 @endforeach
             </tbody>
@@ -304,12 +326,12 @@
         
         // Mapeo de tipos RIASEC a áreas de estudio
         $mapeoAreas = [
-            'R (Realista)' => ['area' => 'Ingeniería, Tecnología o Ciencias Naturales', 'descripcion' => 'Áreas prácticas y técnicas que involucran trabajo con objetos, máquinas y resolución de problemas concretos, alineadas con tu enfoque realista y orientado a la acción.'],
-            'I (Investigador)' => ['area' => 'Ciencias, Matemáticas o Investigación', 'descripcion' => 'Áreas analíticas y científicas que requieren pensamiento lógico, observación y resolución de problemas complejos, ideales para tu curiosidad intelectual.'],
-            'A (Artista)' => ['area' => 'Artes, Humanidades o Diseño', 'descripcion' => 'Áreas creativas y expresivas que permiten la innovación, auto-expresión y trabajo sin estructuras rígidas, perfectas para tu sensibilidad artística.'],
-            'S (Social)' => ['area' => 'Ciencias Sociales, Educación o Salud', 'descripcion' => 'Áreas relacionadas con personas, servicio y empatía, donde puedes ayudar, enseñar y trabajar en entornos colaborativos, aprovechando tu amabilidad social.'],
-            'E (Emprendedor)' => ['area' => 'Administración, Economía o Negocios', 'descripcion' => 'Áreas de liderazgo, gestión y toma de riesgos, donde puedes convencer a otros y lograr objetivos ambiciosos, reflejando tu personalidad emprendedora.'],
-            'C (Convencional)' => ['area' => 'Contabilidad, Finanzas o Administración', 'descripcion' => 'Áreas organizadas y detalladas que involucran procedimientos establecidos, datos y precisión, ideales para tu enfoque convencional y meticuloso.']
+            'R' => ['area' => 'Ingeniería, Tecnología o Ciencias Naturales', 'descripcion' => 'Áreas prácticas y técnicas que involucran trabajo con objetos, máquinas y resolución de problemas concretos, alineadas con tu enfoque realista y orientado a la acción.'],
+            'I' => ['area' => 'Ciencias, Matemáticas o Investigación', 'descripcion' => 'Áreas analíticas y científicas que requieren pensamiento lógico, observación y resolución de problemas complejos, ideales para tu curiosidad intelectual.'],
+            'A' => ['area' => 'Artes, Humanidades o Diseño', 'descripcion' => 'Áreas creativas y expresivas que permiten la innovación, auto-expresión y trabajo sin estructuras rígidas, perfectas para tu sensibilidad artística.'],
+            'S' => ['area' => 'Ciencias Sociales, Educación o Salud', 'descripcion' => 'Áreas relacionadas con personas, servicio y empatía, donde puedes ayudar, enseñar y trabajar en entornos colaborativos, aprovechando tu amabilidad social.'],
+            'E' => ['area' => 'Administración, Economía o Negocios', 'descripcion' => 'Áreas de liderazgo, gestión y toma de riesgos, donde puedes convencer a otros y lograr objetivos ambiciosos, reflejando tu personalidad emprendedora.'],
+            'C' => ['area' => 'Contabilidad, Finanzas o Administración', 'descripcion' => 'Áreas organizadas y detalladas que involucran procedimientos establecidos, datos y precisión, ideales para tu enfoque convencional y meticuloso.']
         ];
     @endphp
     
@@ -320,7 +342,7 @@
                 $tipoDominante = $tiposDominantes[0];
                 $recomendacion = $mapeoAreas[$tipoDominante] ?? ['area' => 'Áreas generales de estudio', 'descripcion' => 'Consulta con un orientador para recomendaciones personalizadas.'];
             @endphp
-            <p>Según tu perfil RIASEC dominante (<strong>{{ $tipoDominante }}</strong>), te recomendamos explorar áreas de estudio como: <strong>{{ $recomendacion['area'] }}</strong></p>
+            <p>Según tu perfil RIASEC dominante (<strong>{{ $tipoNombres[$tipoDominante] ?? $tipoDominante }}</strong>), te recomendamos explorar áreas de estudio como: <strong>{{ $recomendacion['area'] }}</strong></p>
             <p class="sec">{{ $recomendacion['descripcion'] }}</p>
         @else
             <!-- Caso: Múltiples tipos dominantes (empate) -->
@@ -330,7 +352,7 @@
                     $recomendacion = $mapeoAreas[$tipo] ?? ['area' => 'Áreas generales de estudio', 'descripcion' => 'Consulta con un orientador para recomendaciones personalizadas.'];
                 @endphp
                 <div style="margin-bottom: 15px; padding: 10px; background: #f0f0f0; border-radius: 6px;">
-                    <p><strong>Perfil {{ $tipo }} ({{ $maxPorcentaje }}%):</strong> {{ $recomendacion['area'] }}</p>
+                    <p><strong>Perfil {{ $tipoNombres[$tipo] ?? $tipo }} ({{ $maxPorcentaje }}%):</strong> {{ $recomendacion['area'] }}</p>
                     <p class="sec">{{ $recomendacion['descripcion'] }}</p>
                 </div>
             @endforeach
