@@ -53,7 +53,9 @@
             <div class="p-8">
                 <form action="{{ route('test.guardar') }}" method="POST" id="test-form">
                     @csrf
-                    <input type="hidden" name="test_id" value="{{ $test_id }}">
+                    @if(isset($draftId))
+                        <input type="hidden" name="draft_id" value="{{ $draftId }}">
+                    @endif
 
                     @if(session('error'))
                         <div class="bg-red-50 border-l-4 border-red-400 text-red-700 p-4 mb-6 rounded-xl shadow-sm" role="alert">
@@ -137,7 +139,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const questionsPerPage = 10; // Mostrar 10 preguntas por página
     let currentPage = 0;
     const totalPages = Math.ceil(preguntas.length / questionsPerPage);
-    const answers = JSON.parse(localStorage.getItem('test_answers_' + {{ $test_id }}) || '{}');
+    const draftId = @json($draftId ?? 'legacy');
+    const answers = JSON.parse(localStorage.getItem('test_answers_' + draftId) || '{}');
 
     const container = document.getElementById('questions-container');
     const prevBtn = document.getElementById('prev-btn');
@@ -203,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                             <div class="text-sm text-gray-600 font-medium"></div>
                         </div>
-                        ${answers[pregunta.id] == '1' ? '<div class="absolute top-2 right-2 w-6 h-6 bg-black rounded-full flex items-center justify-center"><svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>' : ''}
+                        ${answers[pregunta.id] == '0' ? '<div class="absolute top-2 right-2 w-6 h-6 bg-black rounded-full flex items-center justify-center"><svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>' : ''}
                     </label>
                     <label class="group respuesta-movil relative flex items-center w-full px-4 py-4 md:px-8 md:py-5 bg-blue-400 rounded-xl border-2 border-blue-400 hover:border-blue-500 hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-105 active:scale-95">
                         <input type="radio" name="respuestas[${pregunta.id}]" value="1"
@@ -426,34 +429,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Verificar si todas las preguntas del test están completadas y actualizar el botón
     function checkTestCompletion() {
-        // Usar las respuestas guardadas en localStorage en lugar del DOM actual
-        const savedAnswers = JSON.parse(localStorage.getItem('test_answers_' + {{ $test_id }}) || '{}');
-
-        let totalUnanswered = 0;
-        let currentPageUnanswered = 0;
-
-        // Obtener preguntas de la página actual
-        const start = currentPage * questionsPerPage;
-        const end = Math.min(start + questionsPerPage, preguntas.length);
-        const currentPageQuestions = preguntas.slice(start, end);
-
-        // Contar preguntas sin respuesta en la página actual
-        for (const pregunta of currentPageQuestions) {
-            if (!savedAnswers[pregunta.id]) {
-                currentPageUnanswered++;
+        // Mezclar respuestas guardadas con las actuales del formulario para tener el estado más reciente
+        const savedAnswers = JSON.parse(localStorage.getItem('test_answers_' + draftId) || '{}');
+        const formData = new FormData(document.getElementById('test-form'));
+        for (const [key, value] of formData.entries()) {
+            if (key.startsWith('respuestas[')) {
+                const pid = key.match(/respuestas\[(\d+)\]/)[1];
+                savedAnswers[pid] = value; // priorizar lo actual del DOM
             }
         }
 
-        // Si estamos en la última página, solo verificar la página actual
-        // Si no estamos en la última página, verificar todas las preguntas
-        if (currentPage === totalPages - 1) {
-            totalUnanswered = currentPageUnanswered;
-        } else {
-            // Contar todas las preguntas sin respuesta guardada
-            for (const pregunta of preguntas) {
-                if (!savedAnswers[pregunta.id]) {
-                    totalUnanswered++;
-                }
+        let totalUnanswered = 0;
+        // Validar SIEMPRE todas las preguntas (garantía de 60/60 respondidas)
+        for (const pregunta of preguntas) {
+            if (savedAnswers[pregunta.id] === undefined || savedAnswers[pregunta.id] === null || savedAnswers[pregunta.id] === '') {
+                totalUnanswered++;
             }
         }
 
@@ -525,7 +515,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function saveAnswers() {
         const formData = new FormData(document.getElementById('test-form'));
         // Obtener respuestas guardadas previamente
-        const savedAnswers = JSON.parse(localStorage.getItem('test_answers_' + {{ $test_id }}) || '{}');
+    const savedAnswers = JSON.parse(localStorage.getItem('test_answers_' + draftId) || '{}');
         const currentAnswers = { ...savedAnswers }; // Copiar respuestas guardadas
 
         // Actualizar con las respuestas de la página actual
@@ -536,7 +526,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        localStorage.setItem('test_answers_' + {{ $test_id }}, JSON.stringify(currentAnswers));
+    localStorage.setItem('test_answers_' + draftId, JSON.stringify(currentAnswers));
 
         // Feedback visual sutil de guardado automático
         const saveIndicator = document.createElement('div');
@@ -596,8 +586,31 @@ document.addEventListener('DOMContentLoaded', function() {
             showNotification('Debes completar todas las preguntas del test antes de ver los resultados.', 'warning');
             return false;
         }
+        // Asegurar que TODAS las respuestas (de todas las páginas) se envíen al servidor
+        const form = document.getElementById('test-form');
+        // Fusionar localStorage con el estado actual del DOM para que la última página no quede desfasada
+        const savedAnswersAll = JSON.parse(localStorage.getItem('test_answers_' + draftId) || '{}');
+        const formDataNow = new FormData(form);
+        for (const [key, value] of formDataNow.entries()) {
+            if (key.startsWith('respuestas[')) {
+                const pid = key.match(/respuestas\[(\d+)\]/)[1];
+                savedAnswersAll[pid] = value; // actualizar con lo último marcado
+            }
+        }
+        // Eliminar clones previos si existen
+        form.querySelectorAll('input.answer-clone').forEach(el => el.remove());
+        // Agregar inputs ocultos para cada respuesta guardada
+        Object.keys(savedAnswersAll).forEach((pid) => {
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = `respuestas[${pid}]`;
+            hidden.value = String(savedAnswersAll[pid]);
+            hidden.className = 'answer-clone';
+            form.appendChild(hidden);
+        });
 
-        localStorage.removeItem('test_answers_' + {{ $test_id }});
+        // Limpiar storage sólo después de preparar el envío
+        localStorage.removeItem('test_answers_' + draftId);
         showNotification('¡Enviando tus respuestas! Procesando resultados...', 'success');
     });
 

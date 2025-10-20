@@ -1,0 +1,152 @@
+1. Resumen ejecutivo
+• Proyecto: Sistema de orientación vocacional (Laravel + MySQL) desplegado en Hostinger.
+• Objetivo de cambios: mejorar UX móvil/escritorio, exactitud de datos, consistencia en producción y claridad de reportes.
+• Estado: estable en producción; sin eliminación de datos históricos. Exportaciones (CSV/PDF) y gráficas corregidas y funcionando.
+
+2. Arquitectura y entorno
+• Framework: Laravel (MVC).
+• BD: MySQL/MariaDB.
+• Patrón: MVC con Eloquent ORM y Blade en vistas.
+• Despliegue: Hostinger (PHP-FPM), Vite para assets.
+• Autenticación: sesiones Laravel; contraseñas con bcrypt; protección CSRF; throttle de login activo.
+
+3. Cambios funcionales clave
+• Persistencia diferida del test:
+  o No se crea registro en tests al iniciar.
+  o Se genera draftId (UUID) en sesión.
+  o Respuestas se guardan en localStorage con clave test_answers_{draftId}.
+  o Se crea el Test y sus Respuestas solo al finalizar (transacción).
+  o No se elimina ningún test existente (sin limpieza masiva).
+• Validación estricta de avance:
+  o No permite avanzar si faltan respuestas.
+  o Scroll automático a la primera pregunta faltante y resaltado (móvil y escritorio).
+  o Indicadores de página deshabilitados como navegación (solo guía visual).
+
+4. UI/UX del test (móvil y escritorio)
+• Respuestas:
+  o Ancho completo en móvil; radio totalmente dentro del cuadro.
+  o Separación mayor entre número y enunciado.
+  o Botones de respuesta con tamaño uniforme; ajuste de padding para móvil.
+• Paleta de respuestas:
+  o No me identifica: #c8c8c8.
+  o Me identifica un poco: #00aeff.
+  o Me identifica mucho: #131e58 (forzado inline para evitar purgado en producción).
+  o Checkmark negro en las tres opciones.
+  o Inputs radio unificados: class="text-gray-700 focus:ring-gray-500 mr-4".
+
+5. Resultados y PDF
+• RIASEC mostrado como letra + nombre: “R (Realista)”, “I (Investigador)”, “A (Artista)”, “S (Social)”, “E (Emprendedor)”, “C (Convencional)”.
+• Recomendación de área basada en dominante o empates.
+• Botón “Descargar PDF” con esquema de color de la línea gráfica, presente arriba y abajo de la vista (desktop y móvil).
+• PDF:
+  o Mismo mapeo RIASEC.
+  o Sin mensajes de “no hay universidades”.
+  o La columna “Universidades” se oculta si ninguna carrera del bloque tiene vínculos; celdas se dejan vacías si faltan.
+  o Mejora de calidad en curso: mayor escala de captura (html2canvas), encabezado con filtros aplicados y pie con numeración de páginas; márgenes consistentes.
+
+6. Lógica de universidades en resultados
+• Eliminado el placeholder de universidades (id null).
+• Normalización en controlador: se filtran placeholders heredados antes de renderizar.
+• Botón “Ver universidades (n)” solo aparece si existen universidades realmente vinculadas a la carrera.
+• En ausencia de universidades, no se muestra botón ni bloque.
+
+7. Rendimiento y consultas
+• Optimizaciones con Eloquent:
+  o Carga diferida controlada para evitar N+1.
+  o Uso de colecciones y recálculo de porcentajes en memoria cuando es viable.
+• Estadísticas:
+  o Consolidación a una sola inyección de JSON embebido para todas las gráficas.
+• Exportaciones:
+  o CSV “Windows-friendly” con BOM UTF-8 y separador “;”.
+
+8. Consistencia en producción
+• Sustitución de clases arbitrarias de color por:
+  o Clases Tailwind estándar o estilos inline (para #131e58) para evitar purgado en build.
+• Chart.js robusto:
+  o Eje de edad “category”, sin autoskip, rotación 0°, offset y padding; re-render/resize tras load para estabilizar etiquetas.
+  o Leyendas laterales generadas con estilos inline para evitar purge de Tailwind.
+• Dropdowns:
+  o Opciones forzadas en negro; valor seleccionado legible sobre fondo.
+
+9. Accesibilidad y microinteracciones
+• Estados activos/feedback táctil en móvil.
+• Transiciones suaves y sombras sutiles.
+• Contraste de texto garantizado con la nueva paleta.
+• Navegación por teclado viable (focus visible en controles clave).
+
+10. Archivos impactados (principales)
+• realizar.blade.php
+• resultados.blade.php
+• resultados_pdf.blade.php
+• TestController.php (iniciar, guardar y normalización de datos)
+• InformeAvanzadoController.php + vistas (index/pdf)
+• EstadisticasController.php
+• resources/views/admin/estadisticas/index.blade.php
+
+11. Riesgos y mitigaciones
+• Pérdida de progreso si se limpia el navegador: mitigado con localStorage por draftId y validaciones de avance.
+• Purgado de Tailwind en producción: mitigado con estilos inline para colores corporativos específicos y leyendas/elementos dinámicos.
+• PDF borroso/desalineado: mitigado con escala de captura mayor, márgenes consistentes y header/footer.
+• CSV incompatible: mitigado con BOM UTF-8 y “;” (Excel Windows).
+
+12. Recomendaciones operativas
+• Tras cada despliegue en Hostinger:
+  o php artisan view:clear
+  o php artisan cache:clear
+  o php artisan config:clear
+  o php artisan route:clear
+• Verificar en producción:
+  o Que el botón “Ver universidades” solo aparezca con vínculos reales.
+  o Que al iniciar un test no se cree registro en BD hasta finalizar.
+  o Que todas las gráficas muestren datos y etiquetas; leyenda lateral de edad visible.
+  o Que CSV/PDF se generen correctamente.
+
+13. Próximos pasos sugeridos (opcionales)
+• Guardado parcial server-side (draft en BD) para continuidad entre dispositivos.
+• Métricas de conversión (inicio vs finalización del test).
+• Página de administración para gestionar universidades por carrera.
+• Finalizar mejoras del PDF (encabezado, pie y paginado estable).
+
+14. Seguridad y cumplimiento
+• Roles/permisos para acceso a informes y exportaciones.
+• Secretos solo en .env (APP_KEY, DB); HTTPS forzado.
+• Evitar PII en logs y exportar datos agregados cuando sea posible.
+• Cookies/Sesión: SameSite y tiempos de expiración adecuados.
+
+15. Observabilidad y monitoreo
+• Logs con rotación (daily) y niveles adecuados; contexto en errores de exportar.
+• Considerar Sentry/Rollbar para excepciones cliente/servidor.
+• Healthcheck básico (DB y permisos de storage).
+
+16. KPIs y métricas
+• Conversión del test (inicio→fin) y tiempo promedio.
+• Uso de informes (filtros aplicados, descargas CSV/PDF).
+• Calidad: tasa de errores de exportación; “soft 404” de universidades (objetivo = 0).
+
+17. QA y pruebas
+• Unit/Feature:
+  o exportarExcel: BOM UTF-8 + “;”, secciones y porcentajes.
+  o Filtros (período/departamento/género) afectan agregaciones (edad/género/personalidad/carreras).
+  o Informes Avanzados: reemplazo de “distribución por tipo de personalidad” por “distribución por sexo” en UI/PDF/CSV.
+• Vista:
+  o Leyendas y etiquetas en edad visibles en producción (sin clases purgadas).
+• Manual:
+  o Navegación móvil; descargas PDF/CSV; validación de vínculos de universidades.
+
+18. Runbook de despliegue y rollback
+• Despliegue:
+  o Subir build, limpiar cachés (view/cache/config/route), pruebas de humo.
+• Rollback:
+  o Restaurar build anterior, limpiar cachés, revisar logs de errores.
+
+19. Mantenibilidad y deuda técnica
+• Centralizar utilidades de Chart.js para reuso y menos duplicación.
+• Documentar el formato del JSON de estadísticas y la paleta corporativa.
+• Añadir índices en DB sobre campos de filtro (fecha, departamento_id, genero).
+• Evaluar PDF server-side si la complejidad crece (Snappy/wkhtmltopdf).
+
+20. Anexos
+• Paleta: #0b3be9, #0079f4, #00aeff, #051a9a, #131e58.
+• Rango de edades: 16–19, 20–22, 23–25, 26–30, 31+.
+• CSV: UTF-8 BOM; separador “;”; secciones con filtros + porcentajes.
+• Chart.js (Edad): eje “category”, no autoskip, rotación 0°, offset, padding; re-render tras load; leyenda lateral HTML con estilos inline para evitar purge.

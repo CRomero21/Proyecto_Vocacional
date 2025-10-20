@@ -310,20 +310,8 @@
     @php
         $porcentajes = $resultados['porcentajes'] ?? [];
         arsort($porcentajes); // Ordenar de mayor a menor
-        
-        // Encontrar el porcentaje máximo
-        $maxPorcentaje = reset($porcentajes);
-        
-        // Identificar todos los tipos que tienen el porcentaje máximo (manejar empates)
-        $tiposDominantes = [];
-        foreach ($porcentajes as $tipo => $porcentaje) {
-            if ($porcentaje === $maxPorcentaje) {
-                $tiposDominantes[] = $tipo;
-            } else {
-                break; // Como está ordenado, podemos parar cuando encontremos un porcentaje menor
-            }
-        }
-        
+        $top2 = array_slice($porcentajes, 0, 2, true); // exactamente dos
+
         // Mapeo de tipos RIASEC a áreas de estudio
         $mapeoAreas = [
             'R' => ['area' => 'Ingeniería, Tecnología o Ciencias Naturales', 'descripcion' => 'Áreas prácticas y técnicas que involucran trabajo con objetos, máquinas y resolución de problemas concretos, alineadas con tu enfoque realista y orientado a la acción.'],
@@ -334,32 +322,19 @@
             'C' => ['area' => 'Contabilidad, Finanzas o Administración', 'descripcion' => 'Áreas organizadas y detalladas que involucran procedimientos establecidos, datos y precisión, ideales para tu enfoque convencional y meticuloso.']
         ];
     @endphp
-    
-    @if(count($tiposDominantes) > 0)
-        @if(count($tiposDominantes) === 1)
-            <!-- Caso: Solo un tipo dominante -->
-            @php
-                $tipoDominante = $tiposDominantes[0];
-                $recomendacion = $mapeoAreas[$tipoDominante] ?? ['area' => 'Áreas generales de estudio', 'descripcion' => 'Consulta con un orientador para recomendaciones personalizadas.'];
-            @endphp
-            <p>Según tu perfil RIASEC dominante (<strong>{{ $tipoNombres[$tipoDominante] ?? $tipoDominante }}</strong>), te recomendamos explorar áreas de estudio como: <strong>{{ $recomendacion['area'] }}</strong></p>
-            <p class="sec">{{ $recomendacion['descripcion'] }}</p>
-        @else
-            <!-- Caso: Múltiples tipos dominantes (empate) -->
-            <p><strong>¡Tienes múltiples perfiles dominantes!</strong> Se encontraron {{ count($tiposDominantes) }} tipos con el mismo porcentaje máximo ({{ $maxPorcentaje }}%). Aquí tienes recomendaciones para cada uno:</p>
-            @foreach($tiposDominantes as $tipo)
-                @php
-                    $recomendacion = $mapeoAreas[$tipo] ?? ['area' => 'Áreas generales de estudio', 'descripcion' => 'Consulta con un orientador para recomendaciones personalizadas.'];
-                @endphp
-                <div style="margin-bottom: 15px; padding: 10px; background: #f0f0f0; border-radius: 6px;">
-                    <p><strong>Perfil {{ $tipoNombres[$tipo] ?? $tipo }} ({{ $maxPorcentaje }}%):</strong> {{ $recomendacion['area'] }}</p>
-                    <p class="sec">{{ $recomendacion['descripcion'] }}</p>
-                </div>
-            @endforeach
-        @endif
-        
-        <!-- Resumen de resultados -->
-        <p class="sec"><strong>Resumen:</strong> Basado en tu perfil RIASEC, estas recomendaciones te ayudan a identificar áreas de estudio que se alinean con tus intereses y fortalezas. Si tienes múltiples perfiles dominantes, significa que tienes una personalidad versátil con intereses diversos. Te recomendamos explorar todas las áreas sugeridas y considerar cuál se alinea mejor con tus metas personales y oportunidades disponibles. Consulta con un orientador profesional para una interpretación más detallada y personalizada.</p>
+
+    @if(count($top2) > 0)
+        @foreach($top2 as $tipo => $pct)
+            @php $rec = $mapeoAreas[$tipo] ?? ['area' => 'Áreas generales de estudio', 'descripcion' => 'Consulta con un orientador para recomendaciones personalizadas.']; @endphp
+            <div style="margin-bottom: 12px; padding: 10px; background: #f0f6ff; border: 1px solid #cbd5e1; border-radius: 6px;">
+                <p style="margin: 0 0 4px 0;">
+                    <strong>Perfil {{ $tipoNombres[$tipo] ?? $tipo }} ({{ $pct }}%):</strong>
+                    {{ $rec['area'] }}
+                </p>
+                <p class="sec" style="margin: 0;">{{ $rec['descripcion'] }}</p>
+            </div>
+        @endforeach
+        <p class="sec"><strong>Resumen:</strong> Estas 2 áreas corresponden a tus perfiles con mayor coincidencia. Úsalas como guía inicial y complementa con tus intereses, habilidades y oportunidades. Un orientador puede ayudarte a afinar la decisión.</p>
     @else
         <div class="no-data">No se pudo generar una recomendación de área de estudio debido a falta de datos de perfil.</div>
     @endif

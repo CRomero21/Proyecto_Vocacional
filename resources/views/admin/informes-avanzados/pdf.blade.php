@@ -59,11 +59,14 @@
                             case 'Total Estudiantes':
                                 echo $isObject ? ($item->total_estudiantes ?? 0) : ($isArray ? ($item['total_estudiantes'] ?? 0) : 0);
                                 break;
-                            case 'Tests Completados':
-                                echo $isObject ? ($item->tests_completados ?? 0) : ($isArray ? ($item['tests_completados'] ?? 0) : 0);
+                            case 'Masculinos':
+                                echo $isObject ? ($item->masculinos ?? 0) : ($isArray ? ($item['masculinos'] ?? 0) : 0);
                                 break;
-                            case 'Tests Incompletos':
-                                echo $isObject ? ($item->tests_incompletos ?? 0) : ($isArray ? ($item['tests_incompletos'] ?? 0) : 0);
+                            case 'Femeninos':
+                                echo $isObject ? ($item->femeninos ?? 0) : ($isArray ? ($item['femeninos'] ?? 0) : 0);
+                                break;
+                            case 'Otros':
+                                echo $isObject ? ($item->otros ?? 0) : ($isArray ? ($item['otros'] ?? 0) : 0);
                                 break;
                             case 'Total Usuarios':
                                 echo $isObject ? ($item->total ?? 0) : ($isArray ? ($item['total'] ?? 0) : 0);

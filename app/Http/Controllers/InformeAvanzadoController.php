@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Informe;
 use App\Models\User;
 use App\Models\TestResult;
@@ -23,10 +24,11 @@ class InformeAvanzadoController extends Controller
     {
         // Validación de parámetros
         $request->validate([
-            'tipo_informe' => 'nullable|in:usuarios_datos,instituciones_educativas,distribucion_demografica,personalidades,carreras,carreras_mas_solicitadas',
+            'tipo_informe' => 'nullable|in:usuarios_datos,instituciones_educativas,distribucion_demografica,carreras,carreras_mas_solicitadas',
             'departamento' => 'nullable|string|max:100',
             'ciudad' => 'nullable|string|max:100',
-            'genero' => 'nullable|in:m,f',
+            // Aceptar M/F/O en mayúsculas o minúsculas
+            'genero' => ['nullable','regex:/^(m|f|o)$/i'],
             'edad_min' => 'nullable|integer|min:13|max:100',
             'edad_max' => 'nullable|integer|min:13|max:100|gte:edad_min',
             'institucion' => 'nullable|string|max:255',
@@ -55,7 +57,7 @@ class InformeAvanzadoController extends Controller
             $informeCargado = Informe::find($request->route('id'));
             if ($informeCargado) {
                 // Verificación de permisos: solo propietario o superadmin
-                if (auth()->user()->role !== 'superadmin' && $informeCargado->user_id !== auth()->id()) {
+                if (Auth::user()->role !== 'superadmin' && $informeCargado->user_id !== Auth::id()) {
                     abort(403, 'No tienes permiso para ver este informe.');
                 }
                 $datos = json_decode($informeCargado->datos, true);
@@ -66,8 +68,8 @@ class InformeAvanzadoController extends Controller
 
         // Filtrar informes recientes por usuario (solo superadmin ve todos)
         $query = Informe::latest()->take(10);
-        if (auth()->user()->role !== 'superadmin') {
-            $query->where('user_id', auth()->id());
+        if (Auth::user()->role !== 'superadmin') {
+            $query->where('user_id', Auth::id());
         }
         $informesRecientes = $query->get();
         
@@ -87,7 +89,7 @@ class InformeAvanzadoController extends Controller
             
             // Logging mejorado con métricas
             Log::info('Informe generado', [
-                'user_id' => auth()->id(),
+                'user_id' => Auth::id(),
                 'tipo_informe' => $tipoInforme,
                 'registros_generados' => is_array($datos) && isset($datos['data']) ? count($datos['data']) : count($datos),
                 'tiempo_ejecucion' => round($executionTime, 3),
@@ -161,7 +163,7 @@ class InformeAvanzadoController extends Controller
         $informe->tipo = $request->tipo_informe;
         $informe->datos = $request->datos_informe;
         $informe->filtros = $request->filtros ?? '{}';
-        $informe->user_id = auth()->id() ?? 1; // Asignar usuario actual o por defecto
+    $informe->user_id = Auth::id() ?? 1; // Asignar usuario actual o por defecto
         $informe->save();
         
         return redirect()->route('admin.informes-avanzados.ver', $informe->id)->with('success', 'Informe guardado correctamente');
@@ -211,7 +213,7 @@ class InformeAvanzadoController extends Controller
                     throw new \Exception("El informe solicitado no existe");
                 }
                 // Verificación de permisos: solo propietario o superadmin
-                if (auth()->user()->role !== 'superadmin' && $informe->user_id !== auth()->id()) {
+                if (Auth::user()->role !== 'superadmin' && $informe->user_id !== Auth::id()) {
                     throw new \Exception("No tienes permiso para exportar este informe.");
                 }
                 $datos = $informe->datos;
@@ -324,7 +326,7 @@ class InformeAvanzadoController extends Controller
     {
         try {
             // Preparar datos para la vista PDF
-            $headers = $this->getHeadersForTipo($tipo);
+            $headers = $this->getHeadersForTipo($tipo, $datos);
             $titulo = $this->getTituloForTipo($tipo);
             
             // Crear vista temporal con los datos
@@ -343,18 +345,21 @@ class InformeAvanzadoController extends Controller
         }
     }
     
-    private function getHeadersForTipo($tipo)
+    private function getHeadersForTipo($tipo, $datos = null)
     {
         switch ($tipo) {
             case 'usuarios_datos':
                 return ['Nombre', 'Email', 'Teléfono', 'Género', 'Departamento', 'Ciudad', 'Institución'];
             case 'instituciones_educativas':
-                // Los headers dependerán del nivel de agrupación, pero por simplicidad mantendremos los mismos
-                return ['Institución', 'Departamento', 'Ciudad', 'Total Estudiantes', 'Tests Completados', 'Tests Incompletos'];
+                if (is_array($datos) && !empty($datos)) {
+                    $first = $datos[0];
+                    if (isset($first['ciudad']) && !isset($first['nombre'])) {
+                        return ['Ciudad', 'Departamento', 'Total Usuarios', 'Masculinos', 'Femeninos', 'Otros'];
+                    }
+                }
+                return ['Institución', 'Departamento', 'Ciudad', 'Total Estudiantes', 'Masculinos', 'Femeninos', 'Otros'];
             case 'distribucion_demografica':
                 return ['Departamento', 'Ciudad', 'Total Usuarios', 'Porcentaje'];
-            case 'personalidades':
-                return ['Tipo', 'Descripción', 'Total', 'Porcentaje'];
             case 'carreras':
                 return ['Carrera', 'Área', 'Recomendaciones', 'Porcentaje', 'Match Promedio'];
             case 'carreras_mas_solicitadas':
@@ -396,10 +401,12 @@ class InformeAvanzadoController extends Controller
                 return $isArray ? ($item['nombre'] ?? $item['unidad_educativa'] ?? '') : ($isObject ? ($item->nombre ?? $item->unidad_educativa ?? '') : '');
             case 'Total Estudiantes':
                 return $isObject ? ($item->total_estudiantes ?? 0) : ($isArray ? ($item['total_estudiantes'] ?? 0) : 0);
-            case 'Tests Completados':
-                return $isObject ? ($item->tests_completados ?? 0) : ($isArray ? ($item['tests_completados'] ?? 0) : 0);
-            case 'Tests Incompletos':
-                return $isObject ? ($item->tests_incompletos ?? 0) : ($isArray ? ($item['tests_incompletos'] ?? 0) : 0);
+            case 'Masculinos':
+                return $isObject ? ($item->masculinos ?? 0) : ($isArray ? ($item['masculinos'] ?? 0) : 0);
+            case 'Femeninos':
+                return $isObject ? ($item->femeninos ?? 0) : ($isArray ? ($item['femeninos'] ?? 0) : 0);
+            case 'Otros':
+                return $isObject ? ($item->otros ?? 0) : ($isArray ? ($item['otros'] ?? 0) : 0);
             case 'Total Usuarios':
                 return $isObject ? ($item->total ?? $item->total_usuarios ?? 0) : ($isArray ? ($item['total'] ?? $item['total_usuarios'] ?? 0) : 0);
             case 'Porcentaje':
@@ -443,7 +450,6 @@ class InformeAvanzadoController extends Controller
             'usuarios_datos' => 'Datos de Contacto de Usuarios',
             'instituciones_educativas' => 'Usuarios por Institución Educativa',
             'distribucion_demografica' => 'Distribución Geográfica',
-            'personalidades' => 'Distribución de Tipos de Personalidad',
             'carreras' => 'Carreras Recomendadas',
             'carreras_mas_solicitadas' => 'Carreras Más Solicitadas',
         ];
@@ -459,7 +465,6 @@ class InformeAvanzadoController extends Controller
             'usuarios_datos' => $this->generarDatosUsuarios($request, $limit),
             'instituciones_educativas' => $this->generarDatosInstituciones($request, $limit),
             'distribucion_demografica' => $this->generarDatosDemograficos($request, $limit),
-            'personalidades' => $this->generarDatosPersonalidades($request),
             'carreras' => $this->generarDatosCarreras($request),
             'carreras_mas_solicitadas' => $this->generarDatosCarrerasMasSolicitadas($request),
             default => []
@@ -484,16 +489,8 @@ class InformeAvanzadoController extends Controller
             });
         }
         if ($request->filled('genero')) {
-            // Convertir abreviaturas a palabras completas para coincidir con la base de datos
-            $generoValue = $request->genero;
-            if (strtolower($generoValue) == 'm') {
-                $generoValue = 'Masculino';
-            } elseif (strtolower($generoValue) == 'f') {
-                $generoValue = 'Femenino';
-            } elseif (strtolower($generoValue) == 'o') {
-                $generoValue = 'Otro';
-            }
-            $query->where('sexo', $generoValue);
+            $variants = $this->getGeneroVariants($request->genero);
+            $query->whereIn('sexo', $variants);
         }
         if ($request->filled('edad_min')) {
             $query->whereRaw('TIMESTAMPDIFF(YEAR, fecha_nacimiento, CURDATE()) >= ?', [$request->edad_min]);
@@ -528,14 +525,17 @@ class InformeAvanzadoController extends Controller
                     $q->where('completado', 1);
                 });
             } elseif ($request->estado_test === 'incompleto') {
-                $query->whereDoesntHave('tests')
-                      ->orWhereHas('tests', function($q) {
-                          $q->where('completado', 0);
+                // Agrupar condiciones para no romper otros filtros
+                $query->where(function($q) {
+                    $q->doesntHave('tests')
+                      ->orWhereHas('tests', function($t) {
+                          $t->where('completado', 0);
                       });
+                });
             }
         }
         
-        // Aplicar paginación si se especifica un límite
+    // Aplicar paginación si se especifica un límite
         if ($limit && $limit > 0) {
             $usuarios = $query->paginate($limit);
             $datos = $usuarios->toArray();
@@ -590,16 +590,8 @@ class InformeAvanzadoController extends Controller
 
         // Aplicar filtros a los usuarios
         if ($request->filled('genero')) {
-            // Convertir abreviaturas a palabras completas para coincidir con la base de datos
-            $generoValue = $request->genero;
-            if (strtolower($generoValue) == 'm') {
-                $generoValue = 'Masculino';
-            } elseif (strtolower($generoValue) == 'f') {
-                $generoValue = 'Femenino';
-            } elseif (strtolower($generoValue) == 'o') {
-                $generoValue = 'Otro';
-            }
-            $subQueryUsuarios->where('sexo', $generoValue);
+            $variants = $this->getGeneroVariants($request->genero);
+            $subQueryUsuarios->whereIn('sexo', $variants);
         }
         if ($request->filled('edad_min')) {
             $subQueryUsuarios->whereRaw('TIMESTAMPDIFF(YEAR, fecha_nacimiento, CURDATE()) >= ?', [$request->edad_min]);
@@ -652,8 +644,9 @@ class InformeAvanzadoController extends Controller
                 ciudades.nombre as ciudad,
                 departamentos.nombre as departamento,
                 COUNT(DISTINCT users.id) as total_usuarios,
-                COUNT(DISTINCT CASE WHEN tests.completado = 1 THEN tests.id END) as tests_completados,
-                COUNT(DISTINCT CASE WHEN tests.completado = 0 OR tests.id IS NULL THEN users.id END) as tests_incompletos
+                COUNT(DISTINCT CASE WHEN users.sexo IN ("M","m","Masculino","masculino") THEN users.id END) as masculinos,
+                COUNT(DISTINCT CASE WHEN users.sexo IN ("F","f","Femenino","femenino") THEN users.id END) as femeninos,
+                COUNT(DISTINCT CASE WHEN users.sexo IS NULL OR users.sexo IN ("O","o","Otro","otro","No especificado","no especificado") THEN users.id END) as otros
             ')
             ->join('departamentos', 'ciudades.departamento_id', '=', 'departamentos.id')
             ->leftJoin('unidades_educativas', 'ciudades.id', '=', 'unidades_educativas.ciudad_id')
@@ -694,8 +687,9 @@ class InformeAvanzadoController extends Controller
                     'ciudad' => $item->ciudad,
                     'departamento' => $item->departamento,
                     'total_usuarios' => $item->total_usuarios,
-                    'tests_completados' => $item->tests_completados,
-                    'tests_incompletos' => $item->tests_incompletos,
+                    'masculinos' => $item->masculinos,
+                    'femeninos' => $item->femeninos,
+                    'otros' => $item->otros,
                 ];
             }, $datos['data']);
 
@@ -709,8 +703,9 @@ class InformeAvanzadoController extends Controller
                 'ciudad' => $item->ciudad,
                 'departamento' => $item->departamento,
                 'total_usuarios' => $item->total_usuarios,
-                'tests_completados' => $item->tests_completados,
-                'tests_incompletos' => $item->tests_incompletos,
+                'masculinos' => $item->masculinos,
+                'femeninos' => $item->femeninos,
+                'otros' => $item->otros,
             ];
         })->toArray();
     }
@@ -720,8 +715,9 @@ class InformeAvanzadoController extends Controller
         $query = UnidadEducativa::select('unidades_educativas.*')
             ->selectRaw('
                 COUNT(DISTINCT users.id) as total_estudiantes,
-                COUNT(DISTINCT CASE WHEN tests.completado = 1 THEN tests.id END) as tests_completados,
-                COUNT(DISTINCT CASE WHEN tests.completado = 0 OR tests.id IS NULL THEN users.id END) as tests_incompletos,
+                COUNT(DISTINCT CASE WHEN users.sexo IN ("M","m","Masculino","masculino") THEN users.id END) as masculinos,
+                COUNT(DISTINCT CASE WHEN users.sexo IN ("F","f","Femenino","femenino") THEN users.id END) as femeninos,
+                COUNT(DISTINCT CASE WHEN users.sexo IS NULL OR users.sexo IN ("O","o","Otro","otro","No especificado","no especificado") THEN users.id END) as otros,
                 departamentos.nombre as departamento_nombre,
                 ciudades.nombre as ciudad_nombre
             ')
@@ -767,8 +763,9 @@ class InformeAvanzadoController extends Controller
                     'departamento' => $institucion['departamento_nombre'] ?? null,
                     'ciudad' => $institucion['ciudad_nombre'] ?? null,
                     'total_estudiantes' => $institucion['total_estudiantes'] ?? 0,
-                    'tests_completados' => $institucion['tests_completados'] ?? 0,
-                    'tests_incompletos' => $institucion['tests_incompletos'] ?? 0,
+                    'masculinos' => $institucion['masculinos'] ?? 0,
+                    'femeninos' => $institucion['femeninos'] ?? 0,
+                    'otros' => $institucion['otros'] ?? 0,
                 ];
             }, $datos['data']);
 
@@ -784,8 +781,9 @@ class InformeAvanzadoController extends Controller
                 'departamento' => $institucion->departamento_nombre ?? null,
                 'ciudad' => $institucion->ciudad_nombre ?? null,
                 'total_estudiantes' => $institucion->total_estudiantes ?? 0,
-                'tests_completados' => $institucion->tests_completados ?? 0,
-                'tests_incompletos' => $institucion->tests_incompletos ?? 0,
+                'masculinos' => $institucion->masculinos ?? 0,
+                'femeninos' => $institucion->femeninos ?? 0,
+                'otros' => $institucion->otros ?? 0,
             ];
         })->toArray();
     }
@@ -795,8 +793,9 @@ class InformeAvanzadoController extends Controller
         $query = UnidadEducativa::select('unidades_educativas.*')
             ->selectRaw('
                 COUNT(DISTINCT users.id) as total_estudiantes,
-                COUNT(DISTINCT CASE WHEN tests.completado = 1 THEN tests.id END) as tests_completados,
-                COUNT(DISTINCT CASE WHEN tests.completado = 0 OR tests.id IS NULL THEN users.id END) as tests_incompletos,
+                COUNT(DISTINCT CASE WHEN users.sexo IN ("M","m","Masculino","masculino") THEN users.id END) as masculinos,
+                COUNT(DISTINCT CASE WHEN users.sexo IN ("F","f","Femenino","femenino") THEN users.id END) as femeninos,
+                COUNT(DISTINCT CASE WHEN users.sexo IS NULL OR users.sexo IN ("O","o","Otro","otro","No especificado","no especificado") THEN users.id END) as otros,
                 departamentos.nombre as departamento_nombre,
                 ciudades.nombre as ciudad_nombre
             ')
@@ -851,8 +850,9 @@ class InformeAvanzadoController extends Controller
                     'departamento' => $institucion['departamento_nombre'] ?? null,
                     'ciudad' => $institucion['ciudad_nombre'] ?? null,
                     'total_estudiantes' => $institucion['total_estudiantes'] ?? 0,
-                    'tests_completados' => $institucion['tests_completados'] ?? 0,
-                    'tests_incompletos' => $institucion['tests_incompletos'] ?? 0,
+                    'masculinos' => $institucion['masculinos'] ?? 0,
+                    'femeninos' => $institucion['femeninos'] ?? 0,
+                    'otros' => $institucion['otros'] ?? 0,
                 ];
             }, $datos['data']);
 
@@ -868,8 +868,9 @@ class InformeAvanzadoController extends Controller
                 'departamento' => $institucion->departamento_nombre ?? null,
                 'ciudad' => $institucion->ciudad_nombre ?? null,
                 'total_estudiantes' => $institucion->total_estudiantes ?? 0,
-                'tests_completados' => $institucion->tests_completados ?? 0,
-                'tests_incompletos' => $institucion->tests_incompletos ?? 0,
+                'masculinos' => $institucion->masculinos ?? 0,
+                'femeninos' => $institucion->femeninos ?? 0,
+                'otros' => $institucion->otros ?? 0,
             ];
         })->toArray();
     }
@@ -886,15 +887,7 @@ class InformeAvanzadoController extends Controller
 
         // Aplicar filtros demográficos
         if ($request->filled('genero')) {
-            $generoValue = $request->genero;
-            if (strtolower($generoValue) == 'm') {
-                $generoValue = 'Masculino';
-            } elseif (strtolower($generoValue) == 'f') {
-                $generoValue = 'Femenino';
-            } elseif (strtolower($generoValue) == 'o') {
-                $generoValue = 'Otro';
-            }
-            $query->where('users.sexo', $generoValue);
+            $query->whereIn('users.sexo', $this->getGeneroVariants($request->genero));
         }
         if ($request->filled('edad_min')) {
             $query->whereRaw('TIMESTAMPDIFF(YEAR, users.fecha_nacimiento, CURDATE()) >= ?', [$request->edad_min]);
@@ -961,15 +954,7 @@ class InformeAvanzadoController extends Controller
 
         // Aplicar filtros demográficos
         if ($request->filled('genero')) {
-            $generoValue = $request->genero;
-            if (strtolower($generoValue) == 'm') {
-                $generoValue = 'Masculino';
-            } elseif (strtolower($generoValue) == 'f') {
-                $generoValue = 'Femenino';
-            } elseif (strtolower($generoValue) == 'o') {
-                $generoValue = 'Otro';
-            }
-            $query->where('users.sexo', $generoValue);
+            $query->whereIn('users.sexo', $this->getGeneroVariants($request->genero));
         }
         if ($request->filled('edad_min')) {
             $query->whereRaw('TIMESTAMPDIFF(YEAR, users.fecha_nacimiento, CURDATE()) >= ?', [$request->edad_min]);
@@ -1047,15 +1032,7 @@ class InformeAvanzadoController extends Controller
 
         // Aplicar filtros demográficos
         if ($request->filled('genero')) {
-            $generoValue = $request->genero;
-            if (strtolower($generoValue) == 'm') {
-                $generoValue = 'Masculino';
-            } elseif (strtolower($generoValue) == 'f') {
-                $generoValue = 'Femenino';
-            } elseif (strtolower($generoValue) == 'o') {
-                $generoValue = 'Otro';
-            }
-            $query->where('users.sexo', $generoValue);
+            $query->whereIn('users.sexo', $this->getGeneroVariants($request->genero));
         }
         if ($request->filled('edad_min')) {
             $query->whereRaw('TIMESTAMPDIFF(YEAR, users.fecha_nacimiento, CURDATE()) >= ?', [$request->edad_min]);
@@ -1261,15 +1238,7 @@ class InformeAvanzadoController extends Controller
             }
 
             if ($request->filled('genero')) {
-                $generoValue = $request->genero;
-                if (strtolower($generoValue) == 'm') {
-                    $generoValue = 'Masculino';
-                } elseif (strtolower($generoValue) == 'f') {
-                    $generoValue = 'Femenino';
-                } elseif (strtolower($generoValue) == 'o') {
-                    $generoValue = 'Otro';
-                }
-                $query->where('users.sexo', $generoValue);
+                $query->whereIn('users.sexo', $this->getGeneroVariants($request->genero));
             }
             if ($request->filled('edad_min')) {
                 $query->whereRaw('TIMESTAMPDIFF(YEAR, users.fecha_nacimiento, CURDATE()) >= ?', [$request->edad_min]);
@@ -1348,15 +1317,7 @@ class InformeAvanzadoController extends Controller
 
         // Aplicar filtros demográficos
         if ($request->filled('genero')) {
-            $generoValue = $request->genero;
-            if (strtolower($generoValue) == 'm') {
-                $generoValue = 'Masculino';
-            } elseif (strtolower($generoValue) == 'f') {
-                $generoValue = 'Femenino';
-            } elseif (strtolower($generoValue) == 'o') {
-                $generoValue = 'Otro';
-            }
-            $query->where('users.sexo', $generoValue);
+            $query->whereIn('users.sexo', $this->getGeneroVariants($request->genero));
         }
         if ($request->filled('edad_min')) {
             $query->whereRaw('TIMESTAMPDIFF(YEAR, users.fecha_nacimiento, CURDATE()) >= ?', [$request->edad_min]);
@@ -1420,7 +1381,8 @@ class InformeAvanzadoController extends Controller
                         'datos' => array_column($datos, 'total'),
                         'porcentajes' => array_column($datos, 'porcentaje'),
                         'titulo' => 'Distribución por Departamentos',
-                        'colores' => ['#6366f1', '#10b981', '#f472b6', '#fbbf24', '#a78bfa', '#06b6d4']
+                        // Corporate palette
+                        'colores' => ['#0b3be9', '#051a9a', '#131e58', '#0079f4', '#00aeff', '#c8c8c8']
                     ];
                 } elseif (isset($datos[0]['ciudad']) && isset($datos[0]['departamento'])) {
                     // Datos de ciudades
@@ -1429,7 +1391,7 @@ class InformeAvanzadoController extends Controller
                         'datos' => array_column($datos, 'total'),
                         'porcentajes' => array_column($datos, 'porcentaje'),
                         'titulo' => 'Distribución por Ciudad',
-                        'colores' => ['#6366f1', '#10b981', '#f472b6', '#fbbf24', '#a78bfa', '#06b6d4']
+                        'colores' => ['#0b3be9', '#051a9a', '#131e58', '#0079f4', '#00aeff', '#c8c8c8']
                     ];
                 }
                 return null;
@@ -1440,27 +1402,20 @@ class InformeAvanzadoController extends Controller
                     return [
                         'labels' => array_column($datos, 'ciudad'),
                         'datos' => array_column($datos, 'total_usuarios'),
-                        'titulo' => 'Usuarios por Ciudad',
-                        'colores' => ['#6366f1', '#10b981', '#f472b6', '#fbbf24', '#a78bfa', '#06b6d4']
+                        'titulo' => 'Usuarios por Ciudad (Distribución de Género disponible en tabla)',
+                        'colores' => ['#0b3be9', '#051a9a', '#131e58', '#0079f4', '#00aeff', '#c8c8c8']
                     ];
                 } elseif (isset($datos[0]['nombre'])) {
                     // Datos de instituciones
                     return [
                         'labels' => array_column($datos, 'nombre'),
                         'datos' => array_column($datos, 'total_estudiantes'),
-                        'titulo' => 'Estudiantes por Institución',
-                        'colores' => ['#6366f1', '#10b981', '#f472b6', '#fbbf24', '#a78bfa', '#06b6d4']
+                        'titulo' => 'Estudiantes por Institución (Distribución de Género disponible en tabla)',
+                        'colores' => ['#0b3be9', '#051a9a', '#131e58', '#0079f4', '#00aeff', '#c8c8c8']
                     ];
                 }
                 return null;
-            case 'personalidades':
-                return [
-                    'labels' => array_column($datos, 'tipo_primario'),
-                    'datos' => array_column($datos, 'total'),
-                    'porcentajes' => array_column($datos, 'porcentaje'),
-                    'titulo' => 'Distribución de Personalidades',
-                    'colores' => ['#6366f1', '#10b981', '#f472b6', '#fbbf24', '#a78bfa', '#06b6d4']
-                ];
+            // 'personalidades' eliminado
             default:
                 return null;
         }
@@ -1525,12 +1480,7 @@ class InformeAvanzadoController extends Controller
                     }
                 }
                 break;
-            case 'personalidades':
-                $maxTipo = collect($datos)->sortByDesc('total')->first();
-                if ($maxTipo) {
-                    $insights['tipo_mas_comun'] = "El tipo de personalidad más común es {$maxTipo['tipo_primario']} con {$maxTipo['total']} usuarios ({$maxTipo['porcentaje']}%)";
-                }
-                break;
+            // 'personalidades' eliminado
         }
 
         return $insights;
@@ -1585,6 +1535,23 @@ class InformeAvanzadoController extends Controller
             Log::info("Generando datos para cache: $cacheKey");
             return $callback();
         });
+    }
+
+    // Normaliza el filtro de género a múltiples variantes posibles en BD
+    private function getGeneroVariants(?string $input): array
+    {
+        if (!$input) return [];
+        $c = strtolower(trim($input));
+        switch ($c) {
+            case 'm':
+                return ['M', 'm', 'Masculino', 'masculino'];
+            case 'f':
+                return ['F', 'f', 'Femenino', 'femenino'];
+            case 'o':
+                return ['O', 'o', 'Otro', 'otro', 'No especificado', 'no especificado'];
+            default:
+                return [$input];
+        }
     }
     
     // Método para medir tiempo de ejecución

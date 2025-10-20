@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Retroalimentacion;
+use Illuminate\Support\Str;
 
 class TestController extends Controller
 {
@@ -21,7 +22,8 @@ class TestController extends Controller
 
     public function iniciar()
     {
-    $testPendiente = Test::where('user_id', Auth::id())
+        // Compatibilidad: si existe un test pendiente de flujos anteriores, permitir continuarlo
+        $testPendiente = Test::where('user_id', Auth::id())
             ->where('completado', false)
             ->first();
 
@@ -30,16 +32,19 @@ class TestController extends Controller
                 ->with('info', 'Tienes un test pendiente. Puedes continuarlo o iniciar uno nuevo.');
         }
 
-        $test = Test::create([
-            'user_id' => Auth::id(),
-            'fecha' => now(),
-        ]);
-
         $preguntas = Pregunta::inRandomOrder()->get();
+
+        // Nuevo flujo: no crear registro en BD hasta finalizar
+        $draftId = (string) Str::uuid();
+        session([
+            'test_draft_id' => $draftId,
+            'test_started_at' => now(),
+        ]);
 
         return view('test.realizar', [
             'preguntas' => $preguntas,
-            'test_id' => $test->id,
+            // Para compatibilidad, no enviar test_id en el nuevo flujo
+            'draftId' => $draftId,
         ]);
     }
 
@@ -150,16 +155,9 @@ class TestController extends Controller
     public function guardar(Request $request)
     {
         $request->validate([
-            'test_id' => 'required|exists:tests,id',
             'respuestas' => 'required|array',
             'respuestas.*' => 'required|integer|min:0|max:2',
         ]);
-
-        $test = Test::findOrFail($request->test_id);
-
-    if ($test->user_id !== Auth::id()) {
-            abort(403, 'No autorizado');
-        }
 
         $puntajes = [
             'R' => 0, 'I' => 0, 'A' => 0, 'S' => 0, 'E' => 0, 'C' => 0
@@ -241,13 +239,30 @@ class TestController extends Controller
             ])->withInput();
         }
 
-        $test->update([
-            'tipo_primario' => $tipoPrimario,
-            'tipo_secundario' => $tipoSecundario,
-            'resultados' => $resultados,
-            'completado' => true,
-            'fecha_completado' => now()
-        ]);
+        // Persistir resultados: si viene test_id (flujo antiguo), actualizar; si no, crear nuevo registro al finalizar
+        if ($request->filled('test_id')) {
+            $test = Test::findOrFail($request->input('test_id'));
+            if ($test->user_id !== Auth::id()) {
+                abort(403, 'No autorizado');
+            }
+            $test->update([
+                'tipo_primario' => $tipoPrimario,
+                'tipo_secundario' => $tipoSecundario,
+                'resultados' => $resultados,
+                'completado' => true,
+                'fecha_completado' => now()
+            ]);
+        } else {
+            $test = Test::create([
+                'user_id' => Auth::id(),
+                'fecha' => now(),
+                'tipo_primario' => $tipoPrimario,
+                'tipo_secundario' => $tipoSecundario,
+                'resultados' => $resultados,
+                'completado' => true,
+                'fecha_completado' => now()
+            ]);
+        }
 
         // Guardar recomendaciones en tabla separada si existe
         if (Schema::hasTable('test_carrera_recomendacion') && is_array($recomendaciones) && !empty($recomendaciones)) {
@@ -581,14 +596,26 @@ class TestController extends Controller
         }
 
         $titulo = 'Resultados de Test Vocacional';
-    return Pdf::loadView('test.resultados_pdf', compact(
+        $pdf = Pdf::loadView('test.resultados_pdf', compact(
             'test',
             'resultados',
             'tiposPersonalidad',
             'titulo',
             'recomendacionesAreas'
-        ))
-        ->download('resultados_test_'.$test->id.'.pdf');
+        ));
+        // Aumenta compatibilidad para imágenes (URLs) y HTML5
+        try {
+            if (method_exists($pdf, 'setOption')) {
+                $pdf->setOption('isRemoteEnabled', true);
+                $pdf->setOption('isHtml5ParserEnabled', true);
+            } elseif (method_exists($pdf, 'set_option')) { // versiones antiguas
+                $pdf->set_option('isRemoteEnabled', true);
+                $pdf->set_option('isHtml5ParserEnabled', true);
+            }
+        } catch (\Throwable $e) {
+            // Silencioso: si falla, seguimos con configuración por defecto
+        }
+        return $pdf->download('resultados_test_'.$test->id.'.pdf');
     } 
     public function informes()
     {

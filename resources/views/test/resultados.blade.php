@@ -203,7 +203,7 @@
             @endif
         </div>
 
-        {{-- Nueva Sección: Recomendación de Área de Estudio --}}
+    {{-- Nueva Sección: Recomendación de Área de Estudio (Top-2 siempre) --}}
         <div class="mb-8">
             <h2 class="text-2xl font-semibold mb-4 text-purple-700 flex items-center">
                 <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -214,20 +214,9 @@
             @php
                 $porcentajes = $resultados['porcentajes'] ?? [];
                 arsort($porcentajes); // Ordenar de mayor a menor
-                
-                // Encontrar el porcentaje máximo
-                $maxPorcentaje = reset($porcentajes);
-                
-                // Identificar todos los tipos que tienen el porcentaje máximo (manejar empates)
-                $tiposDominantes = [];
-                foreach ($porcentajes as $tipo => $porcentaje) {
-                    if ($porcentaje === $maxPorcentaje) {
-                        $tiposDominantes[] = $tipo;
-                    } else {
-                        break; // Como está ordenado, podemos parar cuando encontremos un porcentaje menor
-                    }
-                }
-                
+                // Tomar exactamente los dos primeros (puede incluir empates, no importa)
+                $top2 = array_slice($porcentajes, 0, 2, true);
+
                 // Mapeo de tipos RIASEC a áreas de estudio
                 $mapeoAreas = [
                     'R' => ['area' => 'Ingeniería, Tecnología o Ciencias Naturales', 'descripcion' => 'Áreas prácticas y técnicas que involucran trabajo con objetos, máquinas y resolución de problemas concretos, alineadas con tu enfoque realista y orientado a la acción.'],
@@ -238,67 +227,33 @@
                     'C' => ['area' => 'Contabilidad, Finanzas o Administración', 'descripcion' => 'Áreas organizadas y detalladas que involucran procedimientos establecidos, datos y precisión, ideales para tu enfoque convencional y meticuloso.']
                 ];
             @endphp
-            
-            @if(count($tiposDominantes) > 0)
-                @if(count($tiposDominantes) === 1)
-                    <!-- Caso: Solo un tipo dominante -->
-                    @php
-                        $tipoDominante = $tiposDominantes[0];
-                        $recomendacion = $mapeoAreas[$tipoDominante] ?? ['area' => 'Áreas generales de estudio', 'descripcion' => 'Consulta con un orientador para recomendaciones personalizadas.'];
-                    @endphp
-                    <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 border border-purple-200">
-                        <div class="flex items-center mb-4">
-                            <span class="text-2xl font-bold text-purple-700 mr-3">{{ $tipoDominante }}</span>
-                            <span class="text-lg font-semibold text-gray-800">Perfil Dominante</span>
-                            <span class="ml-auto text-sm text-gray-500 bg-purple-100 px-2 py-1 rounded">{{ $maxPorcentaje }}%</span>
-                        </div>
-                        <p class="text-gray-700 mb-3"><strong>Área Recomendada:</strong> {{ $recomendacion['area'] }}</p>
-                        <p class="text-sm text-gray-600">{{ $recomendacion['descripcion'] }}</p>
-                        <div class="mt-4 text-xs text-gray-500 bg-purple-50 p-3 rounded">
-                            <strong>Nota:</strong> Esta recomendación se basa en tu perfil RIASEC dominante y es un punto de partida. Considera tus intereses personales, habilidades y metas para una decisión final. Consulta con un orientador profesional para más orientación.
-                        </div>
-                    </div>
-                @else
-                    <!-- Caso: Múltiples tipos dominantes (empate) -->
-                    <div class="space-y-4">
-                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <div class="flex items-center mb-2">
-                                <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <span class="text-sm font-medium text-blue-800">¡Tienes múltiples perfiles dominantes!</span>
-                            </div>
-                            <p class="text-sm text-blue-700">Se encontraron {{ count($tiposDominantes) }} tipos con el mismo porcentaje máximo ({{ $maxPorcentaje }}%). Aquí tienes recomendaciones para cada uno:</p>
-                        </div>
-                        
-                        @foreach($tiposDominantes as $tipo)
-                            @php
-                                $recomendacion = $mapeoAreas[$tipo] ?? ['area' => 'Áreas generales de estudio', 'descripcion' => 'Consulta con un orientador para recomendaciones personalizadas.'];
-                            @endphp
-                            <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 border border-purple-200">
-                                <div class="flex items-center justify-between mb-4">
-                                    <div class="flex items-center">
-                                        <span class="text-2xl font-bold text-purple-700 mr-3">{{ $tipo }}</span>
-                                        <span class="text-lg font-semibold text-gray-800">Perfil Dominante</span>
-                                    </div>
-                                    <span class="text-sm text-gray-500 bg-purple-100 px-2 py-1 rounded">{{ $maxPorcentaje }}%</span>
+
+            @if(count($top2) > 0)
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    @foreach($top2 as $tipo => $pct)
+                        @php $rec = $mapeoAreas[$tipo] ?? ['area' => 'Áreas generales de estudio', 'descripcion' => 'Consulta con un orientador para recomendaciones personalizadas.']; @endphp
+                        <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 border border-purple-200">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center">
+                                    <span class="text-2xl font-bold text-purple-700 mr-3">{{ $tipo }}</span>
+                                    <span class="text-lg font-semibold text-gray-800">Perfil dominante</span>
                                 </div>
-                                <p class="text-gray-700 mb-3"><strong>Área Recomendada:</strong> {{ $recomendacion['area'] }}</p>
-                                <p class="text-sm text-gray-600">{{ $recomendacion['descripcion'] }}</p>
+                                <span class="text-sm text-gray-500 bg-purple-100 px-2 py-1 rounded">{{ $pct }}%</span>
                             </div>
-                        @endforeach
-                        
-                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                            <div class="flex items-center mb-2">
-                                <svg class="w-5 h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                                </svg>
-                                <span class="text-sm font-medium text-yellow-800">Consejo importante</span>
-                            </div>
-                            <p class="text-sm text-yellow-700">Tener múltiples perfiles dominantes es común y positivo. Significa que tienes una personalidad versátil con intereses diversos. Te recomendamos explorar todas las áreas sugeridas y considerar cuál se alinea mejor con tus metas personales y oportunidades disponibles.</p>
+                            <p class="text-gray-700 mb-2"><strong>Área recomendada:</strong> {{ $rec['area'] }}</p>
+                            <p class="text-sm text-gray-600">{{ $rec['descripcion'] }}</p>
                         </div>
+                    @endforeach
+                </div>
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
+                    <div class="flex items-center mb-2">
+                        <svg class="w-5 h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                        <span class="text-sm font-medium text-yellow-800">Consejo</span>
                     </div>
-                @endif
+                    <p class="text-sm text-yellow-700">Estas áreas se basan en tus 2 perfiles con mayor coincidencia. Úsalas como guía inicial y complementa con tus intereses, habilidades y oportunidades. Un orientador puede ayudarte a afinar la decisión.</p>
+                </div>
             @else
                 <div class="bg-white p-6 rounded-lg shadow-md text-center">
                     <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">

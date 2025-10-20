@@ -4,7 +4,7 @@
 @section('title', 'Análisis de Datos')
 
 @section('content')
-<div class="bg-gradient-to-br from-blue-900 to-indigo-900 min-h-screen p-4 md:p-8">
+<div class="min-h-screen p-4 md:p-8" style="background: linear-gradient(135deg, #131e58 0%, #0b3be9 50%, #0079f4 100%);">
     <div class="mx-auto max-w-7xl">
     <!-- ...contenido HTML... -->
         @if(isset($error))
@@ -45,21 +45,25 @@
                 <h1 class="text-xl md:text-2xl font-bold text-white">Análisis de Datos del Sistema</h1>
                 
                 <div class="flex flex-wrap gap-2">
-                    <select id="periodo" class="bg-white/10 text-white border border-white/20 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-400">
+                    <style>
+                        /* Solo la lista desplegable (las opciones) en negro */
+                        #periodo option, #departamento option { color: #000 !important; }
+                    </style>
+                    <select id="periodo" class="rounded-md px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2" style="background: linear-gradient(90deg, rgba(11,59,233,0.2), rgba(0,121,244,0.2)); border:1px solid rgba(255,255,255,0.3);">
                         <option value="7">Últimos 7 días</option>
                         <option value="30" selected>Últimos 30 días</option>
                         <option value="90">Últimos 90 días</option>
                         <option value="365">Último año</option>
                     </select>
                     
-                    <select id="departamento" class="bg-white/10 text-white border border-white/20 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-400">
+                    <select id="departamento" class="rounded-md px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2" style="background: linear-gradient(90deg, rgba(11,59,233,0.2), rgba(0,121,244,0.2)); border:1px solid rgba(255,255,255,0.3);">
                         <option value="">Todos los departamentos</option>
                         @foreach($departamentos ?? [] as $depto)
                             <option value="{{ $depto }}" {{ ($departamentoFiltro ?? '') == $depto ? 'selected' : '' }}>{{ $depto }}</option>
                         @endforeach
                     </select>
                     
-                    <button id="aplicar-filtros" class="bg-indigo-500 hover:bg-indigo-600 text-white rounded-md px-4 py-1.5 text-sm">
+                    <button id="aplicar-filtros" class="text-white rounded-md px-4 py-1.5 text-sm" style="background: linear-gradient(90deg, #0b3be9, #0079f4); border:1px solid rgba(255,255,255,0.2);">
                         Aplicar Filtros
                     </button>
                 </div>
@@ -76,13 +80,13 @@
             <div class="p-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <!-- Total Usuarios -->
-                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                    <div class="p-4 rounded-lg border" style="background:#fff; border-color:#e5e7eb; border-top:4px solid #0b3be9;">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-blue-800 text-sm font-medium">Total Usuarios</p>
                                 <h3 class="text-2xl font-bold text-blue-900 mt-1">{{ $totalUsuarios }}</h3>
                             </div>
-                            <div class="bg-blue-500 rounded-full p-2">
+                            <div class="rounded-full p-2" style="background: linear-gradient(90deg, #0b3be9, #0079f4);">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                 </svg>
@@ -91,13 +95,13 @@
                     </div>
                     
                     <!-- Tests Iniciados -->
-                    <div class="bg-purple-50 p-4 rounded-lg border border-purple-100">
+                    <div class="p-4 rounded-lg border" style="background:#fff; border-color:#e5e7eb; border-top:4px solid #0079f4;">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-purple-800 text-sm font-medium">Tests Iniciados</p>
                                 <h3 class="text-2xl font-bold text-purple-900 mt-1">{{ $testsIniciados }}</h3>
                             </div>
-                            <div class="bg-purple-500 rounded-full p-2">
+                            <div class="rounded-full p-2" style="background: linear-gradient(90deg, #0079f4, #00aeff);">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                 </svg>
@@ -106,13 +110,13 @@
                     </div>
                     
                     <!-- Tests Completados -->
-                    <div class="bg-pink-50 p-4 rounded-lg border border-pink-100">
+                    <div class="p-4 rounded-lg border" style="background:#fff; border-color:#e5e7eb; border-top:4px solid #00aeff;">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-pink-800 text-sm font-medium">Tests Completados</p>
                                 <h3 class="text-2xl font-bold text-pink-900 mt-1">{{ $testsCompletados }}</h3>
                             </div>
-                            <div class="bg-pink-500 rounded-full p-2">
+                            <div class="rounded-full p-2" style="background: linear-gradient(90deg, #00aeff, #0b3be9);">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
@@ -121,7 +125,7 @@
                     </div>
                     
                     <!-- Tasa de Completitud -->
-                    <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+                    <div class="p-4 rounded-lg border" style="background:#fff; border-color:#e5e7eb; border-top:4px solid #051a9a;">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-green-800 text-sm font-medium">Tasa de Completitud</p>
@@ -133,7 +137,7 @@
                                     @endif
                                 </h3>
                             </div>
-                            <div class="bg-green-500 rounded-full p-2">
+                            <div class="rounded-full p-2" style="background: linear-gradient(90deg, #051a9a, #131e58);">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                 </svg>
@@ -153,13 +157,13 @@
             
             <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Valoración promedio -->
-                <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
+                <div class="p-4 rounded-lg border" style="background:#f8fbff; border-color:#d9e4ff;">
                     <h3 class="text-md font-medium text-indigo-800 mb-2">Valoración Promedio</h3>
                     <div class="flex items-center">
-                        <div class="text-3xl font-bold text-indigo-900">{{ number_format($utilidadPromedio ?? 0, 2) }}</div>
+                        <div class="text-4xl font-extrabold text-indigo-900">{{ number_format($utilidadPromedio ?? 0, 2) }}</div>
                         <div class="ml-2 flex">
                             @for($i = 1; $i <= 5; $i++)
-                                <svg class="w-6 h-6 {{ ($utilidadPromedio ?? 0) >= $i ? 'text-yellow-400' : 'text-gray-300' }}" fill="currentColor" viewBox="0 0 20 20">
+                                <svg class="w-6 h-6 {{ ($utilidadPromedio ?? 0) >= $i ? 'text-yellow-400 drop-shadow' : 'text-gray-300' }}" fill="currentColor" viewBox="0 0 20 20">
                                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                                 </svg>
                             @endfor
@@ -169,7 +173,7 @@
                 </div>
 
                 <!-- Promedios de utilidad y precisión de retroalimentaciones -->
-                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                <div class="p-4 rounded-lg border" style="background:#f8fbff; border-color:#d9e4ff;">
                     <h3 class="text-md font-medium text-blue-800 mb-2">Promedios de Retroalimentación</h3>
                     <div class="flex flex-col gap-2">
                         <div class="flex items-center">
@@ -196,7 +200,7 @@
                                         ? ($distribucionValoraciones[$i] / $totalValoraciones) * 100 
                                         : 0;
                                 @endphp
-                                <div class="h-full bg-yellow-400" style="width: {{ $porcentaje }}%"></div>
+                                <div class="h-full" data-width="{{ $porcentaje }}" style="background: linear-gradient(90deg, #00aeff, #0079f4);"></div>
                             </div>
                             <span class="text-sm text-gray-600 w-10">
                                 {{ isset($distribucionValoraciones) && isset($distribucionValoraciones[$i]) ? $distribucionValoraciones[$i] : 0 }}
@@ -253,8 +257,11 @@
                                 </svg>
                                 Distribución por Edad
                             </h3>
-                            <div class="chart-container" style="position: relative; height:200px; width:100%">
-                                <canvas id="chartEdad"></canvas>
+                            <div class="flex flex-row items-center gap-6">
+                                <div class="chart-container" style="position: relative; height:240px; width:100%">
+                                    <canvas id="chartEdad"></canvas>
+                                </div>
+                                <div id="leyendaEdad" class="text-sm" style="min-width:180px; display:flex; flex-direction:column; gap:8px;"></div>
                             </div>
                         </div>
                         
@@ -299,8 +306,8 @@
                                     <div class="flex items-center">
                                         <span class="text-gray-600 text-sm mr-2 w-28 truncate">{{ $institucion->nombre }}</span>
                                         <div class="relative flex-grow h-6 bg-gray-200 rounded">
-                                            <div class="absolute top-0 left-0 h-6 rounded bg-indigo-500" style="width: {{ $institucion->porcentaje }}%"></div>
-                                            <span class="absolute inset-0 flex items-center justify-end px-2 text-xs font-semibold text-gray-800">{{ $institucion->usuarios }} ({{ $institucion->porcentaje }}%)</span>
+                                            <div class="absolute top-0 left-0 h-6 rounded" data-width="{{ $institucion->porcentaje }}" style="background: linear-gradient(90deg, #0079f4, #0b3be9);"></div>
+                                            <span class="absolute inset-0 flex items-center justify-end px-2 text-xs font-semibold text-gray-800">{{ $institucion->usuarios }} usuarios</span>
                                         </div>
                                     </div>
                                 @empty
@@ -370,8 +377,8 @@
             <!-- Carreras más Recomendadas -->
             <div class="bg-white rounded-xl shadow-xl overflow-hidden">
                 <div class="border-b border-gray-200 bg-white p-4">
-                    <h2 class="text-xl font-semibold text-gray-800">Carreras más Recomendadas</h2>
-                    <p class="text-sm text-gray-500">Análisis de recomendaciones del sistema</p>
+                    <h2 class="text-xl font-semibold text-gray-800">Carreras más Solicitadas</h2>
+                    <p class="text-sm text-gray-500">Selecciones registradas en retroalimentaciones</p>
                 </div>
                 
                 <div class="p-6">
@@ -383,15 +390,14 @@
                     </div>
                     
                     <div class="mt-6 border-t border-gray-100 pt-4">
-                        <h3 class="text-md font-medium text-gray-700 mb-3">Top 5 Carreras Recomendadas</h3>
+                        <h3 class="text-md font-medium text-gray-700 mb-3">Top 5 Carreras Solicitadas</h3>
                         <div id="listaCarreras" class="space-y-3">
                             <!-- Se llenarán dinámicamente -->
                         </div>
                     </div>
                 </div>
             </div>
-</script>
-</script>
+<!-- Eliminado: etiquetas de cierre de script extra -->
         </div>
         
         <!-- Botones de acción -->
@@ -412,46 +418,57 @@
     </div>
 </div>
 
-<!-- Scripts para las gráficas -->
-<script>
-// Variables generadas por Blade para los gráficos
-const carrerasSeleccionadasTop = @json($carrerasSeleccionadasTop ?? []);
-const estudiantesPorDepartamento = @json($estudiantesPorDepartamento ?? []);
-const porTipoPersonalidad = @json($porTipoPersonalidad ?? []);
-const carrerasMasRecomendadas = @json($carrerasMasRecomendadas ?? []);
-const distribucionPorEdad = @json($distribucionPorEdad ?? []);
-const distribucionPorGenero = @json($distribucionPorGenero ?? []);
+<!-- Datos para las gráficas en JSON embebido -->
+<script id="estadisticas-data" type="application/json">
+{!! json_encode([
+    'carrerasSeleccionadasTop' => $carrerasSeleccionadasTop ?? [],
+    'distribucionPorDepartamento' => $estudiantesPorDepartamento ?? [],
+    'porTipoPersonalidad' => $porTipoPersonalidad ?? [],
+    'carrerasMasRecomendadas' => $carrerasMasRecomendadas ?? [],
+    'distribucionPorEdad' => $distribucionPorEdad ?? [],
+    'distribucionPorGenero' => $distribucionPorGenero ?? [],
+], JSON_UNESCAPED_UNICODE) !!}
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Aplicar anchos para barras con data-width
+        document.querySelectorAll('[data-width]').forEach(el => {
+            const w = parseFloat(el.getAttribute('data-width')) || 0;
+            el.style.width = `${w}%`;
+        });
+        // Parsear datos embebidos
+        const metaEl = document.getElementById('estadisticas-data');
+        const meta = metaEl ? JSON.parse(metaEl.textContent) : {};
+        const carrerasSeleccionadasTop = meta.carrerasSeleccionadasTop || [];
+        const estudiantesPorDepartamento = meta.distribucionPorDepartamento || [];
+        const porTipoPersonalidad = meta.porTipoPersonalidad || [];
+        const carrerasMasRecomendadas = meta.carrerasMasRecomendadas || [];
+        const distribucionPorEdad = meta.distribucionPorEdad || [];
+        const distribucionPorGenero = meta.distribucionPorGenero || [];
         try {
             console.log('DOM Cargado - Iniciando gráficos');
         } catch(e) {
             console.error('Error al inicializar:', e);
         }
         
-        // Configuración de colores mejorada
+        // Paleta corporativa (azules)
         const colores = {
-            azules: ['rgba(59, 130, 246, 0.8)', 'rgba(37, 99, 235, 0.8)', 'rgba(29, 78, 216, 0.8)'],
-            morados: ['rgba(139, 92, 246, 0.8)', 'rgba(124, 58, 237, 0.8)', 'rgba(109, 40, 217, 0.8)'],
-            verdes: ['rgba(16, 185, 129, 0.8)', 'rgba(5, 150, 105, 0.8)', 'rgba(4, 120, 87, 0.8)'],
-            naranjas: ['rgba(249, 115, 22, 0.8)', 'rgba(234, 88, 12, 0.8)', 'rgba(194, 65, 12, 0.8)'],
-            rosas: ['rgba(236, 72, 153, 0.8)', 'rgba(219, 39, 119, 0.8)', 'rgba(190, 24, 93, 0.8)'],
-            grises: ['rgba(107, 114, 128, 0.8)', 'rgba(75, 85, 99, 0.8)', 'rgba(55, 65, 81, 0.8)'],
-            pastel: [
-                'rgba(255, 99, 132, 0.8)',
-                'rgba(54, 162, 235, 0.8)',
-                'rgba(255, 206, 86, 0.8)',
-                'rgba(75, 192, 192, 0.8)',
-                'rgba(153, 102, 255, 0.8)',
-                'rgba(255, 159, 64, 0.8)',
-                'rgba(199, 199, 199, 0.8)',
-                'rgba(83, 102, 255, 0.8)',
-                'rgba(78, 235, 133, 0.8)',
-                'rgba(255, 99, 255, 0.8)'
+            corporativos: [
+                'rgba(11, 59, 233, 0.85)',  // #0b3be9
+                'rgba(0, 121, 244, 0.85)',  // #0079f4
+                'rgba(0, 174, 255, 0.85)',  // #00aeff
+                'rgba(5, 26, 154, 0.85)',   // #051a9a
+                'rgba(19, 30, 88, 0.85)'    // #131e58
+            ],
+            corporativosBorde: [
+                'rgba(11, 59, 233, 1)',
+                'rgba(0, 121, 244, 1)',
+                'rgba(0, 174, 255, 1)',
+                'rgba(5, 26, 154, 1)',
+                'rgba(19, 30, 88, 1)'
             ]
         };
         
@@ -468,19 +485,17 @@ const distribucionPorGenero = @json($distribucionPorGenero ?? []);
                 const value = data[idx];
                 const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
                 const color = Array.isArray(colors) ? colors[idx] : colors;
-                
                 return `
-                    <div class="flex items-center gap-2 mb-2">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
                         <span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:${color};border:1px solid #ccc;"></span>
-                        <span class="font-medium text-gray-700">${label}</span>
-                        <span class="text-blue-600 font-semibold ml-auto">${value} (${percentage}%)</span>
+                        <span style="color:#374151;font-weight:500;">${label}</span>
+                        <span style="margin-left:auto;color:#1d4ed8;font-weight:600;">${value} (${percentage}%)</span>
                     </div>
                 `;
             }).join('');
         }
 
-        // Datos geográficos
-        let estudiantesPorDepartamento = {!! json_encode($distribucionPorDepartamento ?? []) !!};
+    // Datos geográficos (usar variable ya definida estudiantesPorDepartamento)
         let departamentosLabels = [];
         let departamentosData = [];
         
@@ -504,13 +519,12 @@ const distribucionPorGenero = @json($distribucionPorGenero ?? []);
             datasets: [{
                 label: 'Estudiantes',
                 data: departamentosData,
-                backgroundColor: colores.verdes,
+                backgroundColor: colores.corporativos,
                 borderWidth: 1
             }]
         };
 
-        // Datos personalidad
-        let porTipoPersonalidad = [];
+    // Datos personalidad (usar variable ya definida porTipoPersonalidad)
         let personalidadLabels = [];
         let personalidadData = [];
         
@@ -531,14 +545,13 @@ const distribucionPorGenero = @json($distribucionPorGenero ?? []);
             datasets: [{
                 label: 'Distribución',
                 data: personalidadData,
-                backgroundColor: colores.pastel.slice(0, personalidadLabels.length),
+                backgroundColor: colores.corporativos.slice(0, Math.max(3, personalidadLabels.length)),
                 borderWidth: 1
             }]
         };
 
 
-        // Datos carreras - CORREGIDO
-        let carrerasMasRecomendadas = {!! json_encode($carrerasMasRecomendadas ?? []) !!};
+    // Datos carreras (usar variable ya definida carrerasMasRecomendadas)
         let carrerasLabels = [];
         let carrerasData = [];
         let carrerasMatch = [];
@@ -571,18 +584,18 @@ const distribucionPorGenero = @json($distribucionPorGenero ?? []);
         const datosCarreras = {
             labels: carrerasLabels,
             datasets: [{
-                label: 'Total Recomendaciones',
+                label: 'Total selecciones',
                 data: carrerasData,
-                backgroundColor: colores.pastel,
+                backgroundColor: colores.corporativos,
                 borderWidth: 1,
-                borderColor: colores.pastel.map(color => color.replace('0.8', '1')),
+                borderColor: colores.corporativosBorde,
                 barPercentage: 0.7,
                 categoryPercentage: 0.8
             }]
         };
         
-        // Obtener datos de edad desde el controlador
-        let distribucionEdadLabels = ['16-18', '19-21', '22-25', '26-30', '31+'];
+    // Obtener datos de edad desde el controlador
+    let distribucionEdadLabels = ['16-19', '20-22', '23-25', '26-30', '31+'];
         let distribucionEdadData = [0, 0, 0, 0, 0];
         
         try {
@@ -608,19 +621,20 @@ const distribucionPorGenero = @json($distribucionPorGenero ?? []);
         } catch(e) {
             console.error('Error al procesar datos de edad:', e);
         }
-        
+        // Calcular porcentajes por rango para leyenda lateral (e.g., 16-19 30%)
+        const totalEdad = distribucionEdadData.reduce((a,b)=>a+b,0);
+        const distribucionEdadPct = distribucionEdadLabels.map((label, idx) => {
+            const v = distribucionEdadData[idx] || 0;
+            const pct = totalEdad > 0 ? Math.round((v/totalEdad)*100) : 0;
+            return { label, valor: v, porcentaje: pct };
+        });
+
         const distribucionEdad = {
             labels: distribucionEdadLabels,
             datasets: [{
                 label: 'Usuarios por Rango de Edad',
                 data: distribucionEdadData,
-                backgroundColor: [
-                    'rgba(102, 126, 234, 0.8)',
-                    'rgba(104, 109, 224, 0.8)',
-                    'rgba(126, 214, 223, 0.8)',
-                    'rgba(129, 236, 236, 0.8)',
-                    'rgba(72, 219, 251, 0.8)'
-                ],
+                backgroundColor: colores.corporativos,
                 borderWidth: 1,
                 borderRadius: 4
             }]
@@ -687,21 +701,17 @@ const distribucionPorGenero = @json($distribucionPorGenero ?? []);
         // Crear gráficos con opciones mejoradas
         try {
             // Gráfico de Edad
-            if(document.getElementById('chartEdad')) {
-                new Chart(document.getElementById('chartEdad'), {
+            let edadChart;
+            const canvasEdad = document.getElementById('chartEdad');
+            if(canvasEdad) {
+                edadChart = new Chart(canvasEdad, {
                     type: 'bar',
                     data: distribucionEdad,
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: {
-                                position: 'right',
-                                labels: {
-                                    usePointStyle: true,
-                                    padding: 15
-                                }
-                            },
+                            legend: { display: false },
                             tooltip: {
                                 callbacks: {
                                     label: function(context) {
@@ -712,13 +722,61 @@ const distribucionPorGenero = @json($distribucionPorGenero ?? []);
                                 }
                             }
                         },
+                        scales: {
+                                    x: {
+                                        type: 'category',
+                                        offset: true,
+                                        grid: { display: false },
+                                        ticks: {
+                                            autoSkip: false,
+                                            maxRotation: 0,
+                                            minRotation: 0,
+                                            color: '#374151', // gray-700
+                                            font: { size: 12, weight: '600' },
+                                            padding: 6,
+                                            callback: function(value, index, ticks) {
+                                                // Usar primero las labels del dataset y luego el arreglo fijo
+                                                const lbl = (distribucionEdad && Array.isArray(distribucionEdad.labels)) ? distribucionEdad.labels[index] : undefined;
+                                                if (lbl !== undefined) return lbl;
+                                                if (Array.isArray(distribucionEdadLabels) && distribucionEdadLabels[index]) return distribucionEdadLabels[index];
+                                                return typeof value === 'string' ? value : '';
+                                            }
+                                        }
+                                    },
+                                    y: {
+                                        beginAtZero: true,
+                                        ticks: { precision: 0, color: '#6b7280', font: { size: 11 } },
+                                        grid: { color: 'rgba(0,0,0,0.05)' }
+                                    }
+                        },
                         animation: {
                             animateRotate: true,
                             animateScale: true,
                             duration: 1500
-                        }
+                                },
+                                layout: {
+                                    padding: { bottom: 18, top: 6, left: 0, right: 0 }
+                                }
                     }
                 });
+                // Re-render para entornos donde los estilos/fuentes cargan tarde (producción)
+                setTimeout(() => { if (edadChart) edadChart.resize(); }, 300);
+                setTimeout(() => { if (edadChart) edadChart.update('none'); }, 700);
+                window.addEventListener('load', () => { if (edadChart) edadChart.update(); });
+                // Leyenda lateral personalizada: etiqueta + porcentaje
+                setTimeout(() => {
+                    const leyendaEdad = document.getElementById('leyendaEdad');
+                    if (!leyendaEdad) return;
+                    leyendaEdad.innerHTML = distribucionEdadPct.map((item, idx) => {
+                        const colors = edadChart.data.datasets[0].backgroundColor;
+                        const color = Array.isArray(colors) ? colors[idx % colors.length] : colors;
+                        return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                            <span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:${color};border:1px solid #e5e7eb;"></span>
+                            <span style="color:#374151;">${item.label}</span>
+                            <span style="margin-left:auto;color:#1d4ed8;font-weight:600;">${item.porcentaje}%</span>
+                        </div>`;
+                    }).join('');
+                }, 200);
             }
 
             // Gráfico de Género
@@ -763,7 +821,11 @@ const distribucionPorGenero = @json($distribucionPorGenero ?? []);
                             const val = data[idx];
                             const porcentaje = total > 0 ? Math.round((val / total) * 100) : 0;
                             const color = colores[idx];
-                            return `<span class=\"flex items-center gap-2 mb-1\"><span style=\"display:inline-block;width:16px;height:16px;border-radius:50%;background:${color};border:1px solid #ccc;\"></span><span class='font-semibold'>${label}:</span> <span class='text-blue-700 font-bold'>${porcentaje}%</span></span>`;
+                            return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                                <span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:${color};border:1px solid #ccc;"></span>
+                                <span style="font-weight:600;color:#111827;">${label}:</span>
+                                <span style="color:#1d4ed8;font-weight:700;">${porcentaje}%</span>
+                            </div>`;
                         }).join('');
                     }
                 }, 300);
@@ -819,15 +881,14 @@ const distribucionPorGenero = @json($distribucionPorGenero ?? []);
             if(document.getElementById('chartTiposPersonalidad') && personalidadData.length > 0 && personalidadData.some(val => val > 0)) {
                 console.log('Creando gráfico de personalidad...');
                 const personalidadChart = new Chart(document.getElementById('chartTiposPersonalidad'), {
-                    type: 'polarArea',
+                    type: 'doughnut',
                     data: datosPersonalidad,
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        cutout: '50%',
                         plugins: {
-                            legend: {
-                                display: false
-                            },
+                            legend: { display: false },
                             tooltip: {
                                 callbacks: {
                                     label: function(context) {
@@ -835,14 +896,6 @@ const distribucionPorGenero = @json($distribucionPorGenero ?? []);
                                         const percentage = Math.round((context.raw / total) * 100);
                                         return `${context.label}: ${context.raw} (${percentage}%)`;
                                     }
-                                }
-                            }
-                        },
-                        scales: {
-                            r: {
-                                beginAtZero: true,
-                                ticks: {
-                                    precision: 0
                                 }
                             }
                         },
@@ -878,7 +931,7 @@ const distribucionPorGenero = @json($distribucionPorGenero ?? []);
                             tooltip: {
                                 callbacks: {
                                     label: function(context) {
-                                        return `Total recomendaciones: ${context.raw}`;
+                                        return `Total selecciones: ${context.raw}`;
                                     }
                                 }
                             }
@@ -926,7 +979,7 @@ const distribucionPorGenero = @json($distribucionPorGenero ?? []);
                         return `
                             <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                                 <span class="font-medium text-gray-700">${carrera}</span>
-                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-semibold">${valor} recomendaciones</span>
+                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-semibold">${valor} selecciones</span>
                             </div>
                         `;
                     }).join('');

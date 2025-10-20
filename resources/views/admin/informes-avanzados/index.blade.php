@@ -4,7 +4,7 @@
 @section('title', 'Informes Avanzados')
 
 @section('content')
-<div class="bg-gradient-to-br from-blue-900 to-indigo-900 min-h-screen p-4 md:p-8">
+<div class="bg-gradient-to-br from-[#131e58] to-[#051a9a] min-h-screen p-4 md:p-8">
     <div class="mx-auto max-w-7xl">
         <!-- Breadcrumb y Botón de Regreso -->
         <div class="flex justify-between items-center mb-6">
@@ -24,9 +24,9 @@
         </div>
 
         <div class="bg-white rounded-xl shadow-xl overflow-hidden mb-8">
-            <div class="bg-gradient-to-r from-purple-600 to-indigo-700 p-6">
+            <div class="bg-gradient-to-r from-[#0b3be9] to-[#0079f4] p-6">
                 <h1 class="text-2xl font-bold text-white">Informes Avanzados</h1>
-                <p class="text-purple-100 mt-1">Análisis detallados y extracción de datos para la toma de decisiones</p>
+                <p class="text-white/80 mt-1">Análisis detallados y extracción de datos para la toma de decisiones</p>
             </div>
             
             <!-- Mensajes de éxito/error -->
@@ -49,7 +49,7 @@
             @endif
             
             <!-- Panel de filtros -->
-            <div class="p-6 border-b border-gray-200 bg-gray-50" x-data="{ filtersOpen: true }">
+            <div class="p-6 border-b border-[#c8c8c8] bg-[#f2f2f2]" x-data="{ filtersOpen: true }">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-semibold text-gray-800">Filtros de Informe</h2>
                     <button @click="filtersOpen = !filtersOpen" class="text-gray-500 hover:text-gray-700">
@@ -70,11 +70,10 @@
                     <!-- Tipo de Informe -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Informe</label>
-                        <select name="tipo_informe" id="tipo_informe" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        <select name="tipo_informe" id="tipo_informe" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-[#00aeff] focus:ring focus:ring-[#00aeff] focus:ring-opacity-50">
                             <option value="usuarios_datos">Datos de Contacto de Usuarios</option>
                             <option value="instituciones_educativas">Usuarios por Institución Educativa</option>
                             <option value="distribucion_demografica">Distribución Geográfica</option>
-                            <option value="personalidades">Distribución de Tipos de Personalidad</option>
                             <option value="carreras">Carreras Recomendadas</option>
                             <option value="carreras_mas_solicitadas">Carreras Más Solicitadas</option>
                         </select>
@@ -86,11 +85,11 @@
                         <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <label class="block text-xs text-gray-500">Desde</label>
-                                <input type="date" name="fecha_inicio" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                <input type="date" name="fecha_inicio" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-[#00aeff] focus:ring focus:ring-[#00aeff] focus:ring-opacity-50">
                             </div>
                             <div>
                                 <label class="block text-xs text-gray-500">Hasta</label>
-                                <input type="date" name="fecha_fin" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                <input type="date" name="fecha_fin" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-[#00aeff] focus:ring focus:ring-[#00aeff] focus:ring-opacity-50">
                             </div>
                         </div>
                     </div>
@@ -100,7 +99,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">Ubicación</label>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <select name="departamento" id="departamento" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                <select name="departamento" id="departamento" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-[#00aeff] focus:ring focus:ring-[#00aeff] focus:ring-opacity-50">
                                     <option value="">Todos los departamentos</option>
                                     @foreach($departamentos as $departamento)
                                         <option value="{{ $departamento }}">{{ $departamento }}</option>
@@ -108,7 +107,7 @@
                                 </select>
                             </div>
                             <div>
-                                <select name="ciudad" id="ciudad" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" disabled>
+                                <select name="ciudad" id="ciudad" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-[#00aeff] focus:ring focus:ring-[#00aeff] focus:ring-opacity-50" disabled>
                                     <option value="">Seleccione un departamento primero</option>
                                 </select>
                             </div>
@@ -118,14 +117,14 @@
                     <!-- Segunda fila de filtros -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Institución Educativa</label>
-                        <select name="institucion" id="institucion" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" disabled>
+                        <select name="institucion" id="institucion" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-[#00aeff] focus:ring focus:ring-[#00aeff] focus:ring-opacity-50" disabled>
                             <option value="">Seleccione una ciudad primero</option>
                         </select>
                     </div>
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Género</label>
-                        <select name="genero" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        <select name="genero" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-[#00aeff] focus:ring focus:ring-[#00aeff] focus:ring-opacity-50">
                             <option value="">Todos</option>
                             <option value="M">Masculino</option>
                             <option value="F">Femenino</option>
@@ -137,17 +136,17 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">Rango de Edad</label>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <input type="number" name="edad_min" placeholder="Mín." class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                <input type="number" name="edad_min" placeholder="Mín." class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-[#00aeff] focus:ring focus:ring-[#00aeff] focus:ring-opacity-50">
                             </div>
                             <div>
-                                <input type="number" name="edad_max" placeholder="Máx." class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                <input type="number" name="edad_max" placeholder="Máx." class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-[#00aeff] focus:ring focus:ring-[#00aeff] focus:ring-opacity-50">
                             </div>
                         </div>
                     </div>
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Área de Conocimiento</label>
-                        <select name="area_conocimiento" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        <select name="area_conocimiento" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-[#00aeff] focus:ring focus:ring-[#00aeff] focus:ring-opacity-50">
                             <option value="">Todas las áreas</option>
                             @foreach($areasConocimiento as $area)
                                 <option value="{{ $area }}">{{ $area }}</option>
@@ -162,37 +161,37 @@
                             <div class="grid grid-cols-3 gap-2">
                                 <div>
                                     <label class="inline-flex items-center">
-                                        <input type="checkbox" name="tipos_personalidad[]" value="R" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                        <input type="checkbox" name="tipos_personalidad[]" value="R" class="rounded border-gray-300 text-[#0b3be9] shadow-sm focus:border-[#00aeff] focus:ring focus:ring-[#00aeff] focus:ring-opacity-50">
                                         <span class="ml-2 text-sm text-gray-700">Realista (R)</span>
                                     </label>
                                 </div>
                                 <div>
                                     <label class="inline-flex items-center">
-                                        <input type="checkbox" name="tipos_personalidad[]" value="I" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                        <input type="checkbox" name="tipos_personalidad[]" value="I" class="rounded border-gray-300 text-[#0b3be9] shadow-sm focus:border-[#00aeff] focus:ring focus:ring-[#00aeff] focus:ring-opacity-50">
                                         <span class="ml-2 text-sm text-gray-700">Investigador (I)</span>
                                     </label>
                                 </div>
                                 <div>
                                     <label class="inline-flex items-center">
-                                        <input type="checkbox" name="tipos_personalidad[]" value="A" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                        <input type="checkbox" name="tipos_personalidad[]" value="A" class="rounded border-gray-300 text-[#0b3be9] shadow-sm focus:border-[#00aeff] focus:ring focus:ring-[#00aeff] focus:ring-opacity-50">
                                         <span class="ml-2 text-sm text-gray-700">Artístico (A)</span>
                                     </label>
                                 </div>
                                 <div>
                                     <label class="inline-flex items-center">
-                                        <input type="checkbox" name="tipos_personalidad[]" value="S" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                        <input type="checkbox" name="tipos_personalidad[]" value="S" class="rounded border-gray-300 text-[#0b3be9] shadow-sm focus:border-[#00aeff] focus:ring focus:ring-[#00aeff] focus:ring-opacity-50">
                                         <span class="ml-2 text-sm text-gray-700">Social (S)</span>
                                     </label>
                                 </div>
                                 <div>
                                     <label class="inline-flex items-center">
-                                        <input type="checkbox" name="tipos_personalidad[]" value="E" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                        <input type="checkbox" name="tipos_personalidad[]" value="E" class="rounded border-gray-300 text-[#0b3be9] shadow-sm focus:border-[#00aeff] focus:ring focus:ring-[#00aeff] focus:ring-opacity-50">
                                         <span class="ml-2 text-sm text-gray-700">Emprendedor (E)</span>
                                     </label>
                                 </div>
                                 <div>
                                     <label class="inline-flex items-center">
-                                        <input type="checkbox" name="tipos_personalidad[]" value="C" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                        <input type="checkbox" name="tipos_personalidad[]" value="C" class="rounded border-gray-300 text-[#0b3be9] shadow-sm focus:border-[#00aeff] focus:ring focus:ring-[#00aeff] focus:ring-opacity-50">
                                         <span class="ml-2 text-sm text-gray-700">Convencional (C)</span>
                                     </label>
                                 </div>
@@ -200,7 +199,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Estado del Test</label>
-                            <select name="estado_test" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                            <select name="estado_test" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-[#00aeff] focus:ring focus:ring-[#00aeff] focus:ring-opacity-50">
                                 <option value="">Todos los estados</option>
                                 <option value="completado">Completados</option>
                                 <option value="incompleto">Incompletos</option>
@@ -211,13 +210,13 @@
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
                                     <label class="inline-flex items-center">
-                                        <input type="checkbox" name="campos[]" value="telefono" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                        <input type="checkbox" name="campos[]" value="telefono" class="rounded border-gray-300 text-[#0b3be9] shadow-sm focus:border-[#00aeff] focus:ring focus:ring-[#00aeff] focus:ring-opacity-50">
                                         <span class="ml-2 text-sm text-gray-700">Teléfono</span>
                                     </label>
                                 </div>
                                 <div>
                                     <label class="inline-flex items-center">
-                                        <input type="checkbox" name="campos[]" value="email" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                        <input type="checkbox" name="campos[]" value="email" class="rounded border-gray-300 text-[#0b3be9] shadow-sm focus:border-[#00aeff] focus:ring focus:ring-[#00aeff] focus:ring-opacity-50">
                                         <span class="ml-2 text-sm text-gray-700">Email</span>
                                     </label>
                                 </div>
@@ -227,10 +226,10 @@
                     
                     <!-- Botones de acción -->
                     <div class="md:col-span-3 flex flex-wrap justify-end gap-3 mt-4">
-                        <button type="reset" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                        <button type="reset" class="px-4 py-2 bg-[#c8c8c8] text-[#131e58] rounded-md hover:bg-[#bfbfbf] focus:outline-none focus:ring-2 focus:ring-[#c8c8c8]">
                             Limpiar Filtros
                         </button>
-                        <button type="submit" id="generarBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 flex items-center">
+                        <button type="submit" id="generarBtn" class="px-4 py-2 bg-[#0b3be9] text-white rounded-md hover:bg-[#051a9a] focus:outline-none focus:ring-2 focus:ring-[#00aeff] flex items-center">
                             <svg class="w-4 h-4 mr-2 hidden" id="loadingSpinner" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                             </svg>
@@ -262,14 +261,13 @@
                                     <div class="text-sm font-medium text-gray-900">{{ $informe->nombre }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 text-xs rounded-full 
-                                    @if($informe->tipo == 'usuarios_datos') bg-blue-100 text-blue-800
-                                    @elseif($informe->tipo == 'instituciones_educativas') bg-green-100 text-green-800
-                                    @elseif($informe->tipo == 'distribucion_demografica') bg-purple-100 text-purple-800
-                                    @elseif($informe->tipo == 'personalidades') bg-pink-100 text-pink-800
-                                    @elseif($informe->tipo == 'carreras') bg-indigo-100 text-indigo-800
-                                    @endif
-                                    ">{{ $informe->tipo_legible ?? $informe->tipo }}</span>
+                                    <span class="px-2 py-1 text-xs rounded-full text-white" @class([
+                                        'bg-[#0b3be9]' => $informe->tipo == 'usuarios_datos',
+                                        'bg-[#0079f4]' => $informe->tipo == 'instituciones_educativas',
+                                        'bg-[#051a9a]' => $informe->tipo == 'distribucion_demografica',
+                                        'bg-[#131e58]' => $informe->tipo == 'carreras',
+                                        'bg-[#0b3be9]' => $informe->tipo == 'carreras_mas_solicitadas',
+                                    ])>{{ $informe->tipo_legible ?? $informe->tipo }}</span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ is_string($informe->created_at) ? date('d M Y', strtotime($informe->created_at)) : $informe->created_at->format('d M Y') }}
@@ -313,10 +311,10 @@
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-lg font-semibold text-gray-800">Resultados del Informe</h2>
                     <div class="flex space-x-2">
-                        <button @click="activeTab = 'tabla'" :class="{'bg-indigo-600 text-white': activeTab === 'tabla', 'bg-gray-200 text-gray-700': activeTab !== 'tabla'}" class="px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                        <button @click="activeTab = 'tabla'" :class="{'bg-[#0b3be9] text-white': activeTab === 'tabla', 'bg-[#f2f2f2] text-[#131e58]': activeTab !== 'tabla'}" class="px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-[#00aeff]">
                             Tabla
                         </button>
-                        <button @click="activeTab = 'grafico'" :class="{'bg-indigo-600 text-white': activeTab === 'grafico', 'bg-gray-200 text-gray-700': activeTab !== 'grafico'}" class="px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                        <button @click="activeTab = 'grafico'" :class="{'bg-[#0b3be9] text-white': activeTab === 'grafico', 'bg-[#f2f2f2] text-[#131e58]': activeTab !== 'grafico'}" class="px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-[#00aeff]">
                             Gráfico
                         </button>
                     </div>
@@ -331,7 +329,7 @@
                             <input type="hidden" name="filtros" value="{{ isset($filtrosAplicados) ? json_encode($filtrosAplicados) : '{}' }}">
                             <input type="hidden" name="tipo_informe" value="{{ $tipoInforme ?? 'general' }}">
                             <input type="text" name="nombre_informe" placeholder="Nombre del informe" required class="px-4 py-2 border border-gray-300 rounded-md">
-                            <button type="submit" class="ml-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                            <button type="submit" class="ml-2 px-4 py-2 bg-[#0b3be9] text-white rounded-md hover:bg-[#051a9a] focus:outline-none focus:ring-2 focus:ring-[#00aeff]">
                                 Guardar
                             </button>
                         </form>
@@ -344,7 +342,7 @@
                             <input type="hidden" name="tipo" value="{{ $tipoInforme ?? 'general' }}">
                             <input type="hidden" name="datos" id="exportDatosExcel" value="{{ isset($datos) ? json_encode($datos) : '' }}">
                             <input type="hidden" name="id" value="{{ $informeCargado->id ?? '' }}">
-                            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-300 flex items-center">
+                            <button type="submit" class="px-4 py-2 bg-[#0079f4] text-white rounded-md hover:bg-[#051a9a] focus:outline-none focus:ring-2 focus:ring-[#00aeff] flex items-center">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                 </svg>
@@ -359,7 +357,7 @@
                             <input type="hidden" name="tipo" value="{{ $tipoInforme ?? 'general' }}">
                             <input type="hidden" name="datos" id="exportDatosPDF" value="{{ isset($datos) ? json_encode($datos) : '' }}">
                             <input type="hidden" name="id" value="{{ $informeCargado->id ?? '' }}">
-                            <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 flex items-center">
+                            <button type="submit" class="px-4 py-2 bg-[#131e58] text-white rounded-md hover:bg-[#051a9a] focus:outline-none focus:ring-2 focus:ring-[#00aeff] flex items-center">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                                 </svg>
@@ -450,16 +448,18 @@
                                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ciudad</th>
                                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Departamento</th>
                                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Usuarios</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tests Completados</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tests Incompletos</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Masculinos</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Femeninos</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Otros</th>
                                         @else
                                             <!-- Headers para datos de instituciones -->
                                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Institución</th>
                                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Departamento</th>
                                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ciudad</th>
                                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Estudiantes</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tests Completados</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tests Incompletos</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Masculinos</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Femeninos</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Otros</th>
                                         @endif
                                     </tr>
                                 </thead>
@@ -478,10 +478,13 @@
                                                 <div class="text-sm text-gray-900">{{ $item['total_usuarios'] ?? 0 }}</div>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="text-sm text-gray-900">{{ $item['tests_completados'] ?? 0 }}</div>
+                                                <div class="text-sm text-gray-900">{{ $item['masculinos'] ?? 0 }}</div>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="text-sm text-gray-900">{{ $item['tests_incompletos'] ?? 0 }}</div>
+                                                <div class="text-sm text-gray-900">{{ $item['femeninos'] ?? 0 }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">{{ $item['otros'] ?? 0 }}</div>
                                             </td>
                                         @else
                                             <!-- Filas para datos de instituciones -->
@@ -498,10 +501,13 @@
                                                 <div class="text-sm text-gray-900">{{ $item['total_estudiantes'] ?? 0 }}</div>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="text-sm text-gray-900">{{ $item['tests_completados'] ?? 0 }}</div>
+                                                <div class="text-sm text-gray-900">{{ $item['masculinos'] ?? 0 }}</div>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="text-sm text-gray-900">{{ $item['tests_incompletos'] ?? 0 }}</div>
+                                                <div class="text-sm text-gray-900">{{ $item['femeninos'] ?? 0 }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">{{ $item['otros'] ?? 0 }}</div>
                                             </td>
                                         @endif
                                     </tr>
@@ -676,19 +682,23 @@
                 
                 <!-- Vista de Gráfico -->
                 <div x-show="activeTab === 'grafico'" class="bg-white rounded-lg border border-gray-200 p-6">
+                    <!-- Metadatos para el gráfico (evita Blade en <script>) -->
+                    <div id="chartMeta" class="hidden"
+                         data-tipo-informe="{{ $tipoInforme ?? '' }}"
+                         data-datos-grafico='@json($datosGrafico ?? null)'></div>
                     <div class="chart-container" style="position: relative; height:400px; width:100%">
                         <canvas id="chartInforme"></canvas>
                     </div>
                 </div>
                 
                 <!-- Sección de insights y análisis -->
-                <div class="mt-8 bg-indigo-50 rounded-lg p-6 border border-indigo-100">
-                    <h3 class="text-lg font-semibold text-indigo-800 mb-3">Insights y Recomendaciones</h3>
+                <div class="mt-8 bg-[#f2f2f2] rounded-lg p-6 border border-[#c8c8c8]">
+                    <h3 class="text-lg font-semibold text-[#051a9a] mb-3">Insights y Recomendaciones</h3>
                     <ul class="space-y-3">
                         @if(isset($insights) && is_array($insights))
                             @foreach($insights as $key => $insight)
                                 <li class="flex items-start">
-                                    <svg class="w-5 h-5 text-indigo-600 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-5 h-5 text-[#0b3be9] mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                     </svg>
                                     @if(is_array($insight) || is_object($insight))
@@ -707,7 +717,7 @@
                             @endforeach
                         @else
                             <li class="flex items-start">
-                                <svg class="w-5 h-5 text-indigo-600 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-5 h-5 text-[#0b3be9] mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                                 <span class="text-sm text-gray-700">No hay insights disponibles para este informe.</span>
@@ -793,7 +803,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if(tipoInformeSelect) {
         tipoInformeSelect.addEventListener('change', function() {
-            if(this.value === 'personalidades' || this.value === 'carreras' || this.value === 'carreras_mas_solicitadas') {
+            if(this.value === 'carreras' || this.value === 'carreras_mas_solicitadas') {
                 filtrosPersonalidad.style.display = 'grid';
             } else {
                 filtrosPersonalidad.style.display = 'none';
@@ -910,8 +920,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Creación de gráficos
     if(document.getElementById('chartInforme')) {
         const ctx = document.getElementById('chartInforme').getContext('2d');
-        const tipoInforme = @json($tipoInforme ?? '');
-        const datosGrafico = @json($datosGrafico ?? null);
+        const metaEl = document.getElementById('chartMeta');
+        const tipoInforme = metaEl ? metaEl.dataset.tipoInforme : '';
+        const datosGrafico = (metaEl && metaEl.dataset.datosGrafico) ? (function(){
+            try { return JSON.parse(metaEl.dataset.datosGrafico); } catch (e) { console.error('Error parseando datosGrafico:', e); return null; }
+        })() : null;
         
         if(datosGrafico && datosGrafico.labels && datosGrafico.datos) {
             let config = {
@@ -923,20 +936,20 @@ document.addEventListener('DOMContentLoaded', function() {
                         label: datosGrafico.titulo || 'Datos',
                         data: datosGrafico.datos,
                         backgroundColor: datosGrafico.colores || [
-                            'rgba(99, 102, 241, 0.5)',
-                            'rgba(16, 185, 129, 0.5)',
-                            'rgba(244, 114, 182, 0.5)',
-                            'rgba(251, 146, 60, 0.5)',
-                            'rgba(147, 51, 234, 0.5)',
-                            'rgba(37, 99, 235, 0.5)',
+                            'rgba(11, 59, 233, 0.6)',   // #0b3be9
+                            'rgba(0, 121, 244, 0.6)',   // #0079f4
+                            'rgba(5, 26, 154, 0.6)',    // #051a9a
+                            'rgba(0, 174, 255, 0.6)',   // #00aeff
+                            'rgba(19, 30, 88, 0.6)',    // #131e58
+                            'rgba(200, 200, 200, 0.6)', // #c8c8c8
                         ],
                         borderColor: datosGrafico.bordes || [
-                            'rgb(99, 102, 241)',
-                            'rgb(16, 185, 129)',
-                            'rgb(244, 114, 182)',
-                            'rgb(251, 146, 60)',
-                            'rgb(147, 51, 234)',
-                            'rgb(37, 99, 235)',
+                            'rgb(11, 59, 233)',   // #0b3be9
+                            'rgb(0, 121, 244)',   // #0079f4
+                            'rgb(5, 26, 154)',    // #051a9a
+                            'rgb(0, 174, 255)',   // #00aeff
+                            'rgb(19, 30, 88)',    // #131e58
+                            'rgb(200, 200, 200)', // #c8c8c8
                         ],
                         borderWidth: 1
                     }]
